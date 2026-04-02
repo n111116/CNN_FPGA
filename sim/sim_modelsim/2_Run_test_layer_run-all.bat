@@ -1,0 +1,1 @@
+vsim -do ./test_layer_all.tcl

@@ -1,0 +1,1 @@
+vsim -do ./test_adpter_conv2d.tcl

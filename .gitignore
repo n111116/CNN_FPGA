@@ -1,0 +1,5 @@
+sim/sim_modelsim/**
+!sim/sim_modelsim/**/
+!sim/sim_modelsim/**/*.tcl
+!sim/sim_modelsim/**/*.bat
+prj
