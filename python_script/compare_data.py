@@ -2,7 +2,7 @@ import os
 import scipy.io
 
 # 这里选择要验证的仿真层
-from CnnHardwareGenerator import layer28 as layer_to_test
+from CnnHardwareGenerator import layer0 as layer_to_test
 # ================= 配置参数 =================
 layer_to_test.load_mat_data()
 # 1. 原始参考数据

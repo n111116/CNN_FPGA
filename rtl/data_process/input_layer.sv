@@ -60,8 +60,9 @@ module input_layer #(
     logic [FIFO_WIDTH-1:0] line_out[KERNEL_ROW-1:0];
     logic [FIFO_WIDTH-1:0] line_ram_out[KERNEL_ROW-1:0];
 
-    localparam LB_DEPTH = IMG_COL*CYCLE_PERIOD_IN - 1;
+    localparam LB_DEPTH = IMG_COL*CYCLE_PERIOD_IN;
     logic [$clog2(LB_DEPTH)-1:0] lb_waddr;
+    logic [$clog2(LB_DEPTH)-1:0] lb_raddr;
     
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -81,8 +82,8 @@ module input_layer #(
             end
             assign line_out[i] = line_ram_out[i];
             sdp_ram #(.WIDTH(FIFO_WIDTH), .DEPTH(LB_DEPTH)) u_lb_ram (
-                .clk(clk), .clk_en(clk_en), .we(pp_rd_active), .waddr(lb_waddr), .wdata(line_ram_out[i + STEP_ROW]), 
-                .re(pp_rd_active), .raddr(lb_waddr), .q(line_ram_out[i])
+                .clk(clk), .clk_en(clk_en), .we(we_line_ram[i]), .waddr(lb_waddr), .wdata(line_ram_out[i + STEP_ROW]), 
+                .re(pp_rd_active), .raddr(lb_raddr), .q(line_ram_out[i])
             );
         end
         // 后 STEP_ROW 行是新的行缓存，写入来自输入数据，并且写入地址由 pp_wr_sel 和 pp_wr_cnt 共同控制
@@ -168,14 +169,16 @@ module input_layer #(
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             lb_waddr <= 0;
+            lb_raddr <= 0;
         end
         else if (clk_en) begin
             if(pp_rd_active) begin
-                if (lb_waddr == LB_DEPTH - 1) 
-                    lb_waddr <= 0;
+                if (lb_raddr == LB_DEPTH - 1) 
+                    lb_raddr <= 0;
                 else 
-                    lb_waddr <= lb_waddr + 1;
+                    lb_raddr <= lb_raddr + 1;
             end
+            lb_waddr <= lb_raddr;  // 写地址慢一拍，与写使能、写数据同步
         end
     end
 
