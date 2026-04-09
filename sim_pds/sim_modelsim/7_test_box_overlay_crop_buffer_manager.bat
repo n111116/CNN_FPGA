@@ -1,0 +1,1 @@
+vsim -do ./test_box_overlay_crop_buffer_manager.tcl

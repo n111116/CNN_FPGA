@@ -2,4 +2,11 @@ sim/sim_modelsim/**
 !sim/sim_modelsim/**/
 !sim/sim_modelsim/**/*.tcl
 !sim/sim_modelsim/**/*.bat
-prj
+prj/**
+!prj/yolo_systolic.srcs/
+sim_pds/sim_modelsim/**
+!sim_pds/sim_modelsim/**/
+!sim_pds/sim_modelsim/**/*.tcl
+!sim_pds/sim_modelsim/**/*.bat
+prj_pds/**
+!prj_pds/*.fdc

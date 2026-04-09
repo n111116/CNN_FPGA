@@ -1,0 +1,1 @@
+vsim -do ./test_my_fifo.tcl
