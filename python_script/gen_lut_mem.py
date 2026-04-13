@@ -13,7 +13,7 @@ except ImportError:
     # 为了演示，如果导入失败，这里使用硬编码的模拟对象
     class MockLayer:
         def __init__(self):
-            self.bit_widths = {'out': 16} # 假设 layer33 输出为 16bit (作为 LUT 输入)
+            self.bit_widths = {'out': 16} # 假设 layer11 输出为 16bit (作为 LUT 输入)
             self.shift_key = 0            # 假设小数位为 8bit
             self.output_mem_dir = "mem_data"
             self.layer_num = 11

@@ -5,14 +5,14 @@ module tb_box_overlay_crop_buffer_manager();
     // =========================================================
     // 1. 参数定义 (为加速仿真，缩小图像与裁剪尺寸)
     // =========================================================
-    parameter IMG_WIDTH  = 128;
-    parameter IMG_HEIGHT = 128;
+    parameter IMG_WIDTH  = 256;
+    parameter IMG_HEIGHT = 256;
     parameter GRID_STRIDE_CENTER = 16;
     parameter GRID_STRIDE_LTRB   = 1;
     parameter MAX_BOX_NUM = 3;
     
-    parameter CROP_WIDTH  = 20;
-    parameter CROP_HEIGHT = 12;
+    parameter CROP_WIDTH  = 60;
+    parameter CROP_HEIGHT = 30;
 
     // =========================================================
     // 2. 时钟与复位生成
@@ -43,7 +43,7 @@ module tb_box_overlay_crop_buffer_manager();
     logic        end_box_wr   [0:MAX_BOX_NUM-1];
     logic [15:0] crop_x_min   [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
     logic [15:0] crop_y_min   [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [23:0] crop_rgb_out ;
+    logic [23:0] crop_rgb_out [0:MAX_BOX_NUM-1];
 
     // Manager 输出到 PE 的链路
     logic        new_line_1;
@@ -264,12 +264,12 @@ module tb_box_overlay_crop_buffer_manager();
             end
             else if (frame_no == 1) begin
                 if (y == 5)  fork send_box_data(1, 1, 1, 99, 1, 1, 1, 1); join_none 
-                if (y == 40) fork send_box_data(2, 4, 4, 90, 15, 15, 15, 15); join_none
+                if (y == 40) fork send_box_data(2, 13, 4, 90, 15, 15, 15, 15); join_none
                 if (y == 80) fork send_box_data(3, 6, 6, 85, 10,  8, 10, 10); join_none
             end
             else if (frame_no == 2) begin
                 if (y == 10) fork send_box_data(4, 2, 2, 95, 12, 12, 12, 12); join_none 
-                if (y == 60) fork send_box_data(1, 5, 5, 88, 10,  5, 20, 10); join_none 
+                if (y == 60) fork send_box_data(1, 12, 5, 88, 10,  5, 20, 10); join_none 
             end
             else if (frame_no == 3) begin
                 if (y ==  5) fork send_box_data(1, 1, 1, 99, 10, 10, 10, 10); join_none 
@@ -281,9 +281,9 @@ module tb_box_overlay_crop_buffer_manager();
                 if (y == 5)  fork send_box_data(1, 1, 1, 99, 10, 10, 10, 10); join_none 
                 if (y == 6)  fork send_box_data(2, 2, 2, 99, 10, 10, 10, 10); join_none 
                 if (y == 7)  fork send_box_data(3, 3, 3, 99, 25, 10, 25, 10); join_none 
-                if (y == 65) fork send_box_data(1, 3, 6, 99, 10, 10, 10, 10); join_none 
-                if (y == 66) fork send_box_data(2, 4, 6, 99, 10, 10, 10, 10); join_none 
-                if (y == 67) fork send_box_data(3, 5, 6, 99, 25, 10, 14, 10); join_none 
+                if (y == 65) fork send_box_data(1, 3, 12, 99, 10, 10, 10, 10); join_none 
+                if (y == 66) fork send_box_data(2, 4, 12, 99, 10, 10, 10, 10); join_none 
+                if (y == 67) fork send_box_data(3, 5, 12, 99, 25, 10, 14, 10); join_none 
             end
 
             @(negedge clk_video);

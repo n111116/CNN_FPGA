@@ -1,4 +1,4 @@
-// 要更换目标层数时，使用查找与替换功能，把所有 "_LAYER6" 替换成 "_LAYERn"即可。
+// 要更换目标层数时，使用查找与替换功能，把所有 "_LAYER7" 替换成 "_LAYERn"即可。
 `timescale 1ns/1ps
 `include "layer0.vh"
 `include "layer1.vh"
@@ -11,7 +11,7 @@
 `include "layer8.vh"
 `include "layer9.vh"
 `include "layer10.vh"
-`include "layer11.vh"
+
 `include "layer20.vh"
 `include "layer21.vh"
 `include "layer22.vh"
@@ -25,7 +25,7 @@
 module tb_layer;
 
     // 预估最大数据量
-    localparam int MEM_DEPTH = IMG_COL_LAYER6 * IMG_ROW_LAYER6 * CYCLE_PERIOD_IN_LAYER6 * PE_PAGE_NUM_LAYER6;
+    localparam int MEM_DEPTH = IMG_COL_LAYER7 * IMG_ROW_LAYER7 * CYCLE_PERIOD_IN_LAYER7 * PE_PAGE_NUM_LAYER7;
 
     // =========================================================
     // 2. 信号定义
@@ -37,41 +37,41 @@ module tb_layer;
     logic data_input_valid;      
     logic output_valid;
     // 输入数据
-    logic [PE_PAGE_NUM_LAYER6-1:0] [DATA_WIDTH_LAYER6-1:0] data_input ;
+    logic [PE_PAGE_NUM_LAYER7-1:0] [DATA_WIDTH_LAYER7-1:0] data_input ;
     
     // 输出数据
-    logic [PE_COL_NUM_LAYER6-1:0] [OUT_WIDTH_LAYER6-1:0] y_out ;
+    logic [PE_COL_NUM_LAYER7-1:0] [OUT_WIDTH_LAYER7-1:0] y_out ;
     logic new_line_out_1;
 
     // 仿真内存
-    logic [DATA_WIDTH_LAYER6-1:0] file_mem [0:MEM_DEPTH-1] ;
+    logic [DATA_WIDTH_LAYER7-1:0] file_mem [0:MEM_DEPTH-1] ;
 
     // =========================================================
     // 3. 模块例化
     // =========================================================
     layer #(
-        .LAYER_NUM(LAYER_NUM_LAYER6),
-        .PE_PAGE_NUM(PE_PAGE_NUM_LAYER6),
-        .PE_ROW_NUM(PE_ROW_NUM_LAYER6),
-        .PE_COL_NUM(PE_COL_NUM_LAYER6),
-        .MAX_POOL(MAX_POOL_LAYER6),
-        .WITH_RELU(WITH_RELU_LAYER6),
-        .KERNEL_COL(KERNEL_COL_LAYER6),
-        .KERNEL_ROW(KERNEL_ROW_LAYER6),
-        .USE_DSP_PE(USE_DSP_PE_LAYER6),
-        .DATA_WIDTH(DATA_WIDTH_LAYER6),
-        .WEIGHT_WIDTH(WEIGHT_WIDTH_LAYER6),
-        .CYCLE_PERIOD_IN(CYCLE_PERIOD_IN_LAYER6),
-        .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT_LAYER6),
-        .STEP_COL(STEP_COL_LAYER6),
-        .STEP_ROW(STEP_ROW_LAYER6),
-        .IMG_COL(IMG_COL_LAYER6),
-        .IMG_ROW(IMG_ROW_LAYER6),
-        .SHIFT_KEY(SHIFT_KEY_LAYER6),
-        .BIAS_WIDTH(BIAS_WIDTH_LAYER6),
-        .OUT_WIDTH(OUT_WIDTH_LAYER6),
-        .PE_PAGE_OUTPUT_WIDTH(PE_PAGE_OUTPUT_WIDTH_LAYER6),
-        .ACC_WIDTH(ACC_WIDTH_LAYER6)
+        .LAYER_NUM(LAYER_NUM_LAYER7),
+        .PE_PAGE_NUM(PE_PAGE_NUM_LAYER7),
+        .PE_ROW_NUM(PE_ROW_NUM_LAYER7),
+        .PE_COL_NUM(PE_COL_NUM_LAYER7),
+        .MAX_POOL(MAX_POOL_LAYER7),
+        .WITH_RELU(WITH_RELU_LAYER7),
+        .KERNEL_COL(KERNEL_COL_LAYER7),
+        .KERNEL_ROW(KERNEL_ROW_LAYER7),
+        .USE_DSP_PE(USE_DSP_PE_LAYER7),
+        .DATA_WIDTH(DATA_WIDTH_LAYER7),
+        .WEIGHT_WIDTH(WEIGHT_WIDTH_LAYER7),
+        .CYCLE_PERIOD_IN(CYCLE_PERIOD_IN_LAYER7),
+        .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT_LAYER7),
+        .STEP_COL(STEP_COL_LAYER7),
+        .STEP_ROW(STEP_ROW_LAYER7),
+        .IMG_COL(IMG_COL_LAYER7),
+        .IMG_ROW(IMG_ROW_LAYER7),
+        .SHIFT_KEY(SHIFT_KEY_LAYER7),
+        .BIAS_WIDTH(BIAS_WIDTH_LAYER7),
+        .OUT_WIDTH(OUT_WIDTH_LAYER7),
+        .PE_PAGE_OUTPUT_WIDTH(PE_PAGE_OUTPUT_WIDTH_LAYER7),
+        .ACC_WIDTH(ACC_WIDTH_LAYER7)
     ) u_layer (
         .clk(clk),
         .clk_en(clk_en),
@@ -104,11 +104,11 @@ module tb_layer;
         for(int i=0; i<MEM_DEPTH; i++) file_mem[i] = 0;
 
         // 读取文件
-        $readmemh(INPUT_FILE_PATH_LAYER6, file_mem);
+        $readmemh(INPUT_FILE_PATH_LAYER7, file_mem);
         
         $display("------------------------------------------------");
-        $display("File Read Check from: %s", INPUT_FILE_PATH_LAYER6);
-        $display("%s",$sformatf("weights_layer%0d_page%0d.mem", LAYER_NUM_LAYER6, 0));
+        $display("File Read Check from: %s", INPUT_FILE_PATH_LAYER7);
+        $display("%s",$sformatf("weights_layer%0d_page%0d.mem", LAYER_NUM_LAYER7, 0));
         $display("Mem[0] (Pix0-Ch0): %h", file_mem[0]);
         $display("Mem[1] (Pix0-Ch1): %h", file_mem[1]);
         $display("------------------------------------------------");
@@ -124,7 +124,7 @@ module tb_layer;
         new_line_input_1 = 0;
         data_input_valid = 0;
         
-        for(int p=0; p<PE_PAGE_NUM_LAYER6; p++) begin
+        for(int p=0; p<PE_PAGE_NUM_LAYER7; p++) begin
             data_input[p] = 0;
         end
 
@@ -134,7 +134,7 @@ module tb_layer;
         repeat(5) @(posedge clk);
         clk_en = 1;             
 
-        for (int index_y = 0; index_y < IMG_ROW_LAYER6 * 2; index_y++) begin 
+        for (int index_y = 0; index_y < IMG_ROW_LAYER7 * 2; index_y++) begin 
             
             // 1. 行首同步
             @(posedge clk);
@@ -145,20 +145,20 @@ module tb_layer;
             new_line_input_1 = 0;
             
             // 2. 输入一行像素
-            for (int index_x = 0; index_x < IMG_COL_LAYER6; index_x++) begin                
-                for (int t=0; t<CYCLE_PERIOD_IN_LAYER6; t++) begin
+            for (int index_x = 0; index_x < IMG_COL_LAYER7; index_x++) begin                
+                for (int t=0; t<CYCLE_PERIOD_IN_LAYER7; t++) begin
                     // --- A. 发送数据 (持续 1 个周期) ---
                     data_input_valid <= 1;
-                    for(int p=0; p<PE_PAGE_NUM_LAYER6; p++) begin
+                    for(int p=0; p<PE_PAGE_NUM_LAYER7; p++) begin
                         int addr; // 声明在循环内，先声明后赋值
 
                         // 地址计算
-                        addr = (index_y * IMG_COL_LAYER6 + index_x) * PE_PAGE_NUM_LAYER6
-                                 * CYCLE_PERIOD_IN_LAYER6 + p * CYCLE_PERIOD_IN_LAYER6 + t;
+                        addr = (index_y * IMG_COL_LAYER7 + index_x) * PE_PAGE_NUM_LAYER7
+                                 * CYCLE_PERIOD_IN_LAYER7 + p * CYCLE_PERIOD_IN_LAYER7 + t;
                         data_input[p] <= file_mem[addr % MEM_DEPTH];
                         // data_input[p] <= index_x * 16 + t + 1; // index_y*64 + 
                         // data_input[p] <= index_y*64 + index_x + 1;
-                        // data_input[p] <= p * CYCLE_PERIOD_IN_LAYER6 + t;
+                        // data_input[p] <= p * CYCLE_PERIOD_IN_LAYER7 + t;
                         // data_input[0] <= 'h10;
                         // data_input[1] <= 'h10;
                         // data_input[2] <= 'heb;
@@ -172,17 +172,17 @@ module tb_layer;
                 // --- B. 空闲等待 (持续 3 个周期) ---
                 // 单像素总周期CYCLE_PERIOD / STEP_COL / STEP_ROW
                 data_input_valid <= 0;
-                repeat((CYCLE_PERIOD_OUT_LAYER6 / STEP_COL_LAYER6 / STEP_ROW_LAYER6-1)
-                *CYCLE_PERIOD_IN_LAYER6) @(posedge clk);
+                repeat((CYCLE_PERIOD_OUT_LAYER7 / STEP_COL_LAYER7 / STEP_ROW_LAYER7-1)
+                *CYCLE_PERIOD_IN_LAYER7) @(posedge clk);
             end
             
             // 3. 行尾间隙
             data_input_valid = 0;
-            repeat((CYCLE_PERIOD_OUT_LAYER6 / STEP_COL_LAYER6 / STEP_ROW_LAYER6)
-                *CYCLE_PERIOD_IN_LAYER6) @(posedge clk); 
-            // if(index_y == IMG_ROW_LAYER6 - 1) begin
-            //     repeat((CYCLE_PERIOD_OUT_LAYER6 / STEP_COL_LAYER6 / STEP_ROW_LAYER6)
-            //     *CYCLE_PERIOD_IN_LAYER6) @(posedge clk);
+            repeat((CYCLE_PERIOD_OUT_LAYER7 / STEP_COL_LAYER7 / STEP_ROW_LAYER7)
+                *CYCLE_PERIOD_IN_LAYER7) @(posedge clk); 
+            // if(index_y == IMG_ROW_LAYER7 - 1) begin
+            //     repeat((CYCLE_PERIOD_OUT_LAYER7 / STEP_COL_LAYER7 / STEP_ROW_LAYER7)
+            //     *CYCLE_PERIOD_IN_LAYER7) @(posedge clk);
             // end
             // repeat(1280*15) @(posedge clk); 
 
@@ -205,12 +205,12 @@ module tb_layer;
 
     // 打开/关闭文件
     initial begin
-        out_file = $fopen(OUTPUT_FILE_PATH_LAYER6, "w");
+        out_file = $fopen(OUTPUT_FILE_PATH_LAYER7, "w");
         if (!out_file) begin
-            $display("Error: Could not open output file: %s", OUTPUT_FILE_PATH_LAYER6);
+            $display("Error: Could not open output file: %s", OUTPUT_FILE_PATH_LAYER7);
             $stop;
         end else begin
-            $display("Output file opened: %s", OUTPUT_FILE_PATH_LAYER6);
+            $display("Output file opened: %s", OUTPUT_FILE_PATH_LAYER7);
         end
     end
 
@@ -235,8 +235,8 @@ module tb_layer;
             if (write_enable && output_valid) begin
             // 2. 写入条件：使能开启 且 输出有效
                 
-                // 格式化写入：一次写入 PE_COL_NUM_LAYER6 个数据
-                for (int c = 0; c < PE_COL_NUM_LAYER6; c++) begin
+                // 格式化写入：一次写入 PE_COL_NUM_LAYER7 个数据
+                for (int c = 0; c < PE_COL_NUM_LAYER7; c++) begin
                     $fwrite(out_file, "%6h ", y_out[c]);
                     // $display("Time %t: y_out = %2h .", $time, y_out[c]);
                 end

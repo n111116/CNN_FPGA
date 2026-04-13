@@ -1,11 +1,7 @@
-`timescale 1ns / 1ps
-
 module char_overlay #(
-    // [修改] 去掉了 int
     parameter CROP_HEIGHT = 128,
     parameter FONT_FILE   = "chars_16x16.mem"
 )(
-    // [修改] 移除了 wire，直接使用 logic
     input  logic               clk_video,
     input  logic               rst_n_video,
     input  logic               video_vs_in,
@@ -292,7 +288,7 @@ module char_overlay #(
     
     always_ff @(posedge clk_video) begin
         if (char_pixel) 
-            video_rgb_out <= 24'hFF_00_FF; // 粉色文字
+            video_rgb_out <= 24'hFF_00_00; // 红色文字
         else            
             // 取 T-3 时刻的数据进寄存器，输出正好是绝对延迟 4 拍！严格与 DE 信号对齐。
             video_rgb_out <= rgb_delay[2]; 

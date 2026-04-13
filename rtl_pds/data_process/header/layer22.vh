@@ -24,17 +24,17 @@
     // 2. 位宽参数 (来自 MAT)  
     parameter int unsigned DATA_WIDTH_LAYER22       = 9;
     parameter int unsigned WEIGHT_WIDTH_LAYER22     = 10;
-    parameter int unsigned BIAS_WIDTH_LAYER22       = 18;
+    parameter int unsigned BIAS_WIDTH_LAYER22       = 17;
     parameter int unsigned OUT_WIDTH_LAYER22        = 9;
 
     // 3. 周期与映射参数
     parameter int unsigned CYCLE_PERIOD_IN_LAYER22  = 16; 
     parameter int unsigned CYCLE_PERIOD_OUT_LAYER22 = 32;
     parameter int unsigned CYCLE_PERIOD_LAYER22     = CYCLE_PERIOD_IN_LAYER22 * CYCLE_PERIOD_OUT_LAYER22;
-    parameter int unsigned SHIFT_KEY_LAYER22        = 10;
+    parameter int unsigned SHIFT_KEY_LAYER22        = 9;
 
     // 4. 图像尺寸
-    parameter int unsigned IMG_COL_LAYER22          = 80;
+    parameter int unsigned IMG_COL_LAYER22          = 72;
     parameter int unsigned IMG_ROW_LAYER22          = 20;
 
     // 5. 自动计算的中间位宽
@@ -42,7 +42,7 @@
     parameter int unsigned ACC_WIDTH_LAYER22        = 27;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER22       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer22_input_9bit.hex";
+    localparam INPUT_FILE_PATH_LAYER22       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer22_input_9bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER22      = "sim_out/layer22_output.hex";
 
 `endif // LAYER22_VH

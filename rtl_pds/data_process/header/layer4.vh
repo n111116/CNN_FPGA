@@ -8,13 +8,13 @@
     parameter int unsigned LAYER_NUM_LAYER4 = 4;
 
     // 1. 架构参数
-    parameter int unsigned PE_PAGE_NUM_LAYER4      = 2;
+    parameter int unsigned PE_PAGE_NUM_LAYER4      = 4;
     parameter int unsigned PE_COL_NUM_LAYER4       = 2;  
     parameter int unsigned PE_ROW_NUM_LAYER4       = 9;  
     parameter int unsigned KERNEL_COL_LAYER4       = 3;
     parameter int unsigned KERNEL_ROW_LAYER4       = 3;  
     parameter int unsigned CHANNEL_OUT_NUM_LAYER4  = 64;
-    parameter int unsigned CHANNEL_IN_NUM_LAYER4   = 32;  
+    parameter int unsigned CHANNEL_IN_NUM_LAYER4   = 64;  
     parameter int unsigned MAX_POOL_LAYER4         = 0;
     parameter int unsigned WITH_RELU_LAYER4        = 1;
     parameter int unsigned STEP_ROW_LAYER4         = 1;
@@ -39,10 +39,10 @@
 
     // 5. 自动计算的中间位宽
     parameter int unsigned PE_PAGE_OUTPUT_WIDTH_LAYER4 = 21;
-    parameter int unsigned ACC_WIDTH_LAYER4        = 26;
+    parameter int unsigned ACC_WIDTH_LAYER4        = 27;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER4       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer4_input_8bit.hex";
+    localparam INPUT_FILE_PATH_LAYER4       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer4_input_8bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER4      = "sim_out/layer4_output.hex";
 
 `endif // LAYER4_VH

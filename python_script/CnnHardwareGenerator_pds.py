@@ -1,20 +1,12 @@
 import scipy.io
 import numpy as np
 import os
-# 1080P
-# BASE_IMG_COL = 1920
-# BASE_IMG_ROW = 1080
 # 720P
 BASE_IMG_COL = 1280
 BASE_IMG_ROW = 720
-# 800P
-# BASE_IMG_COL = 1600
-# BASE_IMG_ROW = 800
-# BASE_IMG_COL = 640
-# BASE_IMG_ROW = 640
 
-BASE_IMG_COL_LPERNET = 80
-BASE_IMG_ROW_LPERNET = 20
+BASE_IMG_ROW_LPERNET = 40
+BASE_IMG_COL_LPERNET = 144
 
 # 变量的定义
 # layer_num: 当前层编号
@@ -61,7 +53,7 @@ class CnnHardwareGenerator:
                  bit_width_out = 8,
                  output_mem_dir="rtl_pds/data_process/mem_data", 
                  output_vh_dir="rtl_pds/data_process/header",
-                 mat_file_dir="conv_data_yolov3"):
+                 mat_file_dir="conv_data_yolov3_new_pds"):
         """
         初始化硬件配置生成类
         """
@@ -93,8 +85,8 @@ class CnnHardwareGenerator:
         self.shift_key = 0
         # 默认有 relu，除第8、11层无 relu
         self.with_relu = with_relu # 1 if layer_num not in [8, 11] else 0
-        # 默认上一层层号为该层 -1 ，除了第 9 层。 第 9 层的上一层与第 6 层的上一层同为 5.
-        self.prev_layer_num = layer_num - 1 if layer_num != 9 else 5
+        # 默认上一层层号为该层 -1 ，除了第 8 层。 第 8 层的上一层与第 5 层的上一层同为 4.
+        self.prev_layer_num = layer_num - 1 if layer_num != 8 else 4
 
         # 路径设置，对yolov3
         if(self.layer_num == 0):
@@ -102,10 +94,10 @@ class CnnHardwareGenerator:
             self.relu_name = "node_relu"
         else:
             self.layer_name = f"node_conv2d_{self.layer_num}"
-            if(self.layer_num == 8 or self.layer_num == 11):
+            if(self.layer_num == 7 or self.layer_num == 10):
                 self.relu_name = None
             else:
-                if(self.layer_num <= 7):
+                if(self.layer_num <= 6):
                     self.relu_name = f"node_relu_{self.layer_num}"
                 else:
                     self.relu_name = f"node_relu_{self.layer_num - 1}"
@@ -308,7 +300,7 @@ class CnnHardwareGenerator:
     parameter int unsigned ACC_WIDTH_LAYER{n}        = {acc_bw};
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER{n}       = "{os.getcwd().replace('\\', '/')}/conv_data_hex/layer{self.layer_num}_input_{self.bit_widths['data']}bit.hex";
+    localparam INPUT_FILE_PATH_LAYER{n}       = "{os.getcwd().replace('\\', '/')}/conv_data_hex_pds/layer{self.layer_num}_input_{self.bit_widths['data']}bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER{n}      = "sim_out/layer{n}_output.hex";
 
 `endif // LAYER{n}_VH
@@ -334,7 +326,7 @@ class CnnHardwareGenerator:
                     # hex_strings.append(format(511, 'x'))
         # 用换行符连接所有字符串，得到最终 content
         content = '\n'.join(hex_strings)
-        hex_file_name = f"conv_data_hex/layer{self.layer_num}_input_{self.bit_widths['data']}bit.hex"
+        hex_file_name = f"conv_data_hex_pds/layer{self.layer_num}_input_{self.bit_widths['data']}bit.hex"
         
         with open(hex_file_name, 'w') as f:
             f.write(content)
@@ -350,7 +342,7 @@ class CnnHardwareGenerator:
 layer0 = CnnHardwareGenerator(
     layer_num=0,
     pe_page_num=3,
-    pe_col_num=2,
+    pe_col_num=1,
     cycle_period_cin=1,
     cycle_period_cout=8,
     use_dsp=1,
@@ -389,7 +381,7 @@ layer2 = CnnHardwareGenerator(
 layer3 = CnnHardwareGenerator(
     layer_num=3,
     pe_page_num=layer2.pe_col_num,
-    pe_col_num=2,
+    pe_col_num=4,
     cycle_period_cin=layer2.cycle_period_cout,
     cycle_period_cout=16,
     use_dsp=1,
@@ -413,7 +405,7 @@ layer4 = CnnHardwareGenerator(
 layer5 = CnnHardwareGenerator(
     layer_num=5,
     pe_page_num=layer4.pe_col_num,
-    pe_col_num=4,
+    pe_col_num=2,
     cycle_period_cin=layer4.cycle_period_cout,
     cycle_period_cout=16,
     use_dsp=0,
@@ -435,20 +427,9 @@ layer6 = CnnHardwareGenerator(
 layer7 = CnnHardwareGenerator(
     layer_num=7,
     pe_page_num=layer6.pe_col_num,
-    pe_col_num=2,
+    pe_col_num=1,
     cycle_period_cin=layer6.cycle_period_cout,
     cycle_period_cout=16,
-    use_dsp=0,
-    img_row=int(BASE_IMG_ROW/16),
-    img_col=int(BASE_IMG_COL/16)
-)
-
-layer8 = CnnHardwareGenerator(
-    layer_num=8,
-    pe_page_num=layer7.pe_col_num,
-    pe_col_num=1,
-    cycle_period_cin=layer7.cycle_period_cout,
-    cycle_period_cout=32,
     kernel_row=1,  # 1*1卷积
     kernel_col=1,  # 1*1卷积
     use_dsp=0,
@@ -458,11 +439,22 @@ layer8 = CnnHardwareGenerator(
     img_col=int(BASE_IMG_COL/16)
 )
 
+layer8 = CnnHardwareGenerator(
+    layer_num=8,
+    pe_page_num=layer4.pe_col_num,
+    pe_col_num=2,
+    cycle_period_cin=layer4.cycle_period_cout,
+    cycle_period_cout=16,
+    use_dsp=0,
+    img_row=int(BASE_IMG_ROW/16),
+    img_col=int(BASE_IMG_COL/16)
+)
+
 layer9 = CnnHardwareGenerator(
     layer_num=9,
-    pe_page_num=layer5.pe_col_num,
+    pe_page_num=layer8.pe_col_num,
     pe_col_num=1,
-    cycle_period_cin=layer5.cycle_period_cout,
+    cycle_period_cin=layer8.cycle_period_cout,
     cycle_period_cout=32,
     use_dsp=0,
     img_row=int(BASE_IMG_ROW/16),
@@ -472,20 +464,9 @@ layer9 = CnnHardwareGenerator(
 layer10 = CnnHardwareGenerator(
     layer_num=10,
     pe_page_num=layer9.pe_col_num,
-    pe_col_num=2,
+    pe_col_num=1,
     cycle_period_cin=layer9.cycle_period_cout,
     cycle_period_cout=16,
-    use_dsp=0,
-    img_row=int(BASE_IMG_ROW/16),
-    img_col=int(BASE_IMG_COL/16)
-)
-
-layer11 = CnnHardwareGenerator(
-    layer_num=11,
-    pe_page_num=layer10.pe_col_num,
-    pe_col_num=1,
-    cycle_period_cin=layer10.cycle_period_cout,
-    cycle_period_cout=32,
     kernel_row=1,  # 1*1卷积
     kernel_col=1,  # 1*1卷积
     use_dsp=0,
@@ -494,35 +475,40 @@ layer11 = CnnHardwareGenerator(
     img_row=int(BASE_IMG_ROW/16),
     img_col=int(BASE_IMG_COL/16)
 )
+
 # 从 layer20 开始是 lpernetv8 的层结构
 layer20 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=20,
     pe_page_num=3,
     pe_col_num=1,
     cycle_period_cin=1,
     cycle_period_cout=16,
     bit_width_out=9,
+    step_row=1,
+    step_col=2,
     img_row=int(BASE_IMG_ROW_LPERNET),
     img_col=int(BASE_IMG_COL_LPERNET)
 )
 layer21 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=21,
     pe_page_num=layer20.pe_col_num,
     pe_col_num=1,
     cycle_period_cin=layer20.cycle_period_cout,
-    cycle_period_cout=layer20.cycle_period_cin,
+    cycle_period_cout=layer20.cycle_period_cin*2,
     bit_width_data=9,
     bit_width_out=9,
     max_pool=1,
     with_relu=0,
+    step_row=2,
+    step_col=1,
     img_row=int(BASE_IMG_ROW_LPERNET),
-    img_col=int(BASE_IMG_COL_LPERNET)
+    img_col=int(BASE_IMG_COL_LPERNET/2)
 )
 # 特殊情况，第20层和第21层的速度远快于第22层，我们增加第20层的行间隙并在22层输入前进行解耦
 layer22 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=22,
     pe_page_num=layer21.pe_col_num,
     pe_col_num=1,
@@ -532,11 +518,11 @@ layer22 = CnnHardwareGenerator(
     bit_width_out=9,
     step_row=1,
     step_col=2,
-    img_row=int(BASE_IMG_ROW_LPERNET),
-    img_col=int(BASE_IMG_COL_LPERNET)
+    img_row=int(BASE_IMG_ROW_LPERNET/2),
+    img_col=int(BASE_IMG_COL_LPERNET/2)
 )
 layer23 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=23,
     pe_page_num=layer22.pe_col_num,
     pe_col_num=1,
@@ -548,11 +534,11 @@ layer23 = CnnHardwareGenerator(
     with_relu=0,
     step_row=2,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET),
-    img_col=int(BASE_IMG_COL_LPERNET/2)
+    img_row=int(BASE_IMG_ROW_LPERNET/2),
+    img_col=int(BASE_IMG_COL_LPERNET/4)
 )
 layer24 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=24,
     pe_page_num=layer23.pe_col_num,
     pe_col_num=1,
@@ -562,11 +548,11 @@ layer24 = CnnHardwareGenerator(
     bit_width_out=9,
     step_row=1,
     step_col=2,
-    img_row=int(BASE_IMG_ROW_LPERNET/2),
-    img_col=int(BASE_IMG_COL_LPERNET/2)
+    img_row=int(BASE_IMG_ROW_LPERNET/4),
+    img_col=int(BASE_IMG_COL_LPERNET/4)
 )
 layer25 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=25,
     pe_page_num=layer24.pe_col_num,
     pe_col_num=1,
@@ -578,12 +564,12 @@ layer25 = CnnHardwareGenerator(
     with_relu=0,
     step_row=2,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/2),
-    img_col=int(BASE_IMG_COL_LPERNET/4)
+    img_row=int(BASE_IMG_ROW_LPERNET/4),
+    img_col=int(BASE_IMG_COL_LPERNET/8)
 )
 
 layer26 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=26,
     pe_page_num=layer25.pe_col_num,
     pe_col_num=2,
@@ -593,12 +579,12 @@ layer26 = CnnHardwareGenerator(
     bit_width_out=9,
     step_row=1,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/4),
-    img_col=int(BASE_IMG_COL_LPERNET/4)
+    img_row=int(BASE_IMG_ROW_LPERNET/8),
+    img_col=int(BASE_IMG_COL_LPERNET/8)
 )
 
 layer27 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=27,
     pe_page_num=layer26.pe_col_num,
     pe_col_num=2,
@@ -610,11 +596,11 @@ layer27 = CnnHardwareGenerator(
     kernel_row=1,
     step_row=1,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/4),
-    img_col=int(BASE_IMG_COL_LPERNET/4)
+    img_row=int(BASE_IMG_ROW_LPERNET/8),
+    img_col=int(BASE_IMG_COL_LPERNET/8)
 )
 layer28 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8",
+    mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=28,
     pe_page_num=layer26.pe_col_num,
     pe_col_num=2,
@@ -627,12 +613,12 @@ layer28 = CnnHardwareGenerator(
     kernel_row=1,
     step_row=1,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/4),
-    img_col=int(BASE_IMG_COL_LPERNET/4)
+    img_row=int(BASE_IMG_ROW_LPERNET/8),
+    img_col=int(BASE_IMG_COL_LPERNET/8)
 )
 
-all_layers = [layer0, layer1, layer2, layer3, layer4, layer5, layer6, layer7, layer8, layer9, layer10, layer11, \
-              layer20, layer21, layer22, layer23, layer24, layer25, layer26, layer27, layer28]
+all_layers = [layer0, layer1, layer2, layer3, layer4, layer5, layer6, layer7, layer8, layer9, layer10, \
+    layer20, layer21, layer22, layer23, layer24, layer25, layer26, layer27, layer28]
 
 # ================= 使用示例 =================
 if __name__ == "__main__":

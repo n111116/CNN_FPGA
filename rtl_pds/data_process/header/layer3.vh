@@ -9,11 +9,11 @@
 
     // 1. 架构参数
     parameter int unsigned PE_PAGE_NUM_LAYER3      = 1;
-    parameter int unsigned PE_COL_NUM_LAYER3       = 2;  
+    parameter int unsigned PE_COL_NUM_LAYER3       = 4;  
     parameter int unsigned PE_ROW_NUM_LAYER3       = 9;  
     parameter int unsigned KERNEL_COL_LAYER3       = 3;
     parameter int unsigned KERNEL_ROW_LAYER3       = 3;  
-    parameter int unsigned CHANNEL_OUT_NUM_LAYER3  = 32;
+    parameter int unsigned CHANNEL_OUT_NUM_LAYER3  = 64;
     parameter int unsigned CHANNEL_IN_NUM_LAYER3   = 32;  
     parameter int unsigned MAX_POOL_LAYER3         = 0;
     parameter int unsigned WITH_RELU_LAYER3        = 1;
@@ -24,7 +24,7 @@
     // 2. 位宽参数 (来自 MAT)  
     parameter int unsigned DATA_WIDTH_LAYER3       = 8;
     parameter int unsigned WEIGHT_WIDTH_LAYER3     = 9;
-    parameter int unsigned BIAS_WIDTH_LAYER3       = 16;
+    parameter int unsigned BIAS_WIDTH_LAYER3       = 17;
     parameter int unsigned OUT_WIDTH_LAYER3        = 8;
 
     // 3. 周期与映射参数
@@ -42,7 +42,7 @@
     parameter int unsigned ACC_WIDTH_LAYER3        = 26;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER3       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer3_input_8bit.hex";
+    localparam INPUT_FILE_PATH_LAYER3       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer3_input_8bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER3      = "sim_out/layer3_output.hex";
 
 `endif // LAYER3_VH

@@ -8,13 +8,13 @@
     parameter int unsigned LAYER_NUM_LAYER9 = 9;
 
     // 1. 架构参数
-    parameter int unsigned PE_PAGE_NUM_LAYER9      = 4;
+    parameter int unsigned PE_PAGE_NUM_LAYER9      = 2;
     parameter int unsigned PE_COL_NUM_LAYER9       = 1;  
     parameter int unsigned PE_ROW_NUM_LAYER9       = 9;  
     parameter int unsigned KERNEL_COL_LAYER9       = 3;
     parameter int unsigned KERNEL_ROW_LAYER9       = 3;  
     parameter int unsigned CHANNEL_OUT_NUM_LAYER9  = 32;
-    parameter int unsigned CHANNEL_IN_NUM_LAYER9   = 64;  
+    parameter int unsigned CHANNEL_IN_NUM_LAYER9   = 32;  
     parameter int unsigned MAX_POOL_LAYER9         = 0;
     parameter int unsigned WITH_RELU_LAYER9        = 1;
     parameter int unsigned STEP_ROW_LAYER9         = 1;
@@ -24,7 +24,7 @@
     // 2. 位宽参数 (来自 MAT)  
     parameter int unsigned DATA_WIDTH_LAYER9       = 8;
     parameter int unsigned WEIGHT_WIDTH_LAYER9     = 9;
-    parameter int unsigned BIAS_WIDTH_LAYER9       = 17;
+    parameter int unsigned BIAS_WIDTH_LAYER9       = 16;
     parameter int unsigned OUT_WIDTH_LAYER9        = 8;
 
     // 3. 周期与映射参数
@@ -39,10 +39,10 @@
 
     // 5. 自动计算的中间位宽
     parameter int unsigned PE_PAGE_OUTPUT_WIDTH_LAYER9 = 21;
-    parameter int unsigned ACC_WIDTH_LAYER9        = 27;
+    parameter int unsigned ACC_WIDTH_LAYER9        = 26;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER9       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer9_input_8bit.hex";
+    localparam INPUT_FILE_PATH_LAYER9       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer9_input_8bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER9      = "sim_out/layer9_output.hex";
 
 `endif // LAYER9_VH

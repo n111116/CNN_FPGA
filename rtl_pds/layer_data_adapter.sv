@@ -69,7 +69,7 @@ module layer_data_adapter #(
             new_line_1       <= 1'b0;
             data_latch_valid <= 1'b0;
             new_line_delay_cnt <= 4'd0;
-            for (i = 0; i < CHANNEL_IN; i++) pe_parallel_data[i] <= '0;
+            for (i = 0; i < 24; i++) pe_parallel_data[i] <= '0;
         end else begin
             // 默认拉低脉冲信号
             input_valid <= 1'b0;

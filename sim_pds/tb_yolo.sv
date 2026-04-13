@@ -14,7 +14,6 @@
 `include "layer8.vh"
 `include "layer9.vh"
 `include "layer10.vh"
-`include "layer11.vh"
 
 module tb_yolo;
 
@@ -43,9 +42,9 @@ module tb_yolo;
     
     // 输出接口 1 信号 (Layer 8 原始特征图)
     // 【关键】：这里必须是压缩数组
-    logic [PE_COL_NUM_LAYER8-1:0][OUT_WIDTH_LAYER8-1:0] layer_y_out_layer8;
-    logic out_valid_layer8;
-    logic new_line_out_1_layer8;
+    logic [PE_COL_NUM_LAYER7-1:0][OUT_WIDTH_LAYER7-1:0] layer_y_out_layer7;
+    logic out_valid_layer7;
+    logic new_line_out_1_layer7;
 
     // 输出接口 2 信号 (Post Process 极值坐标与置信度)
     logic [31:0] post_packet_data;
@@ -72,9 +71,9 @@ module tb_yolo;
         .data_input_valid       (data_input_valid),
         .data_input             (data_input),
 
-        .layer_y_out_layer8     (layer_y_out_layer8),
-        .out_valid_layer8       (out_valid_layer8),
-        .new_line_out_1_layer8  (new_line_out_1_layer8),
+        .layer_y_out_layer7     (layer_y_out_layer7),
+        .out_valid_layer7       (out_valid_layer7),
+        .new_line_out_1_layer7  (new_line_out_1_layer7),
 
         .post_packet_data       (post_packet_data),
         .post_packet_valid      (post_packet_valid),
@@ -152,12 +151,12 @@ module tb_yolo;
                             addr = (index_y * IMG_COL_LAYER0 + index_x) * PE_PAGE_NUM_LAYER0 * CYCLE_PERIOD_IN_LAYER0 + p * CYCLE_PERIOD_IN_LAYER0 + t;
                             
                             // 若读取了真实图片数据，使用下一行：
-                            // data_input[p] <= file_mem[addr % MEM_DEPTH];
+                            data_input[p] <= file_mem[addr % MEM_DEPTH];
                             
                             // 这里采用模拟数据 (例如固定值 0x10) 驱动网络
-                            data_input[0] <= 'h10; 
-                            data_input[1] <= 'h10; 
-                            data_input[2] <= 'heb; 
+                            // data_input[0] <= 'h10; 
+                            // data_input[1] <= 'h10; 
+                            // data_input[2] <= 'heb; 
                         end
                         @(posedge clk); 
                     end

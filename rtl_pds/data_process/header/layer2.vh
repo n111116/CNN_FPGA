@@ -31,7 +31,7 @@
     parameter int unsigned CYCLE_PERIOD_IN_LAYER2  = 4; 
     parameter int unsigned CYCLE_PERIOD_OUT_LAYER2 = 32;
     parameter int unsigned CYCLE_PERIOD_LAYER2     = CYCLE_PERIOD_IN_LAYER2 * CYCLE_PERIOD_OUT_LAYER2;
-    parameter int unsigned SHIFT_KEY_LAYER2        = 7;
+    parameter int unsigned SHIFT_KEY_LAYER2        = 8;
 
     // 4. Í¼Ïñ³ß´ç
     parameter int unsigned IMG_COL_LAYER2          = 320;
@@ -42,7 +42,7 @@
     parameter int unsigned ACC_WIDTH_LAYER2        = 25;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER2       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer2_input_8bit.hex";
+    localparam INPUT_FILE_PATH_LAYER2       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer2_input_8bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER2      = "sim_out/layer2_output.hex";
 
 `endif // LAYER2_VH

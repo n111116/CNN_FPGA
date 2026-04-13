@@ -2,7 +2,7 @@ import os
 import scipy.io
 
 # 这里选择要验证的仿真层
-from CnnHardwareGenerator import layer6 as layer_to_test
+from CnnHardwareGenerator_pds import layer7 as layer_to_test
 # ================= 配置参数 =================
 layer_to_test.load_mat_data()
 # 1. 原始参考数据
@@ -11,31 +11,13 @@ if(layer_to_test.with_relu == 1):
 else:
     REF_FILE_PATH = layer_to_test.layer_mat_file
 
-# REF_FILE_PATH = layer_to_test.layer_mat_file
-
-# 2. ModelSim/USB 仿真输出数据 指定文件夹路径
-# # 获取usb_data文件夹中最新的 .hex 文件
-# folder_path = "usb_data"
-# file_pattern = os.path.join(folder_path, "*.hex")
-# files = glob.glob(file_pattern)
-# 
-# if files:
-#     latest_file = max(files, key=os.path.getmtime)
-#     SIM_FILE_PATH = latest_file
-#     print(f"Found latest file: {SIM_FILE_PATH}")
-# else:
-#     SIM_FILE_PATH = None
-#     print("Error: No hex files found in folder.")
-
 SIM_FILE_PATH = f"sim_pds/sim_modelsim/sim_out/layer{layer_to_test.layer_num}_output.hex"
 
 # 3. 硬件参数
 IMG_ROW = layer_to_test.img_row // layer_to_test.step_row
 IMG_COL = layer_to_test.img_col // layer_to_test.step_col
-
+# print("****",IMG_ROW,IMG_COL)
 CHANNELS = layer_to_test.cycle_period_cout*layer_to_test.pe_col_num     # 总输出通道数
-if layer_to_test.layer_num == 33:
-    CHANNELS = 40
 PE_COL_NUM = layer_to_test.pe_col_num                                   # 硬件 PE 列数 (并行度)
 CYCLE_PERIOD_OUT = layer_to_test.cycle_period_cout                      # 输出复用周期
 CYCLE_PERIOD_IN = layer_to_test.cycle_period_cin 
@@ -171,11 +153,11 @@ def compare_data():
                     for pe_idx in range(PE_COL_NUM):
                         channel_idx = pe_idx * CYCLE_PERIOD_OUT + t
                         # ref_flat_idx = (r * IMG_COL + c) * CHANNELS + channel_idx
-                        # layer8实际上只有4个输出通道
-                        if layer_to_test.layer_num == 8 and channel_idx >= 4:
+                        # layer7实际上只有4个输出通道
+                        if layer_to_test.layer_num == 7 and channel_idx >= 4:
                             pass
-                        # layer11实际上只有5个输出通道
-                        elif layer_to_test.layer_num == 11 and channel_idx >= 5:
+                        # layer10实际上只有5个输出通道
+                        elif layer_to_test.layer_num == 10 and channel_idx >= 5:
                             pass
                             # print(channel_idx)
                         # layer28实际上只有76个输出通道

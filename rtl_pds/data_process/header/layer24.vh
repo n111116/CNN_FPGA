@@ -31,10 +31,10 @@
     parameter int unsigned CYCLE_PERIOD_IN_LAYER24  = 32; 
     parameter int unsigned CYCLE_PERIOD_OUT_LAYER24 = 64;
     parameter int unsigned CYCLE_PERIOD_LAYER24     = CYCLE_PERIOD_IN_LAYER24 * CYCLE_PERIOD_OUT_LAYER24;
-    parameter int unsigned SHIFT_KEY_LAYER24        = 9;
+    parameter int unsigned SHIFT_KEY_LAYER24        = 10;
 
     // 4. 图像尺寸
-    parameter int unsigned IMG_COL_LAYER24          = 40;
+    parameter int unsigned IMG_COL_LAYER24          = 36;
     parameter int unsigned IMG_ROW_LAYER24          = 10;
 
     // 5. 自动计算的中间位宽
@@ -42,7 +42,7 @@
     parameter int unsigned ACC_WIDTH_LAYER24        = 28;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER24       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer24_input_9bit.hex";
+    localparam INPUT_FILE_PATH_LAYER24       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer24_input_9bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER24      = "sim_out/layer24_output.hex";
 
 `endif // LAYER24_VH

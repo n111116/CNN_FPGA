@@ -24,7 +24,7 @@
     // 2. 位宽参数 (来自 MAT)  
     parameter int unsigned DATA_WIDTH_LAYER26       = 9;
     parameter int unsigned WEIGHT_WIDTH_LAYER26     = 10;
-    parameter int unsigned BIAS_WIDTH_LAYER26       = 18;
+    parameter int unsigned BIAS_WIDTH_LAYER26       = 19;
     parameter int unsigned OUT_WIDTH_LAYER26        = 9;
 
     // 3. 周期与映射参数
@@ -34,7 +34,7 @@
     parameter int unsigned SHIFT_KEY_LAYER26        = 9;
 
     // 4. 图像尺寸
-    parameter int unsigned IMG_COL_LAYER26          = 20;
+    parameter int unsigned IMG_COL_LAYER26          = 18;
     parameter int unsigned IMG_ROW_LAYER26          = 5;
 
     // 5. 自动计算的中间位宽
@@ -42,7 +42,7 @@
     parameter int unsigned ACC_WIDTH_LAYER26        = 29;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER26       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer26_input_9bit.hex";
+    localparam INPUT_FILE_PATH_LAYER26       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer26_input_9bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER26      = "sim_out/layer26_output.hex";
 
 `endif // LAYER26_VH

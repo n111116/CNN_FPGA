@@ -31,10 +31,10 @@
     parameter int unsigned CYCLE_PERIOD_IN_LAYER27  = 64; 
     parameter int unsigned CYCLE_PERIOD_OUT_LAYER27 = 64;
     parameter int unsigned CYCLE_PERIOD_LAYER27     = CYCLE_PERIOD_IN_LAYER27 * CYCLE_PERIOD_OUT_LAYER27;
-    parameter int unsigned SHIFT_KEY_LAYER27        = 10;
+    parameter int unsigned SHIFT_KEY_LAYER27        = 9;
 
     // 4. 图像尺寸
-    parameter int unsigned IMG_COL_LAYER27          = 20;
+    parameter int unsigned IMG_COL_LAYER27          = 18;
     parameter int unsigned IMG_ROW_LAYER27          = 5;
 
     // 5. 自动计算的中间位宽
@@ -42,7 +42,7 @@
     parameter int unsigned ACC_WIDTH_LAYER27        = 28;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER27       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer27_input_9bit.hex";
+    localparam INPUT_FILE_PATH_LAYER27       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer27_input_9bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER27      = "sim_out/layer27_output.hex";
 
 `endif // LAYER27_VH

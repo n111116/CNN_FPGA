@@ -12,10 +12,10 @@
 `include "data_process/header/layer8.vh"
 `include "data_process/header/layer9.vh"
 `include "data_process/header/layer10.vh"
-`include "data_process/header/layer11.vh"
+// `include "data_process/header/layer11.vh" // 第11层已被移除，注释掉头文件
 
 module top_yolo #(
-    // --- Post Process (Layer 11) 参数 ---
+    // --- Post Process (原 Layer 11, 现接 Layer 10) 参数 ---
     parameter LUT_FILE      = "sigmoid_lut_9bit_to_8bit_h.mem",
     parameter bit    CONV_POSITIVE = 1,
     parameter int    CONF_WIDTH    = 8,
@@ -29,16 +29,16 @@ module top_yolo #(
     // ---------------- 输入接口 (To Layer 0) ----------------
     input  logic                                                new_line_input_1,
     input  logic                                                data_input_valid,
-    // [修改]: 压缩数组形式
+    // 压缩数组形式
     input  logic [PE_PAGE_NUM_LAYER0-1:0][DATA_WIDTH_LAYER0-1:0] data_input,
 
-    // ---------------- 输出接口 1 (Layer 8 原始特征图) ----------------
-    // [修改]: 压缩数组形式
-    output logic [PE_COL_NUM_LAYER8-1:0][OUT_WIDTH_LAYER8-1:0]  layer_y_out_layer8,
-    output logic                                                out_valid_layer8,
-    output logic                                                new_line_out_1_layer8,
+    // ---------------- 输出接口 1 (Layer 7 原始特征图) ----------------
+    // 压缩数组形式
+    output logic [PE_COL_NUM_LAYER7-1:0][OUT_WIDTH_LAYER7-1:0]  layer_y_out_layer7,
+    output logic                                                out_valid_layer7,
+    output logic                                                new_line_out_1_layer7,
 
-    // ---------------- 输出接口 2 (Layer 11 经后处理打包输出) ----------------
+    // ---------------- 输出接口 2 (Layer 10 经后处理打包输出) ----------------
     output logic [31:0]                                         post_packet_data,
     output logic                                                post_packet_valid,
     output logic                                                post_frame_done
@@ -66,12 +66,12 @@ module top_yolo #(
     logic out_valid_layer3;
     logic new_line_out_1_layer3;
 
-    // Layer 4 -> Layer 5
+    // Layer 4 -> Layer 5 & Layer 8
     logic [PE_COL_NUM_LAYER4-1:0][OUT_WIDTH_LAYER4-1:0] layer_y_out_layer4;
     logic out_valid_layer4;
     logic new_line_out_1_layer4;
 
-    // Layer 5 -> Layer 6 & Layer 9
+    // Layer 5 -> Layer 6
     logic [PE_COL_NUM_LAYER5-1:0][OUT_WIDTH_LAYER5-1:0] layer_y_out_layer5;
     logic out_valid_layer5;
     logic new_line_out_1_layer5;
@@ -81,27 +81,22 @@ module top_yolo #(
     logic out_valid_layer6;
     logic new_line_out_1_layer6;
 
-    // Layer 7 -> Layer 8
-    logic [PE_COL_NUM_LAYER7-1:0][OUT_WIDTH_LAYER7-1:0] layer_y_out_layer7;
-    logic out_valid_layer7;
-    logic new_line_out_1_layer7;
-
-    // // Layer 8 -> cv3 post_conv_2d 已在输出端口中定义
-
+    // Layer 7 -> Adapter (在模块输出端口中已定义 Layer 7 信号)
+    
+    // Layer 8 -> Layer 9
+    logic [PE_COL_NUM_LAYER8-1:0][OUT_WIDTH_LAYER8-1:0] layer_y_out_layer8;
+    logic out_valid_layer8;
+    logic new_line_out_1_layer8;
+    
     // Layer 9 -> Layer 10
     logic [PE_COL_NUM_LAYER9-1:0][OUT_WIDTH_LAYER9-1:0] layer_y_out_layer9;
     logic out_valid_layer9;
     logic new_line_out_1_layer9;
 
-    // Layer 10 -> Layer 11
+    // Layer 10 -> Cv3 conv2d Post Process
     logic [PE_COL_NUM_LAYER10-1:0][OUT_WIDTH_LAYER10-1:0] layer_y_out_layer10;
     logic out_valid_layer10;
     logic new_line_out_1_layer10;
-
-    // Layer 11 -> Adatper
-    logic [PE_COL_NUM_LAYER11-1:0][OUT_WIDTH_LAYER11-1:0] layer_y_out_layer11;
-    logic out_valid_layer11;
-    logic new_line_out_1_layer11;
 
 
 // =========================================================
@@ -359,7 +354,7 @@ module top_yolo #(
         .output_valid(out_valid_layer6)
     );
 
-    // Layer 7
+    // Layer 7 作为输出端口的一部分
     layer #(
         .LAYER_NUM(LAYER_NUM_LAYER7),
         .PE_PAGE_NUM(PE_PAGE_NUM_LAYER7),
@@ -390,6 +385,8 @@ module top_yolo #(
         .new_line_input_1(new_line_out_1_layer6),
         .data_input_valid(out_valid_layer6),
         .data_input(layer_y_out_layer6),
+        
+        // --- 核心修改：连接到模块的 Top 级输出接口 ---
         .y_out(layer_y_out_layer7),
         .new_line_out_1(new_line_out_1_layer7),
         .output_valid(out_valid_layer7)
@@ -423,15 +420,16 @@ module top_yolo #(
         .clk(clk),
         .clk_en(clk_en),
         .rst_n(rst_n),
-        .new_line_input_1(new_line_out_1_layer7),
-        .data_input_valid(out_valid_layer7),
-        .data_input(layer_y_out_layer7),
+        // 从 Layer 4 的输出端口取数据
+        .new_line_input_1(new_line_out_1_layer4),
+        .data_input_valid(out_valid_layer4),
+        .data_input(layer_y_out_layer4),
         .y_out(layer_y_out_layer8),
         .new_line_out_1(new_line_out_1_layer8),
         .output_valid(out_valid_layer8)
     );
 
-    // Layer 9
+    // Layer 9 (路由分支，从 Layer 8 取数据)
     layer #(
         .LAYER_NUM(LAYER_NUM_LAYER9),
         .PE_PAGE_NUM(PE_PAGE_NUM_LAYER9),
@@ -459,9 +457,10 @@ module top_yolo #(
         .clk(clk),
         .clk_en(clk_en),
         .rst_n(rst_n),
-        .new_line_input_1(new_line_out_1_layer5),
-        .data_input_valid(out_valid_layer5),
-        .data_input(layer_y_out_layer5),
+        .new_line_input_1(new_line_out_1_layer8),
+        .data_input_valid(out_valid_layer8),
+        .data_input(layer_y_out_layer8),
+        
         .y_out(layer_y_out_layer9),
         .new_line_out_1(new_line_out_1_layer9),
         .output_valid(out_valid_layer9)
@@ -503,50 +502,16 @@ module top_yolo #(
         .output_valid(out_valid_layer10)
     );
 
-    // Layer 11
-    layer #(
-        .LAYER_NUM(LAYER_NUM_LAYER11),
-        .PE_PAGE_NUM(PE_PAGE_NUM_LAYER11),
-        .PE_ROW_NUM(PE_ROW_NUM_LAYER11),
-        .PE_COL_NUM(PE_COL_NUM_LAYER11),
-        .KERNEL_COL(KERNEL_COL_LAYER11),
-        .KERNEL_ROW(KERNEL_ROW_LAYER11),
-        .WITH_RELU(WITH_RELU_LAYER11),
-        .MAX_POOL(MAX_POOL_LAYER11),
-        .DATA_WIDTH(DATA_WIDTH_LAYER11),
-        .WEIGHT_WIDTH(WEIGHT_WIDTH_LAYER11),
-        .USE_DSP_PE(USE_DSP_PE_LAYER11),
-        .CYCLE_PERIOD_IN(CYCLE_PERIOD_IN_LAYER11),
-        .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT_LAYER11),
-        .IMG_COL(IMG_COL_LAYER11),
-        .IMG_ROW(IMG_ROW_LAYER11),
-        .STEP_COL(STEP_COL_LAYER11),
-        .STEP_ROW(STEP_ROW_LAYER11),
-        .SHIFT_KEY(SHIFT_KEY_LAYER11),
-        .BIAS_WIDTH(BIAS_WIDTH_LAYER11),
-        .OUT_WIDTH(OUT_WIDTH_LAYER11),
-        .PE_PAGE_OUTPUT_WIDTH(PE_PAGE_OUTPUT_WIDTH_LAYER11),
-        .ACC_WIDTH(ACC_WIDTH_LAYER11)
-    ) u_layer11 (
-        .clk(clk),
-        .clk_en(clk_en),
-        .rst_n(rst_n),
-        .new_line_input_1(new_line_out_1_layer10),
-        .data_input_valid(out_valid_layer10),
-        .data_input(layer_y_out_layer10),
-        .y_out(layer_y_out_layer11),
-        .new_line_out_1(new_line_out_1_layer11),
-        .output_valid(out_valid_layer11)
-    );
-
+    // Post Process 模块 (原连在Layer11，现改接Layer10)
     post_cv3_conv2d #(
-        .DATA_WIDTH(OUT_WIDTH_LAYER11), // Layer11 输出位宽
-        .OUT_WIDTH(32),                 // 固定 32-bit 
-        .PE_COL_NUM(PE_COL_NUM_LAYER11),
-        .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT_LAYER11),
+        // --- 核心修改：所有参数替换为 Layer10 ---
+        .DATA_WIDTH(OUT_WIDTH_LAYER10), 
+        .OUT_WIDTH(32),                 
+        .PE_COL_NUM(PE_COL_NUM_LAYER10),
+        .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT_LAYER10),
         .LUT_FILE(LUT_FILE),
-        .IMG_COL(IMG_COL_LAYER11),
-        .IMG_ROW(IMG_ROW_LAYER11),
+        .IMG_COL(IMG_COL_LAYER10),
+        .IMG_ROW(IMG_ROW_LAYER10),
         .CONV_POSITIVE(CONV_POSITIVE),
         .CONF_WIDTH(CONF_WIDTH),
         .CONF_THRESH(CONF_THRESH)
@@ -554,10 +519,10 @@ module top_yolo #(
         .clk(clk),
         .rst_n(rst_n),
 
-        // Input from Layer 11
-        .new_line_in_1(new_line_out_1_layer11),
-        .data_input_valid(out_valid_layer11),
-        .data_in(layer_y_out_layer11),
+        // --- 核心修改：从 Layer10 接收数据 ---
+        .new_line_in_1(new_line_out_1_layer10),
+        .data_input_valid(out_valid_layer10),
+        .data_in(layer_y_out_layer10),
 
         // Output to Adapter
         .packet_data(post_packet_data),

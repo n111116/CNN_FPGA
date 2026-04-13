@@ -2,11 +2,10 @@
 // 头文件 Include
 // =========================================================
 `include "data_process/header/layer0.vh"
-`include "data_process/header/layer8.vh"   
+`include "data_process/header/layer7.vh"   
 `include "data_process/header/layer20.vh"
 `include "data_process/header/layer28.vh"  // 用于LPRNet输出维度的宏定义
 
-`timescale 1ns / 1ps
 `define UD #1
 
 module hdmi_loop #(
@@ -47,7 +46,7 @@ module hdmi_loop #(
     // =========================================================
     localparam bit CONV_POSITIVE = 1;
     localparam int CONF_WIDTH    = 8;
-    localparam int CONF_THRESH   = 8'h59; // 阈值可调
+    localparam int CONF_THRESH   = 8'h40; // 阈值可调
     localparam int CROP_HEIGHT   = IMG_ROW_LAYER20;
     localparam int CROP_WIDTH    = IMG_COL_LAYER20;
     localparam int MAX_BOX_NUM   = 4;
@@ -91,9 +90,9 @@ module hdmi_loop #(
     wire        new_line_1;    
 
     // Layer 8 分支输出 (YOLO -> Adapter) (已修改为标准压缩数组)
-    wire [PE_COL_NUM_LAYER8-1:0][OUT_WIDTH_LAYER8-1:0] layer_y_out_layer8;
-    wire                        out_valid_layer8;
-    wire                        new_line_out_1_layer8;
+    wire [PE_COL_NUM_LAYER7-1:0][OUT_WIDTH_LAYER7-1:0] layer_y_out_layer7;
+    wire                        out_valid_layer7;
+    wire                        new_line_out_1_layer7;
 
     // Post Processing 输出 (YOLO -> Adapter)
     logic [31:0] post_packet_data;
@@ -120,7 +119,7 @@ module hdmi_loop #(
     logic [MAX_BOX_NUM-1:0]        crop_wr_en   ;
     logic [MAX_BOX_NUM-1:0][15:0]  crop_x_min   ; 
     logic [MAX_BOX_NUM-1:0][15:0]  crop_y_min   ; 
-    logic [23:0]                   crop_rgb_out;
+    logic [MAX_BOX_NUM-1:0][23:0]  crop_rgb_out;
 
     logic        lprnet_new_line;
     logic        lprnet_data_valid;
@@ -138,7 +137,7 @@ module hdmi_loop #(
     // 1. 系统基础配置与时钟/复位管理
     // =========================================================
     assign pixclk_out = pixclk_in;
-    assign led_int    = data_to_layer[0][0];
+    assign led_int    = lprnet_frame_start;
 
     PLL u_pll (
       .clkout1(pix_clk_5x),    
@@ -287,7 +286,7 @@ module hdmi_loop #(
         .CHANNEL_IN(PE_PAGE_NUM_LAYER0), 
         .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT_LAYER0 / STEP_COL_LAYER0 / STEP_ROW_LAYER0),
         .OUT_WIDTH_POST_33(32),
-        .OUT_WIDTH_LAYER23(OUT_WIDTH_LAYER8)
+        .OUT_WIDTH_LAYER23(OUT_WIDTH_LAYER7)
     ) u_layer_data_adapter (
         .clk              (clk_pe),
         .rst_n            (rst_n_app_pe), 
@@ -302,8 +301,8 @@ module hdmi_loop #(
         .packet_data      (post_packet_data),
         .packet_valid     (post_packet_valid),
         .frame_done       (post_frame_done),   
-        .layer23_data     (layer_y_out_layer8[0]),
-        .layer23_valid    (out_valid_layer8),    
+        .layer23_data     (layer_y_out_layer7[0]),
+        .layer23_valid    (out_valid_layer7),    
         .usb_wr_en        (usb_fifo_wr_en),
         .usb_wr_data      (usb_fifo_data_write)
     );
@@ -322,9 +321,9 @@ module hdmi_loop #(
         .data_input_valid     (adapter_valid),      
         .data_input           (data_to_layer),
     
-        .layer_y_out_layer8   (layer_y_out_layer8),
-        .out_valid_layer8     (out_valid_layer8),
-        .new_line_out_1_layer8(new_line_out_1_layer8),
+        .layer_y_out_layer7   (layer_y_out_layer7),
+        .out_valid_layer7     (out_valid_layer7),
+        .new_line_out_1_layer7(new_line_out_1_layer7),
     
         .post_packet_data     (post_packet_data),
         .post_packet_valid    (post_packet_valid),
@@ -344,7 +343,7 @@ module hdmi_loop #(
         .CROP_WIDTH(CROP_WIDTH),
         .CROP_HEIGHT(CROP_HEIGHT),
         .GRID_STRIDE_CENTER(16),
-        .GRID_STRIDE_LTRB(1),
+        .GRID_STRIDE_LTRB(2),  // 模型更改后，LTBR的scale变了
         .LINE_WIDTH(4),
         .MAX_BOX_NUM(MAX_BOX_NUM)
     ) u_box_overlay_sync (
@@ -415,7 +414,7 @@ module hdmi_loop #(
     ) u_lprnet_top (
         .clk             (clk_pe),
         .clk_en          (1'b1),
-        .rst_n           (rst_n_app_pe), 
+        .rst_n           (rstn_out), 
         
         .new_line_input_1(lprnet_new_line),
         .data_input_valid(lprnet_data_valid),

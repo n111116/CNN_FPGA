@@ -34,7 +34,7 @@
     parameter int unsigned SHIFT_KEY_LAYER25        = 0;
 
     // 4. 图像尺寸
-    parameter int unsigned IMG_COL_LAYER25          = 20;
+    parameter int unsigned IMG_COL_LAYER25          = 18;
     parameter int unsigned IMG_ROW_LAYER25          = 10;
 
     // 5. 自动计算的中间位宽
@@ -42,7 +42,7 @@
     parameter int unsigned ACC_WIDTH_LAYER25        = 20;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER25       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer25_input_9bit.hex";
+    localparam INPUT_FILE_PATH_LAYER25       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer25_input_9bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER25      = "sim_out/layer25_output.hex";
 
 `endif // LAYER25_VH

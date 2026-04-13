@@ -24,7 +24,7 @@ module tb_overlay_chain();
     logic        end_box_wr   [0:MAX_BOX_NUM-1];
     logic [15:0] crop_x_min   [0:MAX_BOX_NUM-1];
     logic [15:0] crop_y_min   [0:MAX_BOX_NUM-1];
-    logic [23:0] crop_rgb_out ;
+    logic [23:0] crop_rgb_out [0:MAX_BOX_NUM-1];
 
     logic        new_line_1, data_valid;
     logic [23:0] data_out;

@@ -13,7 +13,7 @@ CHARS = [
 # 你提供的索引列表
 # indices = [12, 51, 69, 74, 50, 45, 45]
 
-indices = [12, 12, 22, 7, 10, 20]
+indices = [0x12, 0x46, 0x47, 0x45, 0x3b, 0x2c, 0x3f]
 # 执行解码
 decoded_chars = [CHARS[i] for i in indices]
 result = "".join(decoded_chars)

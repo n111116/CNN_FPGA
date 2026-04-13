@@ -24,17 +24,17 @@
     // 2. 位宽参数 (来自 MAT)  
     parameter int unsigned DATA_WIDTH_LAYER28       = 9;
     parameter int unsigned WEIGHT_WIDTH_LAYER28     = 10;
-    parameter int unsigned BIAS_WIDTH_LAYER28       = 12;
+    parameter int unsigned BIAS_WIDTH_LAYER28       = 13;
     parameter int unsigned OUT_WIDTH_LAYER28        = 10;
 
     // 3. 周期与映射参数
     parameter int unsigned CYCLE_PERIOD_IN_LAYER28  = 64; 
     parameter int unsigned CYCLE_PERIOD_OUT_LAYER28 = 64;
     parameter int unsigned CYCLE_PERIOD_LAYER28     = CYCLE_PERIOD_IN_LAYER28 * CYCLE_PERIOD_OUT_LAYER28;
-    parameter int unsigned SHIFT_KEY_LAYER28        = 10;
+    parameter int unsigned SHIFT_KEY_LAYER28        = 11;
 
     // 4. 图像尺寸
-    parameter int unsigned IMG_COL_LAYER28          = 20;
+    parameter int unsigned IMG_COL_LAYER28          = 18;
     parameter int unsigned IMG_ROW_LAYER28          = 5;
 
     // 5. 自动计算的中间位宽
@@ -42,7 +42,7 @@
     parameter int unsigned ACC_WIDTH_LAYER28        = 26;
 
     /* Simulation Paths */
-    localparam INPUT_FILE_PATH_LAYER28       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex/layer28_input_9bit.hex";
+    localparam INPUT_FILE_PATH_LAYER28       = "C:/Users/Datou21/Desktop/PDS/cnn_usb_copy/conv_data_hex_pds/layer28_input_9bit.hex";
     localparam OUTPUT_FILE_PATH_LAYER28      = "sim_out/layer28_output.hex";
 
 `endif // LAYER28_VH
