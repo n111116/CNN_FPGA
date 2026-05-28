@@ -122,7 +122,7 @@ module hdmi_loop #(
     logic [15:0]  crop_y_min    [0:MAX_BOX_NUM-1]; 
     logic [15:0]  crop_w0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
     logic [15:0]  crop_h0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [23:0]  crop_rgb_out;
+    logic [23:0]  crop_rgb_out  [0:MAX_BOX_NUM-1];
 
     logic        lprnet_new_line;
     logic        lprnet_data_valid;

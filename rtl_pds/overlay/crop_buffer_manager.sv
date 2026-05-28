@@ -16,7 +16,7 @@ module crop_buffer_manager #(
     input  logic               crop_wr_en   [0:MAX_BOX_NUM-1],
     input  logic [15:0]        x_min_in     [0:MAX_BOX_NUM-1],
     input  logic [15:0]        y_min_in     [0:MAX_BOX_NUM-1],
-    input  logic [23:0]        crop_rgb_out,
+    input  logic [23:0]        crop_rgb_out [0:MAX_BOX_NUM-1],
     
     // ===================================
     // 2. 读端：PE 网络时钟域 (clk_pe)
@@ -177,7 +177,7 @@ module crop_buffer_manager #(
                 .wr_clk  (clk_video),
                 .rst     (safe_rst),              
                 .wr_en   (safe_wr_en),
-                .din     (crop_rgb_out),
+                .din     (crop_rgb_out[i_gen]),
                 .rd_en   (fifo_rd_en[i_gen]),
                 .dout    (ram_q[i_gen]),
                 .full    (),

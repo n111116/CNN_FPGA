@@ -9,10 +9,10 @@ module tb_box_overlay_crop_buffer_manager();
     parameter IMG_HEIGHT = 256;
     parameter GRID_STRIDE_CENTER = 16;
     parameter GRID_STRIDE_LTRB   = 1;
-    parameter MAX_BOX_NUM = 3;
+    parameter MAX_BOX_NUM = 10;
     
-    parameter CROP_WIDTH  = 20;
-    parameter CROP_HEIGHT = 11;
+    parameter CROP_WIDTH  = 40;
+    parameter CROP_HEIGHT = 10;
 
     // =========================================================
     // 2. 时钟与复位生成
@@ -32,6 +32,7 @@ module tb_box_overlay_crop_buffer_manager();
     logic [23:0] video_rgb_in = 0;
     logic        video_vs_out, video_hs_out, video_de_out;
     logic [23:0] video_rgb_out;
+    logic [23:0] input_image_mem [0:IMG_WIDTH*IMG_HEIGHT-1];
 
     // CNN 写框链路
     logic        box_wr_en = 0;
@@ -45,7 +46,7 @@ module tb_box_overlay_crop_buffer_manager();
     logic [15:0] crop_y_min    [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
     logic [15:0] crop_w0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
     logic [15:0] crop_h0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [23:0] crop_rgb_out  ;
+    logic [23:0] crop_rgb_out  [0:MAX_BOX_NUM-1];
 
     // Manager 输出到 PE 的链路
     logic        new_line_1;
@@ -127,11 +128,12 @@ module tb_box_overlay_crop_buffer_manager();
         $display("=================================================");
         $display("   Starting Simulation...");
         $display("=================================================");
+        $readmemh("input_image.hex", input_image_mem);
         
         #100 rst_n = 1;
         #100;
         
-        for (int frame = 0; frame < 5; frame++) begin
+        for (int frame = 0; frame < 6; frame++) begin
             $display("[%0t] Starting Frame %0d", $time, frame);
             generate_video_frame(frame);
         end
@@ -271,7 +273,7 @@ module tb_box_overlay_crop_buffer_manager();
             else if (frame_no == 1) begin
                 if (y == 100)  fork send_box_data(1, 1, 1, 99, 1, 1, 1, 1); join_none 
                 if (y == 101) fork send_box_data(2, 13, 4, 90, 15, 15, 15, 15); join_none
-                if (y == 102) fork send_box_data(3, 6, 6, 85, 10,  8, 10, 10); join_none
+                if (y == 102) fork send_box_data(3, 6, 7, 85, 10,  8, 10, 10); join_none
             end
             else if (frame_no == 2) begin
                 if (y == 100) fork send_box_data(4, 2, 2, 95, 12, 12, 12, 12); join_none 
@@ -300,8 +302,7 @@ module tb_box_overlay_crop_buffer_manager();
             
             video_de_in = 1;
             for (int x = 0; x < IMG_WIDTH; x++) begin
-                if ((x/10)%2 == (y/10)%2) video_rgb_in = {y[7:0]*2, x[7:0]*2, 8'h99};
-                else                      video_rgb_in = {y[7:0]*2, x[7:0]*2, 8'h11};
+                video_rgb_in = input_image_mem[y * IMG_WIDTH + x];
                 @(negedge clk_video);
             end
             video_de_in = 0;

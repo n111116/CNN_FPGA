@@ -7,8 +7,8 @@ module box_overlay_sync #(
     parameter int MAX_BOX_NUM        = 10,     // 屏幕中最多同时展示的框数量。
     
     // 裁剪子图的目标尺寸 W1 x H1
-    parameter int CROP_WIDTH         = 128,    // 裁剪出的子图宽度
-    parameter int CROP_HEIGHT        = 128     // 裁剪出的子图高度
+    parameter int CROP_WIDTH         = 40,     // 裁剪出的子图宽度
+    parameter int CROP_HEIGHT        = 10      // 裁剪出的子图高度
 )(
     input  logic               clk_video,
     input  logic               clk_pe,
@@ -41,7 +41,7 @@ module box_overlay_sync #(
     output logic [15:0]        crop_x_min   [0:MAX_BOX_NUM-1],
     output logic [15:0]        crop_y_min   [0:MAX_BOX_NUM-1],
     output logic               crop_wr_en   [0:MAX_BOX_NUM-1],
-    output logic [23:0]        crop_rgb_out
+    output logic [23:0]        crop_rgb_out [0:MAX_BOX_NUM-1]
 );     
 
     // =========================================================
@@ -56,17 +56,100 @@ module box_overlay_sync #(
     logic signed [15:0] xmin_val, ymin_val, xmax_val, ymax_val;
 
     // DDA 累加器与写使能数组
-    logic [15:0] x_acc       [0:MAX_BOX_NUM-1];
-    logic [15:0] y_acc       [0:MAX_BOX_NUM-1];
-    logic        y_valid_row [0:MAX_BOX_NUM-1];
+    localparam int FRAC_BITS = 8;
+    localparam int FRAC_ONE  = (1 << FRAC_BITS);
+    localparam int FP_WIDTH  = 32;
+    localparam int RECIP_BITS = 32;
+    localparam longint unsigned CROP_WIDTH_RECIP  = ((64'd1 << RECIP_BITS) + CROP_WIDTH - 1) / CROP_WIDTH;
+    localparam longint unsigned CROP_HEIGHT_RECIP = ((64'd1 << RECIP_BITS) + CROP_HEIGHT - 1) / CROP_HEIGHT;
+
+    logic [FP_WIDTH-1:0] x_step       [0:MAX_BOX_NUM-1];
+    logic [FP_WIDTH-1:0] y_step       [0:MAX_BOX_NUM-1];
+    logic [FP_WIDTH-1:0] x_fp         [0:MAX_BOX_NUM-1];
+    logic [FP_WIDTH-1:0] y_fp         [0:MAX_BOX_NUM-1];
+    logic [15:0]         x_sample     [0:MAX_BOX_NUM-1];
+    logic [15:0]         y_sample     [0:MAX_BOX_NUM-1];
+    logic [FRAC_BITS-1:0] x_frac      [0:MAX_BOX_NUM-1];
+    logic [FRAC_BITS-1:0] y_frac      [0:MAX_BOX_NUM-1];
+    logic [15:0]         crop_col_idx [0:MAX_BOX_NUM-1];
+    logic [15:0]         crop_row_idx [0:MAX_BOX_NUM-1];
+    logic                y_valid_row  [0:MAX_BOX_NUM-1];
     
     // 【新增标志位】：用于解决残缺框和半途crop的问题
     logic        crop_active [0:MAX_BOX_NUM-1]; // 标记当前正在进行一次从头开始的合法crop过程
     logic        crop_done   [0:MAX_BOX_NUM-1]; // 标记当前框已经完成了一次完整的crop
+    logic        crop_emit_done [0:MAX_BOX_NUM-1];
     
     // 数据打拍，用于对齐 crop_wr_en 的一级时序延迟
     logic [23:0] video_rgb_in_d1;
-    assign crop_rgb_out = video_rgb_in_d1;
+    logic [23:0] line_buf [0:IMG_WIDTH-1];
+    logic [23:0] curr_rgb_left;
+    logic [23:0] prev_row_left;
+
+    function automatic [FP_WIDTH-1:0] calc_step(
+        input logic [15:0]          src_size,
+        input longint unsigned      dst_recip
+    );
+        logic [63:0] scaled;
+        begin
+            scaled    = ({48'd0, src_size} << FRAC_BITS) * dst_recip;
+            calc_step = scaled >> RECIP_BITS;
+        end
+    endfunction
+
+    function automatic [FP_WIDTH-1:0] calc_start_fp(input logic [FP_WIDTH-1:0] step);
+        if (step > FRAC_ONE) calc_start_fp = (step >> 1) - (FRAC_ONE >> 1);
+        else                 calc_start_fp = 0;
+    endfunction
+
+    function automatic [15:0] calc_sample(
+        input logic [FP_WIDTH-1:0] fp,
+        input logic [15:0]         src_size
+    );
+        logic [15:0] base;
+        logic        has_frac;
+        begin
+            base        = fp[FP_WIDTH-1:FRAC_BITS];
+            has_frac    = |fp[FRAC_BITS-1:0];
+            calc_sample = base + has_frac;
+            if (src_size != 0 && calc_sample >= src_size) calc_sample = src_size - 1;
+        end
+    endfunction
+
+    function automatic [FRAC_BITS-1:0] calc_frac(input logic [FP_WIDTH-1:0] fp);
+        calc_frac = fp[FRAC_BITS-1:0];
+    endfunction
+
+    function automatic [16:0] interp_horizontal(
+        input logic [7:0]           c0,
+        input logic [7:0]           c1,
+        input logic [FRAC_BITS-1:0] frac
+    );
+        logic signed [9:0]  delta;
+        logic signed [17:0] acc;
+        begin
+            delta = $signed({1'b0, c1}) - $signed({1'b0, c0});
+            acc   = $signed({1'b0, c0, {FRAC_BITS{1'b0}}}) +
+                    delta * $signed({1'b0, frac});
+            interp_horizontal = acc[16:0];
+        end
+    endfunction
+
+    function automatic [7:0] interp_vertical(
+        input logic [16:0]          top,
+        input logic [16:0]          bottom,
+        input logic [FRAC_BITS-1:0] frac
+    );
+        logic signed [17:0] delta;
+        logic signed [26:0] acc;
+        begin
+            delta = $signed({1'b0, bottom}) - $signed({1'b0, top});
+            acc   = $signed({1'b0, top, {FRAC_BITS{1'b0}}}) +
+                    delta * $signed({1'b0, frac}) +
+                    (1 << (2 * FRAC_BITS - 1));
+            interp_vertical = acc >> (2 * FRAC_BITS);
+        end
+    endfunction
     // 碰撞检测流水线中间变量数组
     localparam PIPELINE_STAGES = (MAX_BOX_NUM + 1) / 2;
     logic       cur_hit ;
@@ -176,7 +259,7 @@ module box_overlay_sync #(
             
             for (idx = 0; idx < MAX_BOX_NUM; idx++) begin
                 // 【修改逻辑】只有当不仅超出边界，且已经成功经历过完整的crop，才释放框。避免半路生成的框被抛弃。
-                if((pixel_y >= box_ymax[idx] + 1) && crop_done[idx]) begin
+                if((pixel_y > box_ymax[idx] + 1) && crop_done[idx]) begin
                     box_valid[idx] <= 1'b0;
                 end
             end
@@ -284,105 +367,187 @@ module box_overlay_sync #(
         end
     end
 
+    always_ff @(posedge clk_video or negedge rst_n) begin
+        if (!rst_n) begin
+            curr_rgb_left <= 0;
+            prev_row_left <= 0;
+        end else if (video_de_in) begin
+            line_buf[pixel_x] <= video_rgb_in;
+            curr_rgb_left     <= video_rgb_in;
+            prev_row_left     <= line_buf[pixel_x];
+        end
+    end
+
     // =========================================================
-    // F. DDA 映射与子图 FIFO 生成逻辑 
+    // F. Bilinear resize mapping and crop FIFO write generation
     // =========================================================
     generate
         for (i_gen = 0; i_gen < MAX_BOX_NUM; i_gen++) begin : gen_crop_fifo
-            
+            logic [23:0] p00, p10, p01, p11;
+            logic [FP_WIDTH-1:0] next_x_fp, next_y_fp;
+            logic [FP_WIDTH-1:0] init_x_step, init_y_step;
+            logic [FP_WIDTH-1:0] init_x_fp, init_y_fp;
+            logic [15:0] init_y_sample;
+            logic interp_valid_s1, interp_valid_s2;
+            logic end_crop_s1, end_crop_s2;
+            logic [16:0] top_r_s1, top_g_s1, top_b_s1;
+            logic [16:0] bot_r_s1, bot_g_s1, bot_b_s1;
+            logic [FRAC_BITS-1:0] y_frac_s1;
+            logic [23:0] interp_rgb_s2;
+
+            always_comb begin
+                p00 = prev_row_left;
+                p10 = (pixel_x >= IMG_WIDTH) ? line_buf[IMG_WIDTH - 1] : line_buf[pixel_x];
+                p01 = curr_rgb_left;
+                p11 = video_rgb_in;
+
+                if (x_frac[i_gen] == 0) begin
+                    p00 = p10;
+                    p01 = p11;
+                end
+                if (y_frac[i_gen] == 0) begin
+                    p00 = p01;
+                    p10 = p11;
+                end
+
+                next_x_fp    = x_fp[i_gen] + x_step[i_gen];
+                next_y_fp    = y_fp[i_gen] + y_step[i_gen];
+                init_x_step  = calc_step(box_w0[i_gen], CROP_WIDTH_RECIP);
+                init_y_step  = calc_step(box_h0[i_gen], CROP_HEIGHT_RECIP);
+                init_x_fp    = calc_start_fp(init_x_step);
+                init_y_fp    = calc_start_fp(init_y_step);
+                init_y_sample = calc_sample(init_y_fp, box_h0[i_gen]);
+            end
+
             always_ff @(posedge clk_video or negedge rst_n) begin
                 if (!rst_n) begin
-                    y_acc[i_gen] <= 0;
-                    y_valid_row[i_gen] <= 0;
+                    x_step[i_gen]        <= 0;
+                    y_step[i_gen]        <= 0;
+                    x_fp[i_gen]          <= 0;
+                    y_fp[i_gen]          <= 0;
+                    x_sample[i_gen]      <= 0;
+                    y_sample[i_gen]      <= 0;
+                    x_frac[i_gen]        <= 0;
+                    y_frac[i_gen]        <= 0;
+                    crop_col_idx[i_gen]  <= 0;
+                    crop_row_idx[i_gen]  <= 0;
+                    y_valid_row[i_gen]   <= 1'b0;
                     start_crop_wr[i_gen] <= 1'b0;
-                    end_crop_wr[i_gen] <= 1'b0;
-                    crop_x_min[i_gen] <= 0;
-                    crop_y_min[i_gen] <= 0;
-                    crop_active[i_gen] <= 1'b0;
-                    crop_done[i_gen]   <= 1'b0;
-                end else begin 
+                    end_crop_wr[i_gen]   <= 1'b0;
+                    crop_x_min[i_gen]    <= 0;
+                    crop_y_min[i_gen]    <= 0;
+                    crop_active[i_gen]   <= 1'b0;
+                    crop_done[i_gen]     <= 1'b0;
+                    crop_emit_done[i_gen] <= 1'b0;
+                    crop_wr_en[i_gen]    <= 1'b0;
+                    crop_rgb_out[i_gen]  <= 24'd0;
+                    interp_valid_s1      <= 1'b0;
+                    interp_valid_s2      <= 1'b0;
+                    end_crop_s1          <= 1'b0;
+                    end_crop_s2          <= 1'b0;
+                    top_r_s1             <= 0;
+                    top_g_s1             <= 0;
+                    top_b_s1             <= 0;
+                    bot_r_s1             <= 0;
+                    bot_g_s1             <= 0;
+                    bot_b_s1             <= 0;
+                    y_frac_s1            <= 0;
+                    interp_rgb_s2        <= 24'd0;
+                end else begin
                     start_crop_wr[i_gen] <= 1'b0;
-                    end_crop_wr[i_gen] <= 1'b0;
-                    if (box_valid[i_gen]) begin
+                    end_crop_wr[i_gen]   <= end_crop_s2;
+                    crop_wr_en[i_gen]    <= interp_valid_s2;
+                    if (interp_valid_s2) begin
+                        crop_rgb_out[i_gen] <= interp_rgb_s2;
+                    end
+
+                    interp_valid_s2 <= interp_valid_s1;
+                    end_crop_s2     <= end_crop_s1;
+                    if (interp_valid_s1) begin
+                        interp_rgb_s2[23:16] <= interp_vertical(top_r_s1, bot_r_s1, y_frac_s1);
+                        interp_rgb_s2[15:8]  <= interp_vertical(top_g_s1, bot_g_s1, y_frac_s1);
+                        interp_rgb_s2[7:0]   <= interp_vertical(top_b_s1, bot_b_s1, y_frac_s1);
+                    end
+
+                    interp_valid_s1 <= 1'b0;
+                    end_crop_s1     <= 1'b0;
+
+                    if (vs_rising) begin
+                        y_valid_row[i_gen] <= 1'b0;
+                        crop_active[i_gen] <= 1'b0;
+                    end else if (box_valid[i_gen]) begin
                         if (hs_falling) begin
-                            // 框外行
                             y_valid_row[i_gen] <= 1'b0;
-                            
-                            // 1. 只有碰到了真正的顶部，才触发开始写并激活 crop_active
-                            if ((pixel_y) == box_ymin[i_gen]) begin
+
+                            if (pixel_y == box_ymin[i_gen]) begin
+                                x_step[i_gen]        <= init_x_step;
+                                y_step[i_gen]        <= init_y_step;
+                                x_fp[i_gen]          <= init_x_fp;
+                                y_fp[i_gen]          <= init_y_fp;
+                                x_sample[i_gen]      <= calc_sample(init_x_fp, box_w0[i_gen]);
+                                y_sample[i_gen]      <= init_y_sample;
+                                x_frac[i_gen]        <= calc_frac(init_x_fp);
+                                y_frac[i_gen]        <= calc_frac(init_y_fp);
+                                crop_col_idx[i_gen]  <= 0;
+                                crop_row_idx[i_gen]  <= 0;
+                                y_valid_row[i_gen]   <= (init_y_sample == 0);
                                 start_crop_wr[i_gen] <= 1'b1;
-                                crop_active[i_gen]   <= 1'b1; // 激活：这是一次完整的crop开始
-                                crop_x_min[i_gen] <= box_xmin[i_gen];
-                                crop_y_min[i_gen] <= box_ymin[i_gen];
-                                if (((box_h0[i_gen] >> 1) + CROP_HEIGHT) >= box_h0[i_gen]) begin
-                                    y_valid_row[i_gen] <= 1'b1;
-                                    y_acc[i_gen]       <= (box_h0[i_gen] >> 1) + CROP_HEIGHT - box_h0[i_gen];
-                                end else begin
-                                    y_valid_row[i_gen] <= 1'b0;
-                                    y_acc[i_gen]       <= (box_h0[i_gen] >> 1) + CROP_HEIGHT;
-                                end
+                                crop_active[i_gen]   <= 1'b1;
+                                crop_emit_done[i_gen] <= 1'b0;
+                                crop_x_min[i_gen]    <= box_xmin[i_gen];
+                                crop_y_min[i_gen]    <= box_ymin[i_gen];
+                            end else if (crop_active[i_gen] &&
+                                         !crop_emit_done[i_gen] &&
+                                         !y_valid_row[i_gen] &&
+                                         (pixel_y >= box_ymin[i_gen] + y_sample[i_gen])) begin
+                                y_valid_row[i_gen] <= 1'b1;
                             end
-                            // 2. 框内部的后续行：仅当当前处于 active 状态（代表开头被抓到了）才继续 crop 逻辑
-                            else if ((pixel_y) > box_ymin[i_gen] && (pixel_y) < box_ymax[i_gen]) begin
-                                if (crop_active[i_gen]) begin 
-                                    if ((y_acc[i_gen] + CROP_HEIGHT) >= box_h0[i_gen]) begin
-                                        y_valid_row[i_gen] <= 1'b1;           
-                                        y_acc[i_gen]       <= y_acc[i_gen] + CROP_HEIGHT - box_h0[i_gen];
-                                    end else begin 
-                                        y_valid_row[i_gen] <= 1'b0;          
-                                        y_acc[i_gen]       <= y_acc[i_gen] + CROP_HEIGHT;
-                                    end
-                                end
-                            end 
-                            // 3. 框结束行：仅当处在 active 状态时，才视为完成一次完整crop
-                            else if(pixel_y == box_ymax[i_gen])begin
-                                if (crop_active[i_gen]) begin
-                                    end_crop_wr[i_gen] <= 1'b1;
-                                    crop_active[i_gen] <= 1'b0; // 结束crop状态
-                                    crop_done[i_gen]   <= 1'b1; // 标记一次完整crop已经完成
+
+                            if ((pixel_y == box_ymax[i_gen]) && crop_active[i_gen]) begin
+                                crop_active[i_gen] <= 1'b0;
+                                crop_done[i_gen]   <= 1'b1;
+                            end
+                        end
+
+                        if (y_valid_row[i_gen] && video_de_in &&
+                            (pixel_x >= box_xmin[i_gen] + x_sample[i_gen])) begin
+                            interp_valid_s1 <= 1'b1;
+                            top_r_s1        <= interp_horizontal(p00[23:16], p10[23:16], x_frac[i_gen]);
+                            top_g_s1        <= interp_horizontal(p00[15:8],  p10[15:8],  x_frac[i_gen]);
+                            top_b_s1        <= interp_horizontal(p00[7:0],   p10[7:0],   x_frac[i_gen]);
+                            bot_r_s1        <= interp_horizontal(p01[23:16], p11[23:16], x_frac[i_gen]);
+                            bot_g_s1        <= interp_horizontal(p01[15:8],  p11[15:8],  x_frac[i_gen]);
+                            bot_b_s1        <= interp_horizontal(p01[7:0],   p11[7:0],   x_frac[i_gen]);
+                            y_frac_s1       <= y_frac[i_gen];
+
+                            if (crop_col_idx[i_gen] < CROP_WIDTH - 1) begin
+                                crop_col_idx[i_gen] <= crop_col_idx[i_gen] + 1;
+                                x_fp[i_gen]         <= next_x_fp;
+                                x_sample[i_gen]     <= calc_sample(next_x_fp, box_w0[i_gen]);
+                                x_frac[i_gen]       <= calc_frac(next_x_fp);
+                            end else begin
+                                y_valid_row[i_gen] <= 1'b0;
+                                x_fp[i_gen]         <= calc_start_fp(x_step[i_gen]);
+                                x_sample[i_gen]     <= calc_sample(calc_start_fp(x_step[i_gen]), box_w0[i_gen]);
+                                x_frac[i_gen]       <= calc_frac(calc_start_fp(x_step[i_gen]));
+                                crop_col_idx[i_gen] <= 0;
+
+                                if (crop_row_idx[i_gen] < CROP_HEIGHT - 1) begin
+                                    crop_row_idx[i_gen] <= crop_row_idx[i_gen] + 1;
+                                    y_fp[i_gen]         <= next_y_fp;
+                                    y_sample[i_gen]     <= calc_sample(next_y_fp, box_h0[i_gen]);
+                                    y_frac[i_gen]       <= calc_frac(next_y_fp);
+                                end else begin
+                                    end_crop_s1          <= 1'b1;
+                                    crop_emit_done[i_gen] <= 1'b1;
                                 end
                             end
                         end
                     end else begin
-                        y_valid_row[i_gen] <= 1'b0;  
-                        crop_active[i_gen] <= 1'b0;   // 无效框时重置相关状态
+                        y_valid_row[i_gen] <= 1'b0;
+                        crop_active[i_gen] <= 1'b0;
                         crop_done[i_gen]   <= 1'b0;
-                    end
-                end
-            end
-            
-            always_ff @(posedge clk_video or negedge rst_n) begin
-                if (!rst_n) begin
-                    x_acc[i_gen] <= 0;
-                    crop_wr_en[i_gen] <= 0;
-                end else if (box_valid[i_gen]) begin
-                    if (hs_falling || vs_rising) begin
-                        x_acc[i_gen] <= 0;
-                        crop_wr_en[i_gen] <= 0;
-                    end
-                    else if (y_valid_row[i_gen] && video_de_in && pixel_x >= box_xmin[i_gen] && pixel_x < box_xmax[i_gen]) begin
-                        
-                        if (pixel_x == box_xmin[i_gen]) begin
-                            if (((box_w0[i_gen] >> 1) + CROP_WIDTH) >= box_w0[i_gen]) begin
-                                crop_wr_en[i_gen] <= 1'b1;
-                                x_acc[i_gen]      <= (box_w0[i_gen] >> 1) + CROP_WIDTH - box_w0[i_gen];
-                            end else begin
-                                crop_wr_en[i_gen] <= 1'b0;
-                                x_acc[i_gen]      <= (box_w0[i_gen] >> 1) + CROP_WIDTH;
-                            end
-                        end 
-                        else begin
-                            if ((x_acc[i_gen] + CROP_WIDTH) >= box_w0[i_gen]) begin
-                                crop_wr_en[i_gen] <= 1'b1;
-                                x_acc[i_gen]      <= x_acc[i_gen] + CROP_WIDTH - box_w0[i_gen];
-                            end else begin
-                                crop_wr_en[i_gen] <= 1'b0;
-                                x_acc[i_gen]      <= x_acc[i_gen] + CROP_WIDTH;
-                            end
-                        end
-                    end 
-                    else begin
-                        crop_wr_en[i_gen] <= 1'b0;
+                        crop_emit_done[i_gen] <= 1'b0;
                     end
                 end
             end

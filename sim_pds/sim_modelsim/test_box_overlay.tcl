@@ -17,7 +17,11 @@ file copy -force {*}[glob ../../rtl_pds/data_process/mem_data/*.mem] .
 vlog -work rtl_work \
     +incdir+$INC_PATH \
     +define+DATA_PATH="$MEM_DATA_PATH" \
-    ../../rtl_pds/*.sv
+    ../../rtl_pds/overlay/*.sv
+vlog -work rtl_work \
+    +incdir+$INC_PATH \
+    +define+DATA_PATH="$MEM_DATA_PATH" \
+    ../../rtl_pds/my_fifo.sv
 
 # 4. 编译测试平台
 # 确保这里包含了 incdir，否则找不到 .vh 文件
