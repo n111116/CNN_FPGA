@@ -4,9 +4,9 @@ import os
 # 720P
 BASE_IMG_COL = 1280
 BASE_IMG_ROW = 720
-
-BASE_IMG_ROW_LPERNET = 40
-BASE_IMG_COL_LPERNET = 144
+# crop size
+BASE_IMG_ROW_LPERNET = 20
+BASE_IMG_COL_LPERNET = 80
 
 # 变量的定义
 # layer_num: 当前层编号
@@ -486,7 +486,7 @@ layer20 = CnnHardwareGenerator(
     cycle_period_cout=16,
     bit_width_out=9,
     step_row=1,
-    step_col=2,
+    step_col=1,
     img_row=int(BASE_IMG_ROW_LPERNET),
     img_col=int(BASE_IMG_COL_LPERNET)
 )
@@ -496,36 +496,36 @@ layer21 = CnnHardwareGenerator(
     pe_page_num=layer20.pe_col_num,
     pe_col_num=1,
     cycle_period_cin=layer20.cycle_period_cout,
-    cycle_period_cout=layer20.cycle_period_cin*2,
+    cycle_period_cout=layer20.cycle_period_cin,
     bit_width_data=9,
     bit_width_out=9,
     max_pool=1,
     with_relu=0,
-    step_row=2,
+    step_row=1,
     step_col=1,
     img_row=int(BASE_IMG_ROW_LPERNET),
-    img_col=int(BASE_IMG_COL_LPERNET/2)
+    img_col=int(BASE_IMG_COL_LPERNET)
 )
 # 特殊情况，第20层和第21层的速度远快于第22层，我们增加第20层的行间隙并在22层输入前进行解耦
 layer22 = CnnHardwareGenerator(
     mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=22,
     pe_page_num=layer21.pe_col_num,
-    pe_col_num=1,
+    pe_col_num=2,
     cycle_period_cin=16,
-    cycle_period_cout=32,
+    cycle_period_cout=16,
     bit_width_data=9,
     bit_width_out=9,
     step_row=1,
     step_col=2,
-    img_row=int(BASE_IMG_ROW_LPERNET/2),
-    img_col=int(BASE_IMG_COL_LPERNET/2)
+    img_row=int(BASE_IMG_ROW_LPERNET),
+    img_col=int(BASE_IMG_COL_LPERNET)
 )
 layer23 = CnnHardwareGenerator(
     mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=23,
     pe_page_num=layer22.pe_col_num,
-    pe_col_num=1,
+    pe_col_num=2,
     cycle_period_cin=layer22.cycle_period_cout,
     cycle_period_cout=layer22.cycle_period_cin*2,
     bit_width_data=9,
@@ -534,23 +534,24 @@ layer23 = CnnHardwareGenerator(
     with_relu=0,
     step_row=2,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/2),
-    img_col=int(BASE_IMG_COL_LPERNET/4)
+    img_row=int(BASE_IMG_ROW_LPERNET/1),
+    img_col=int(BASE_IMG_COL_LPERNET/2)
 )
 layer24 = CnnHardwareGenerator(
     mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=24,
     pe_page_num=layer23.pe_col_num,
     pe_col_num=1,
-    cycle_period_cin=layer23.cycle_period_cout,
+    cycle_period_cin= 32 // layer23.pe_col_num,
     cycle_period_cout=64,
     bit_width_data=9,
     bit_width_out=9,
     step_row=1,
     step_col=2,
-    img_row=int(BASE_IMG_ROW_LPERNET/4),
-    img_col=int(BASE_IMG_COL_LPERNET/4)
+    img_row=int(BASE_IMG_ROW_LPERNET/2),
+    img_col=int(BASE_IMG_COL_LPERNET/2)
 )
+
 layer25 = CnnHardwareGenerator(
     mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=25,
@@ -564,23 +565,23 @@ layer25 = CnnHardwareGenerator(
     with_relu=0,
     step_row=2,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/4),
-    img_col=int(BASE_IMG_COL_LPERNET/8)
+    img_row=int(BASE_IMG_ROW_LPERNET/2),
+    img_col=int(BASE_IMG_COL_LPERNET/4)
 )
 
 layer26 = CnnHardwareGenerator(
     mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=26,
     pe_page_num=layer25.pe_col_num,
-    pe_col_num=2,
-    cycle_period_cin=layer25.cycle_period_cout,
-    cycle_period_cout=64,
+    pe_col_num=4,
+    cycle_period_cin  = 64 // layer25.pe_col_num,
+    cycle_period_cout = 32,
     bit_width_data=9,
     bit_width_out=9,
     step_row=1,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/8),
-    img_col=int(BASE_IMG_COL_LPERNET/8)
+    img_row=int(BASE_IMG_ROW_LPERNET/4),
+    img_col=int(BASE_IMG_COL_LPERNET/4)
 )
 
 layer27 = CnnHardwareGenerator(
@@ -596,16 +597,18 @@ layer27 = CnnHardwareGenerator(
     kernel_row=1,
     step_row=1,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/8),
-    img_col=int(BASE_IMG_COL_LPERNET/8)
+    img_row=int(BASE_IMG_ROW_LPERNET/4),
+    img_col=int(BASE_IMG_COL_LPERNET/4)
 )
+
+
 layer28 = CnnHardwareGenerator(
     mat_file_dir="conv_data_lprnetv8_new_pds",
     layer_num=28,
-    pe_page_num=layer26.pe_col_num,
-    pe_col_num=2,
-    cycle_period_cin=layer25.cycle_period_cout,
-    cycle_period_cout=64,
+    pe_page_num=layer27.pe_col_num,
+    pe_col_num=4,
+    cycle_period_cin=layer27.cycle_period_cout,
+    cycle_period_cout=32,
     bit_width_data=9,
     bit_width_out=10,
     with_relu=0,
@@ -613,8 +616,8 @@ layer28 = CnnHardwareGenerator(
     kernel_row=1,
     step_row=1,
     step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/8),
-    img_col=int(BASE_IMG_COL_LPERNET/8)
+    img_row=int(BASE_IMG_ROW_LPERNET/4),
+    img_col=int(BASE_IMG_COL_LPERNET/4)
 )
 
 all_layers = [layer0, layer1, layer2, layer3, layer4, layer5, layer6, layer7, layer8, layer9, layer10, \

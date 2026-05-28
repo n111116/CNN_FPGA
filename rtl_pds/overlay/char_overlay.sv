@@ -1,7 +1,11 @@
+`timescale 1ns / 1ps
+
 module char_overlay #(
+    // [修改] 去掉了 int
     parameter CROP_HEIGHT = 128,
     parameter FONT_FILE   = "chars_16x16.mem"
 )(
+    // [修改] 移除了 wire，直接使用 logic
     input  logic               clk_video,
     input  logic               rst_n_video,
     input  logic               video_vs_in,
@@ -170,14 +174,14 @@ module char_overlay #(
     // =========================================================
     // D. 视频域 OSD 简易缓存阵列
     // =========================================================
-    localparam MAX_CHARS = 32; 
+    localparam MAX_CHARS = 64; 
     
     // [修改] 将内部缓存转为压缩数组
     logic [MAX_CHARS-1:0]        c_valid;
     logic [6:0]   c_code[MAX_CHARS-1:0];
     logic [15:0]  c_x[MAX_CHARS-1:0];
     logic [15:0]  c_y[MAX_CHARS-1:0];
-    logic [4:0]  wr_ptr; 
+    logic [6:0]  wr_ptr; 
 
     logic async_fifo_rd_d1;
     always_ff @(posedge clk_video) async_fifo_rd_d1 <= async_fifo_rd;
@@ -200,7 +204,10 @@ module char_overlay #(
                 c_x[wr_ptr]     <= new_x;
                 c_y[wr_ptr]     <= new_y;
                 c_valid[wr_ptr] <= 1'b1;
-                wr_ptr          <= wr_ptr + 1;
+                if(wr_ptr < MAX_CHARS - 1)
+                    wr_ptr <= wr_ptr  + 1;
+                else
+                    wr_ptr <= 0;
             end
 
             for (i_char=0; i_char<MAX_CHARS; i_char=i_char+1) begin
@@ -287,8 +294,12 @@ module char_overlay #(
     assign video_de_out = de_delay[3];
     
     always_ff @(posedge clk_video) begin
-        if (char_pixel) 
-            video_rgb_out <= 24'hFF_00_00; // 红色文字
+        if(s3_hit) begin
+            if (char_pixel) 
+                video_rgb_out <= 24'hFF_00_FF; // 粉色文字
+            else 
+                video_rgb_out <= 24'hFF_FF_FF; // 白色背景
+        end
         else            
             // 取 T-3 时刻的数据进寄存器，输出正好是绝对延迟 4 拍！严格与 DE 信号对齐。
             video_rgb_out <= rgb_delay[2]; 

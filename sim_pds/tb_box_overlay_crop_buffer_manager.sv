@@ -11,8 +11,8 @@ module tb_box_overlay_crop_buffer_manager();
     parameter GRID_STRIDE_LTRB   = 1;
     parameter MAX_BOX_NUM = 3;
     
-    parameter CROP_WIDTH  = 60;
-    parameter CROP_HEIGHT = 30;
+    parameter CROP_WIDTH  = 20;
+    parameter CROP_HEIGHT = 11;
 
     // =========================================================
     // 2. 时钟与复位生成
@@ -38,12 +38,14 @@ module tb_box_overlay_crop_buffer_manager();
     logic [31:0] box_wr_data = 0;
     
     // 内部 Crop 数据链路 (Overlay -> Manager)
-    logic        crop_wr_en   [0:MAX_BOX_NUM-1];
-    logic        start_box_wr [0:MAX_BOX_NUM-1];
-    logic        end_box_wr   [0:MAX_BOX_NUM-1];
-    logic [15:0] crop_x_min   [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [15:0] crop_y_min   [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [23:0] crop_rgb_out [0:MAX_BOX_NUM-1];
+    logic        crop_wr_en    [0:MAX_BOX_NUM-1];
+    logic        start_crop_wr [0:MAX_BOX_NUM-1];
+    logic        end_crop_wr   [0:MAX_BOX_NUM-1];
+    logic [15:0] crop_x_min    [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
+    logic [15:0] crop_y_min    [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
+    logic [15:0] crop_w0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
+    logic [15:0] crop_h0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
+    logic [23:0] crop_rgb_out  ;
 
     // Manager 输出到 PE 的链路
     logic        new_line_1;
@@ -82,10 +84,12 @@ module tb_box_overlay_crop_buffer_manager();
         .box_wr_en(box_wr_en),
         .box_wr_data(box_wr_data),
         
-        .start_box_wr(start_box_wr),
-        .end_box_wr(end_box_wr),
+        .start_crop_wr(start_crop_wr),
+        .end_crop_wr(end_crop_wr),
         .crop_x_min(crop_x_min),     // [新增]
         .crop_y_min(crop_y_min),     // [新增]
+        // .crop_w0(crop_w0),     // [新增]
+        // .crop_h0(crop_h0),     // [新增]
         .crop_wr_en(crop_wr_en),
         .crop_rgb_out(crop_rgb_out)
     );
@@ -99,12 +103,14 @@ module tb_box_overlay_crop_buffer_manager();
         .clk_video(clk_video),
         .rst_n(rst_n),
         
-        .start_box_wr(start_box_wr),
-        .end_box_wr(end_box_wr),
+        .start_crop_wr(start_crop_wr),
+        .end_crop_wr(end_crop_wr),
         .x_min_in(crop_x_min),       // [新增]
         .y_min_in(crop_y_min),       // [新增]
         .crop_wr_en(crop_wr_en),
         .crop_rgb_out(crop_rgb_out),
+        // .crop_w0(crop_w0),     // [新增]
+        // .crop_h0(crop_h0),     // [新增]
         
         .clk_pe(clk_pe),
         .x_min_out(x_min_out),       // [新增]
@@ -263,27 +269,27 @@ module tb_box_overlay_crop_buffer_manager();
                 // Frame 0: 空帧
             end
             else if (frame_no == 1) begin
-                if (y == 5)  fork send_box_data(1, 1, 1, 99, 1, 1, 1, 1); join_none 
-                if (y == 40) fork send_box_data(2, 13, 4, 90, 15, 15, 15, 15); join_none
-                if (y == 80) fork send_box_data(3, 6, 6, 85, 10,  8, 10, 10); join_none
+                if (y == 100)  fork send_box_data(1, 1, 1, 99, 1, 1, 1, 1); join_none 
+                if (y == 101) fork send_box_data(2, 13, 4, 90, 15, 15, 15, 15); join_none
+                if (y == 102) fork send_box_data(3, 6, 6, 85, 10,  8, 10, 10); join_none
             end
             else if (frame_no == 2) begin
-                if (y == 10) fork send_box_data(4, 2, 2, 95, 12, 12, 12, 12); join_none 
-                if (y == 60) fork send_box_data(1, 12, 5, 88, 10,  5, 20, 10); join_none 
+                if (y == 100) fork send_box_data(4, 2, 2, 95, 12, 12, 12, 12); join_none 
+                if (y == 101) fork send_box_data(1, 12, 5, 88, 10,  5, 20, 10); join_none 
             end
             else if (frame_no == 3) begin
-                if (y ==  5) fork send_box_data(1, 1, 1, 99, 10, 10, 10, 10); join_none 
-                if (y == 10) fork send_box_data(2, 2, 2, 99, 10, 10, 10, 10); join_none 
-                if (y == 15) fork send_box_data(3, 3, 3, 99, 10, 10, 10, 10); join_none 
-                if (y == 80) fork send_box_data(4, 6, 6, 99, 10, 10, 10, 10); join_none 
+                if (y == 100) fork send_box_data(1, 1, 1, 99, 10, 10, 10, 10); join_none 
+                if (y == 101) fork send_box_data(2, 2, 2, 99, 10, 10, 10, 10); join_none 
+                if (y == 102) fork send_box_data(3, 3, 3, 99, 10, 10, 10, 10); join_none 
+                if (y == 103) fork send_box_data(4, 6, 6, 99, 10, 10, 10, 10); join_none 
             end
             else if (frame_no == 4) begin
-                if (y == 5)  fork send_box_data(1, 1, 1, 99, 10, 10, 10, 10); join_none 
-                if (y == 6)  fork send_box_data(2, 2, 2, 99, 10, 10, 10, 10); join_none 
-                if (y == 7)  fork send_box_data(3, 3, 3, 99, 25, 10, 25, 10); join_none 
-                if (y == 65) fork send_box_data(1, 3, 12, 99, 10, 10, 10, 10); join_none 
-                if (y == 66) fork send_box_data(2, 4, 12, 99, 10, 10, 10, 10); join_none 
-                if (y == 67) fork send_box_data(3, 5, 12, 99, 25, 10, 14, 10); join_none 
+                if (y == 100)  fork send_box_data(1, 1, 1, 99, 10, 10, 10, 10); join_none 
+                if (y == 101)  fork send_box_data(2, 2, 2, 99, 10, 10, 10, 10); join_none 
+                if (y == 102)  fork send_box_data(3, 3, 3, 99, 25, 10, 25, 10); join_none 
+                if (y == 103) fork send_box_data(1, 3, 12, 99, 10, 10, 10, 10); join_none 
+                if (y == 104) fork send_box_data(2, 4, 12, 99, 30, 10, 30, 10); join_none 
+                if (y == 105) fork send_box_data(3, 5, 12, 99, 25, 10, 25, 10); join_none 
             end
 
             @(negedge clk_video);

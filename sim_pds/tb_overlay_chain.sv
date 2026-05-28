@@ -20,8 +20,8 @@ module tb_overlay_chain();
 
     logic        box_wr_en = 0; logic [31:0] box_wr_data = 0;
     logic        crop_wr_en   [0:MAX_BOX_NUM-1];
-    logic        start_box_wr [0:MAX_BOX_NUM-1];
-    logic        end_box_wr   [0:MAX_BOX_NUM-1];
+    logic        start_crop_wr [0:MAX_BOX_NUM-1];
+    logic        end_crop_wr   [0:MAX_BOX_NUM-1];
     logic [15:0] crop_x_min   [0:MAX_BOX_NUM-1];
     logic [15:0] crop_y_min   [0:MAX_BOX_NUM-1];
     logic [23:0] crop_rgb_out [0:MAX_BOX_NUM-1];
@@ -43,7 +43,7 @@ module tb_overlay_chain();
         .video_vs_in(v_vs_in), .video_hs_in(v_hs_in), .video_de_in(v_de_in), .video_rgb_in(v_rgb_in),
         .video_vs_out(v_vs_mid), .video_hs_out(v_hs_mid), .video_de_out(v_de_mid), .video_rgb_out(v_rgb_mid),
         .box_wr_en(box_wr_en), .box_wr_data(box_wr_data),
-        .start_box_wr(start_box_wr), .end_box_wr(end_box_wr), .crop_x_min(crop_x_min), .crop_y_min(crop_y_min),
+        .start_crop_wr(start_crop_wr), .end_crop_wr(end_crop_wr), .crop_x_min(crop_x_min), .crop_y_min(crop_y_min),
         .crop_wr_en(crop_wr_en), .crop_rgb_out(crop_rgb_out)
     );
 
@@ -51,7 +51,7 @@ module tb_overlay_chain();
         .MAX_BOX_NUM(MAX_BOX_NUM), .CROP_WIDTH(CROP_WIDTH), .CROP_HEIGHT(CROP_HEIGHT), .CYCLE_PERIOD(4)
     ) u_crop_manager (
         .clk_video(clk_video), .rst_n(rst_n),
-        .start_box_wr(start_box_wr), .end_box_wr(end_box_wr), .x_min_in(crop_x_min), .y_min_in(crop_y_min),
+        .start_crop_wr(start_crop_wr), .end_crop_wr(end_crop_wr), .x_min_in(crop_x_min), .y_min_in(crop_y_min),
         .crop_wr_en(crop_wr_en), .crop_rgb_out(crop_rgb_out),
         .clk_pe(clk_pe), .x_min_out(x_min_out), .y_min_out(y_min_out),
         .new_line_1(new_line_1), .data_valid(data_valid), .data_out(data_out)

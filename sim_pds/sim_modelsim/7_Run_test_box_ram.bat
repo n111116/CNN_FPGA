@@ -1,0 +1,1 @@
+vsim -do ./test_box_ram.tcl

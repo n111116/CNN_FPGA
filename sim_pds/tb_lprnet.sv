@@ -357,11 +357,12 @@ module tb_lprnet;
             // 行尾间隙拉长，增大 layer20 的两行间隔，使得行输出速度能匹配 layer22 的处理速度
             data_input_valid = 0;
             repeat(((CYCLE_PERIOD_OUT_LAYER22 / STEP_COL_LAYER22 / STEP_ROW_LAYER22)) * CYCLE_PERIOD_IN_LAYER22 
-                * IMG_COL_LAYER22
+                * IMG_COL_LAYER22  / STEP_ROW_LAYER20
             ) @(posedge clk); 
 
             $display("Finished driving row %0d at time %t, gap_time %d @posedge clk", index_y, $time, 
-            ((CYCLE_PERIOD_OUT_LAYER22 / STEP_COL_LAYER22 / STEP_ROW_LAYER22) - 1) * CYCLE_PERIOD_IN_LAYER22 * IMG_COL_LAYER22);
+            ((CYCLE_PERIOD_OUT_LAYER22 / STEP_COL_LAYER22 / STEP_ROW_LAYER22)) * CYCLE_PERIOD_IN_LAYER22
+                            * IMG_COL_LAYER22 / STEP_ROW_LAYER20);
         end
 
         // 等待所有流水线（Layer20 ~ 28 + Post Process）排空

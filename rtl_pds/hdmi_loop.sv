@@ -4,6 +4,7 @@
 `include "data_process/header/layer0.vh"
 `include "data_process/header/layer7.vh"   
 `include "data_process/header/layer20.vh"
+`include "data_process/header/layer22.vh"
 `include "data_process/header/layer28.vh"  // 用于LPRNet输出维度的宏定义
 
 `define UD #1
@@ -49,7 +50,7 @@ module hdmi_loop #(
     localparam int CONF_THRESH   = 8'h40; // 阈值可调
     localparam int CROP_HEIGHT   = IMG_ROW_LAYER20;
     localparam int CROP_WIDTH    = IMG_COL_LAYER20;
-    localparam int MAX_BOX_NUM   = 4;
+    localparam int MAX_BOX_NUM   = 8;
     localparam int LPRNET_OUT_WIDTH = $clog2(CYCLE_PERIOD_OUT_LAYER28 * PE_COL_NUM_LAYER28);
 
     wire                        pix_clk_5x ;
@@ -114,12 +115,14 @@ module hdmi_loop #(
     // 子图裁剪与 LPRNet 通信信号 (已修改为标准 [MAX-1:0] 压缩数组)
     logic        box_wr_en;
     logic [31:0] box_wr_data;
-    logic [MAX_BOX_NUM-1:0]        start_box_wr ;
-    logic [MAX_BOX_NUM-1:0]        end_box_wr   ;
-    logic [MAX_BOX_NUM-1:0]        crop_wr_en   ;
-    logic [MAX_BOX_NUM-1:0][15:0]  crop_x_min   ; 
-    logic [MAX_BOX_NUM-1:0][15:0]  crop_y_min   ; 
-    logic [MAX_BOX_NUM-1:0][23:0]  crop_rgb_out;
+    logic         start_crop_wr [0:MAX_BOX_NUM-1];
+    logic         end_crop_wr   [0:MAX_BOX_NUM-1];
+    logic         crop_wr_en    [0:MAX_BOX_NUM-1];
+    logic [15:0]  crop_x_min    [0:MAX_BOX_NUM-1]; 
+    logic [15:0]  crop_y_min    [0:MAX_BOX_NUM-1]; 
+    logic [15:0]  crop_w0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
+    logic [15:0]  crop_h0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
+    logic [23:0]  crop_rgb_out;
 
     logic        lprnet_new_line;
     logic        lprnet_data_valid;
@@ -262,20 +265,7 @@ module hdmi_loop #(
         .full           (hdmi_fifo_full),
         .empty          (hdmi_fifo_empty)
     );
-    // ip_fifo u_hdmi_fifo (
-    //     .wr_clk(pixclk_out),                // input
-    //     .wr_rst(~rstn_out),                // input
-    //     .wr_en(hdmi_fifo_wr_en),                  // input
-    //     .wr_data(hdmi_fifo_data_wr),              // input [31:0]
-    //     .wr_full(hdmi_fifo_full),              // output
-    //     // .almost_full(almost_full),      // output
-    //     .rd_clk(clk_pe),                // input
-    //     .rd_rst(~rstn_out),                // input
-    //     .rd_en(hdmi_fifo_rd_en),                  // input
-    //     .rd_data(hdmi_fifo_dout),              // output [31:0]
-    //     .rd_empty(hdmi_fifo_empty)            // output
-    //     // .almost_empty(almost_empty)     // output
-    // );
+    
 
 
     // =========================================================
@@ -367,12 +357,14 @@ module hdmi_loop #(
         .box_wr_data (box_wr_data),
         
         // 子图裁剪输出供 LPRNet 识别
-        .start_box_wr(start_box_wr),
-        .end_box_wr  (end_box_wr),
-        .crop_x_min  (crop_x_min),     
-        .crop_y_min  (crop_y_min),     
-        .crop_wr_en  (crop_wr_en),
-        .crop_rgb_out(crop_rgb_out)
+        .start_crop_wr(start_crop_wr),
+        .end_crop_wr  (end_crop_wr),
+        .crop_x_min   (crop_x_min),     
+        .crop_y_min   (crop_y_min),    
+        // .crop_w0      (crop_w0),     // [新增]
+        // .crop_h0      (crop_h0),     // [新增] 
+        .crop_wr_en   (crop_wr_en),
+        .crop_rgb_out (crop_rgb_out)
     );
 
 
@@ -385,7 +377,8 @@ module hdmi_loop #(
 
     crop_buffer_manager #(
         .MAX_BOX_NUM(MAX_BOX_NUM),
-        .LINE_GAP(20_000),  
+        .LINE_GAP((((CYCLE_PERIOD_OUT_LAYER22 / STEP_COL_LAYER22 / STEP_ROW_LAYER22)) * CYCLE_PERIOD_IN_LAYER22 
+                * IMG_COL_LAYER22  / STEP_ROW_LAYER20)),  
         .CROP_WIDTH(CROP_WIDTH),
         .CROP_HEIGHT(CROP_HEIGHT),
         .CYCLE_PERIOD(CYCLE_PERIOD_OUT_LAYER20 / STEP_COL_LAYER20 / STEP_ROW_LAYER20)
@@ -393,10 +386,12 @@ module hdmi_loop #(
         .clk_video   (pixclk_out),
         .rst_n       (rst_n_app_video),
         
-        .start_box_wr(start_box_wr),
-        .end_box_wr  (end_box_wr),
+        .start_crop_wr(start_crop_wr),
+        .end_crop_wr  (end_crop_wr),
         .x_min_in    (crop_x_min),   
-        .y_min_in    (crop_y_min),   
+        .y_min_in    (crop_y_min),  
+        // .crop_w0     (crop_w0),     // [新增]
+        // .crop_h0     (crop_h0),     // [新增] 
         .crop_wr_en  (crop_wr_en),
         .crop_rgb_out(crop_rgb_out),
         
@@ -434,7 +429,7 @@ module hdmi_loop #(
         .FONT_FILE(CHARS_FILE)
     ) u_char_overlay (
         .clk_video   (pixclk_out),
-        .rst_n_video (rst_n_app_video), 
+        .rst_n_video (rst_n), 
         
         // 接收已画框的视频源流
         .video_vs_in (video_vs_mid),

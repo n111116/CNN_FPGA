@@ -39,52 +39,52 @@ module lprnet_top #(
     // =========================================================
     
     // Layer 20 -> Layer 21
-    logic [PE_COL_NUM_LAYER20-1:0] [OUT_WIDTH_LAYER20-1:0] layer_y_out_layer20;
-    logic out_valid_layer20;
-    logic new_line_out_1_layer20;
+    logic [PE_COL_NUM_LAYER20-1:0] [OUT_WIDTH_LAYER20-1:0] layer_y_out_layer20/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer20/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer20/*synthesis PAP_MARK_DEBUG="1"*/;
 
     // Layer 21 -> Layer 22
-    logic [PE_COL_NUM_LAYER21-1:0] [OUT_WIDTH_LAYER21-1:0] layer_y_out_layer21 ;
-    logic out_valid_layer21;
-    logic new_line_out_1_layer21;
+    logic [PE_COL_NUM_LAYER21-1:0] [OUT_WIDTH_LAYER21-1:0] layer_y_out_layer21/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer21/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer21/*synthesis PAP_MARK_DEBUG="1"*/;
 
     // Layer 22 -> Layer 23
-    logic [PE_COL_NUM_LAYER22-1:0] [OUT_WIDTH_LAYER22-1:0] layer_y_out_layer22 ;
-    logic out_valid_layer22;
-    logic new_line_out_1_layer22;
+    logic [PE_COL_NUM_LAYER22-1:0] [OUT_WIDTH_LAYER22-1:0] layer_y_out_layer22/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer22/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer22/*synthesis PAP_MARK_DEBUG="1"*/;
 
     // Layer 23 -> Layer 24
-    logic [PE_COL_NUM_LAYER23-1:0] [OUT_WIDTH_LAYER23-1:0] layer_y_out_layer23 ;
-    logic out_valid_layer23;
-    logic new_line_out_1_layer23;
+    logic [PE_COL_NUM_LAYER23-1:0] [OUT_WIDTH_LAYER23-1:0] layer_y_out_layer23/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer23/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer23/*synthesis PAP_MARK_DEBUG="1"*/;
 
     // Layer 24 -> Layer 25
-    logic [PE_COL_NUM_LAYER24-1:0] [OUT_WIDTH_LAYER24-1:0] layer_y_out_layer24 ;
-    logic out_valid_layer24;
-    logic new_line_out_1_layer24;
+    logic [PE_COL_NUM_LAYER24-1:0] [OUT_WIDTH_LAYER24-1:0] layer_y_out_layer24/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer24/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer24/*synthesis PAP_MARK_DEBUG="1"*/;
 
     // Layer 25 -> Layer 26
-    logic [PE_COL_NUM_LAYER25-1:0] [OUT_WIDTH_LAYER25-1:0] layer_y_out_layer25 ;
-    logic out_valid_layer25;
-    logic new_line_out_1_layer25;
+    logic [PE_COL_NUM_LAYER25-1:0] [OUT_WIDTH_LAYER25-1:0] layer_y_out_layer25/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer25/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer25/*synthesis PAP_MARK_DEBUG="1"*/;
 
     // Layer 26 -> Layer 27
-    logic [PE_COL_NUM_LAYER26-1:0] [OUT_WIDTH_LAYER26-1:0] layer_y_out_layer26 ;
-    logic out_valid_layer26;
-    logic new_line_out_1_layer26;
+    logic [PE_COL_NUM_LAYER26-1:0] [OUT_WIDTH_LAYER26-1:0] layer_y_out_layer26/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer26/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer26/*synthesis PAP_MARK_DEBUG="1"*/;
 
     // Layer 27 -> Layer 28
-    logic [PE_COL_NUM_LAYER27-1:0] [OUT_WIDTH_LAYER27-1:0] layer_y_out_layer27 ;
-    logic out_valid_layer27;
-    logic new_line_out_1_layer27;
+    logic [PE_COL_NUM_LAYER27-1:0] [OUT_WIDTH_LAYER27-1:0] layer_y_out_layer27/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer27/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer27/*synthesis PAP_MARK_DEBUG="1"*/;
 
     // Layer 28 -> Post Process
-    logic [PE_COL_NUM_LAYER28-1:0] [OUT_WIDTH_LAYER28-1:0] layer_y_out_layer28 ;
-    logic out_valid_layer28;
-    logic new_line_out_1_layer28;
+    logic [PE_COL_NUM_LAYER28-1:0] [OUT_WIDTH_LAYER28-1:0] layer_y_out_layer28/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic out_valid_layer28/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic new_line_out_1_layer28/*synthesis PAP_MARK_DEBUG="1"*/;
     
     // 无符号转有符号 (针对 Post Process 的要求)
-    logic signed [PE_COL_NUM_LAYER28-1:0] [OUT_WIDTH_LAYER28-1:0] layer28_y_out_signed ;
+    logic signed [PE_COL_NUM_LAYER28-1:0] [OUT_WIDTH_LAYER28-1:0] layer28_y_out_signed/*synthesis PAP_MARK_DEBUG="1"*/;
     int idc;
     always_comb begin
         for(idc = 0; idc < PE_COL_NUM_LAYER28; idc = idc + 1) begin

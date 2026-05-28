@@ -34,31 +34,45 @@ module box_overlay_sync #(
     input  logic [31:0]        box_wr_data,
     
     // ===================================
-    // 3. Iprnet 子图相关数据 (同步于 clk_video)
+    // 2. Iprnet 子图相关数据 (同步于 clk_video)
     // ===================================
-    output logic               start_box_wr [0:MAX_BOX_NUM-1],
-    output logic               end_box_wr   [0:MAX_BOX_NUM-1],
+    output logic               start_crop_wr [0:MAX_BOX_NUM-1],
+    output logic               end_crop_wr   [0:MAX_BOX_NUM-1],
     output logic [15:0]        crop_x_min   [0:MAX_BOX_NUM-1],
     output logic [15:0]        crop_y_min   [0:MAX_BOX_NUM-1],
     output logic               crop_wr_en   [0:MAX_BOX_NUM-1],
-    
-    // 【核心修改】：由于不同框的缓存读出时间可能会重叠，必须改为独立数据总线！
-    output logic [23:0]        crop_rgb_out [0:MAX_BOX_NUM-1]
+    output logic [23:0]        crop_rgb_out
 );     
 
     // =========================================================
     // 变量统一定义区
     // =========================================================
     genvar i_gen;
+    genvar s_gen;
     int idx;
     
+    // 坐标计算中间变量 (改为供 always_comb 使用的纯组合逻辑)
     logic signed [15:0] cx, cy;
     logic signed [15:0] xmin_val, ymin_val, xmax_val, ymax_val;
 
+    // DDA 累加器与写使能数组
+    logic [15:0] x_acc       [0:MAX_BOX_NUM-1];
+    logic [15:0] y_acc       [0:MAX_BOX_NUM-1];
+    logic        y_valid_row [0:MAX_BOX_NUM-1];
+    
+    // 【新增标志位】：用于解决残缺框和半途crop的问题
+    logic        crop_active [0:MAX_BOX_NUM-1]; // 标记当前正在进行一次从头开始的合法crop过程
+    logic        crop_done   [0:MAX_BOX_NUM-1]; // 标记当前框已经完成了一次完整的crop
+    
+    // 数据打拍，用于对齐 crop_wr_en 的一级时序延迟
+    logic [23:0] video_rgb_in_d1;
+    assign crop_rgb_out = video_rgb_in_d1;
+    // 碰撞检测流水线中间变量数组
+    localparam PIPELINE_STAGES = (MAX_BOX_NUM + 1) / 2;
     logic       cur_hit ;
     logic [7:0] cur_conf;
     logic [7:0] cur_cls ;
-    logic signed [15:0] pixel_x, pixel_y; 
+    logic signed [15:0] pixel_x, pixel_y; // pixel_y实际上是当前行坐标+1，调用时需要注意
     logic video_de_in_d;
     wire  hs_falling = !video_de_in && video_de_in_d;
 
@@ -72,8 +86,10 @@ module box_overlay_sync #(
 
     my_fifo  #(
         .DATA_WIDTH(32),
-        .FIFO_DEPTH(64)
-    ) u_box_fifo (
+        .FIFO_DEPTH(128)
+    ) 
+    // ip_fifo 
+    u_box_fifo (
         .rd_clk         (clk_video),
         .wr_clk         (clk_pe),
         .rst            (~rst_n),
@@ -86,9 +102,10 @@ module box_overlay_sync #(
     );
 
     // =========================================================
-    // B. Video 域：读取 FIFO 与解析
+    // B. Video 域：读取 FIFO 与 33 拍长包解析
     // =========================================================
     logic [5:0]  word_cnt; 
+
     logic [7:0]  tmp_idx_x, tmp_idx_y, tmp_conf, tmp_cls;
     logic signed [8:0] tmp_L, tmp_T, tmp_B, tmp_R;
 
@@ -104,17 +121,40 @@ module box_overlay_sync #(
     logic [MAX_BOX_NUM-1 : 0] box_valid;
     logic [7:0]         box_cnt; 
     
-    assign fifo_rd_en = ~fifo_empty && (word_cnt < 4) && (&box_valid != 1);
+    // word_cnt从0增长到4，总共读5次
+    // box_valid不全为1，才可以读取缓存
+    assign fifo_rd_en = ~fifo_empty && (word_cnt < 4) && (box_valid[box_cnt] != 1);
     
     logic fifo_valid;
     always_ff @(posedge clk_video or negedge rst_n) begin
-        if (!rst_n) fifo_valid <= 1'b0;
-        else        fifo_valid <= fifo_rd_en;
+        if (!rst_n) begin
+            box_cnt <= 1'b0;
+            fifo_valid <= 1'b0;
+        end else begin
+            fifo_valid <= fifo_rd_en;
+            // if(word_cnt == 0) begin
+            //     // 没在读并且rd_en为0时自增1（轮询），开始读后不再自增，在读取过程中保持稳定。
+            //     if(~fifo_rd_en) begin
+            //         if(box_cnt < MAX_BOX_NUM - 1)begin
+            //             box_cnt <= box_cnt + 1;
+            //         end else begin
+            //             box_cnt <= 0;
+            //         end
+            //     end
+            // end
+            if(word_cnt == 6) begin
+                if(box_cnt < MAX_BOX_NUM - 1)begin
+                    box_cnt <= box_cnt + 1;
+                end else begin
+                    box_cnt <= 0;
+                end
+            end
+        end
     end
-    
     logic vs_in_d;
     wire  vs_rising = video_vs_in && !vs_in_d;
 
+    // [修复1] 把坐标计算提取为纯组合逻辑
     always_comb begin
         cx = {1'b0, tmp_idx_x} * GRID_STRIDE_CENTER + GRID_STRIDE_CENTER/2;
         cy = {1'b0, tmp_idx_y} * GRID_STRIDE_CENTER + GRID_STRIDE_CENTER/2;
@@ -127,49 +167,88 @@ module box_overlay_sync #(
     always_ff @(posedge clk_video or negedge rst_n) begin
         if (!rst_n) begin
             word_cnt <= 0;
-            box_cnt  <= 0;
             vs_in_d  <= 0;
-            for (idx = 0; idx < MAX_BOX_NUM; idx++) box_valid[idx] <= 1'b0;
+            for (idx = 0; idx < MAX_BOX_NUM; idx++) begin
+                box_valid[idx] <= 1'b0;
+            end
         end else begin
             vs_in_d <= video_vs_in;
+            
+            for (idx = 0; idx < MAX_BOX_NUM; idx++) begin
+                // 【修改逻辑】只有当不仅超出边界，且已经成功经历过完整的crop，才释放框。避免半路生成的框被抛弃。
+                if((pixel_y >= box_ymax[idx] + 1) && crop_done[idx]) begin
+                    box_valid[idx] <= 1'b0;
+                end
+            end
             if (fifo_valid) begin
                 if (word_cnt == 0) begin
-                    tmp_cls   <= fifo_dout[31:24]; tmp_idx_x <= fifo_dout[23:16];
-                    tmp_idx_y <= fifo_dout[15:8];  tmp_conf  <= fifo_dout[7:0];
+                    tmp_cls   <= fifo_dout[31:24];
+                    tmp_idx_x <= fifo_dout[23:16];
+                    tmp_idx_y <= fifo_dout[15:8];
+                    tmp_conf  <= fifo_dout[7:0];
                     word_cnt  <= 1;
                 end
-                else if (word_cnt == 1) begin tmp_L <= fifo_dout[8:0]; word_cnt <= 2; end
-                else if (word_cnt == 2) begin tmp_T <= fifo_dout[8:0]; word_cnt <= 3; end
-                else if (word_cnt == 3) begin tmp_R <= fifo_dout[8:0]; word_cnt <= 4; end
-                else if (word_cnt == 4) begin tmp_B <= fifo_dout[8:0]; word_cnt <= 5; end
+                else if (word_cnt == 1) begin
+                    tmp_L <= fifo_dout[8:0];
+                    word_cnt <= 2;
+                end
+                else if (word_cnt == 2) begin
+                    tmp_T <= fifo_dout[8:0];
+                    word_cnt <= 3;
+                end
+                else if (word_cnt == 3) begin
+                    tmp_R <= fifo_dout[8:0];
+                    word_cnt <= 4;
+                end
+                else if (word_cnt == 4) begin
+                    tmp_B <= fifo_dout[8:0];
+                    word_cnt <= 5;
+                end
             end 
+            // 无fifo_valid时
             else begin
                 if (word_cnt == 5) begin
-                    if (box_cnt < MAX_BOX_NUM) begin
-                        word_cnt <= 6;
-                        box_xmin[box_cnt] <= ((xmin_val - 10) > 0) ? (xmin_val - 10) : 0;
-                        box_ymin[box_cnt] <= ((ymin_val -  5) > 0) ? (ymin_val -  5) : 0;
-                        box_xmax[box_cnt] <= ((xmax_val + 10) <  IMG_WIDTH - 1) ? (xmax_val + 10) :  IMG_WIDTH - 1;
-                        box_ymax[box_cnt] <= ((ymax_val +  5) < IMG_HEIGHT - 1) ? (ymax_val +  5) : IMG_HEIGHT - 1;
-                        box_conf [box_cnt]<= tmp_conf;
-                        box_cls  [box_cnt]<= tmp_cls;
-                    end
+                    word_cnt <= 6;
+                    // 寄存器锁存已算好的组合逻辑结果，并进行外扩
+                    box_xmin[box_cnt] <= ((xmin_val - 10) > 1) ? (xmin_val - 10) : 1;
+                    box_ymin[box_cnt] <= ((ymin_val -  5) > 1) ? (ymin_val -  5) : 1;
+                    box_xmax[box_cnt] <= ((xmax_val + 10) <  IMG_WIDTH - 2) ? (xmax_val + 10) :  IMG_WIDTH - 2;
+                    box_ymax[box_cnt] <= ((ymax_val +  5) < IMG_HEIGHT - 2) ? (ymax_val +  5) : IMG_HEIGHT - 2;
+
+                    box_conf [box_cnt]  <= tmp_conf;
+                    box_cls  [box_cnt]  <= tmp_cls;
                 end
+                // 剩余子图相关参数
                 else if(word_cnt == 6) begin
                     word_cnt <= 0;
+                    
                     box_w0[box_cnt]   <= box_xmax[box_cnt] - box_xmin[box_cnt];
                     box_h0[box_cnt]   <= box_ymax[box_cnt] - box_ymin[box_cnt];
+                    // 如果原图过小（小于框大小，将原图扩展至与框一样大）
+                    // 修复：Y轴子图扩展时防止超出屏幕下边界
+                    if(box_ymax[box_cnt] - box_ymin[box_cnt] < CROP_HEIGHT) begin
+                        if (box_ymin[box_cnt] + CROP_HEIGHT <= IMG_HEIGHT - 2) begin
+                            box_ymax[box_cnt] <= box_ymin[box_cnt] + CROP_HEIGHT;
+                        end else begin
+                            // 如果往下扩展会越界，则顶住下边界，把 ymin 往上反推
+                            box_ymax[box_cnt] <= IMG_HEIGHT - 2;
+                            box_ymin[box_cnt] <= (IMG_HEIGHT - 2 >= CROP_HEIGHT) ? (IMG_HEIGHT - 2 - CROP_HEIGHT) : 1;
+                        end
+                        box_h0[box_cnt] <= CROP_HEIGHT;
+                    end
+
+                    // 修复：X轴子图扩展同理
+                    if(box_xmax[box_cnt] - box_xmin[box_cnt] < CROP_WIDTH) begin
+                        if (box_xmin[box_cnt] + CROP_WIDTH <= IMG_WIDTH - 2) begin
+                            box_xmax[box_cnt] <= box_xmin[box_cnt] + CROP_WIDTH;
+                        end else begin
+                            box_xmax[box_cnt] <= IMG_WIDTH - 2;
+                            box_xmin[box_cnt] <= (IMG_WIDTH - 2 >= CROP_WIDTH) ? (IMG_WIDTH - 2 - CROP_WIDTH) : 1;
+                        end
+                        box_w0[box_cnt] <= CROP_WIDTH;
+                    end
                     box_valid[box_cnt] <= 1'b1;
 
-                    if(box_cnt < MAX_BOX_NUM - 1) box_cnt <= box_cnt + 1;
-                    else box_cnt <= 0;
-                end
-                for (idx = 0; idx < MAX_BOX_NUM; idx++) begin
-                    if(hs_falling && (pixel_y - 1 == box_ymax[idx])) begin
-                        box_valid[idx] <= 1'b0;
-                    end else if(vs_rising && (box_ymax[idx] == IMG_HEIGHT - 1))begin
-                        box_valid[idx] <= 1'b0;
-                    end
                 end
             end
         end
@@ -178,13 +257,18 @@ module box_overlay_sync #(
     // =========================================================
     // C. 视频光栅扫描与坐标追踪
     // =========================================================
+    
     always_ff @(posedge clk_video or negedge rst_n) begin
         if (!rst_n) begin
             video_de_in_d <= 0;
             pixel_x <= 0;
             pixel_y <= 0;
+            video_rgb_in_d1 <= 0;
         end else begin
             video_de_in_d <= video_de_in;
+            // [修复3]: 像素数据打一拍，用于对齐 crop_wr_en
+            video_rgb_in_d1 <= video_rgb_in; 
+            
             if (vs_rising) begin
                 pixel_x <= 0;
                 pixel_y <= 0;
@@ -192,6 +276,7 @@ module box_overlay_sync #(
             else if (video_de_in) begin
                 pixel_x <= pixel_x + 1;
             end 
+            // 这样生成的pixel_y实际上是当前行坐标+1，调用时需要注意
             else if (hs_falling) begin
                 pixel_x <= 0;
                 pixel_y <= pixel_y + 1;
@@ -200,180 +285,104 @@ module box_overlay_sync #(
     end
 
     // =========================================================
-    // F. DDA 行缓存与解耦输出状态机 (核心重构)
+    // F. DDA 映射与子图 FIFO 生成逻辑 
     // =========================================================
-    // 状态机定义
-    localparam S_IDLE = 2'd0;
-    localparam S_BUF  = 2'd1;
-    localparam S_READ = 2'd2;
-
     generate
         for (i_gen = 0; i_gen < MAX_BOX_NUM; i_gen++) begin : gen_crop_fifo
             
-            // 物理行缓存 RAM 及指针
-            logic [2:0]  ram_rep_x [0:255]; 
-            logic [23:0] ram_rgb   [0:255];
-            logic [7:0]  ram_wr_ptr;
-            logic [7:0]  ram_rd_ptr;
-            logic [7:0]  ram_max_ptr;
-
-            logic [1:0]  state;
-            logic [2:0]  cur_rep_y;
-            logic [2:0]  rep_y_reg;
-            logic [2:0]  cur_rep_x;
-            logic        load_first;
-
-            // 独立的 DDA 累加器
-            logic [15:0] x_acc;
-            logic [15:0] y_acc;
-            
-            // DDA 组合逻辑预测下一个状态的重复次数
-            logic [2:0]  rep_y, rep_x;
-            logic [15:0] nxt_y, nxt_x;
-            logic [15:0] temp_y, temp_x;
-
-            always_comb begin
-                temp_y = y_acc + CROP_HEIGHT;
-                if      (temp_y >= 4 * box_h0[i_gen]) begin rep_y = 4; nxt_y = temp_y - 4*box_h0[i_gen]; end
-                else if (temp_y >= 3 * box_h0[i_gen]) begin rep_y = 3; nxt_y = temp_y - 3*box_h0[i_gen]; end
-                else if (temp_y >= 2 * box_h0[i_gen]) begin rep_y = 2; nxt_y = temp_y - 2*box_h0[i_gen]; end
-                else if (temp_y >=     box_h0[i_gen]) begin rep_y = 1; nxt_y = temp_y -   box_h0[i_gen]; end
-                else                                  begin rep_y = 0; nxt_y = temp_y; end
-                
-                temp_x = x_acc + CROP_WIDTH;
-                if      (temp_x >= 4 * box_w0[i_gen]) begin rep_x = 4; nxt_x = temp_x - 4*box_w0[i_gen]; end
-                else if (temp_x >= 3 * box_w0[i_gen]) begin rep_x = 3; nxt_x = temp_x - 3*box_w0[i_gen]; end
-                else if (temp_x >= 2 * box_w0[i_gen]) begin rep_x = 2; nxt_x = temp_x - 2*box_w0[i_gen]; end
-                else if (temp_x >=     box_w0[i_gen]) begin rep_x = 1; nxt_x = temp_x -   box_w0[i_gen]; end
-                else                                  begin rep_x = 0; nxt_x = temp_x; end
-            end
-
             always_ff @(posedge clk_video or negedge rst_n) begin
                 if (!rst_n) begin
-                    state <= S_IDLE;
-                    y_acc <= 0; x_acc <= 0;
-                    ram_wr_ptr <= 0; ram_rd_ptr <= 0; ram_max_ptr <= 0;
-                    crop_wr_en[i_gen] <= 0; crop_rgb_out[i_gen] <= 0;
-                    start_box_wr[i_gen] <= 0; end_box_wr[i_gen] <= 0;
-                    cur_rep_y <= 0; cur_rep_x <= 0; load_first <= 0; rep_y_reg <= 0;
+                    y_acc[i_gen] <= 0;
+                    y_valid_row[i_gen] <= 0;
+                    start_crop_wr[i_gen] <= 1'b0;
+                    end_crop_wr[i_gen] <= 1'b0;
+                    crop_x_min[i_gen] <= 0;
+                    crop_y_min[i_gen] <= 0;
+                    crop_active[i_gen] <= 1'b0;
+                    crop_done[i_gen]   <= 1'b0;
                 end else begin 
-                    start_box_wr[i_gen] <= 1'b0;
-                    end_box_wr[i_gen]   <= 1'b0;
-                    crop_wr_en[i_gen]   <= 1'b0;
-
+                    start_crop_wr[i_gen] <= 1'b0;
+                    end_crop_wr[i_gen] <= 1'b0;
                     if (box_valid[i_gen]) begin
-                        // ----------------------------------------------------
-                        // 1. 行级 (Row Level) 同步与 Y 轴 DDA
-                        // ----------------------------------------------------
                         if (hs_falling) begin
-                            x_acc <= 0; // 每行开始前重置 X 累加器
-                            if (pixel_y == box_ymin[i_gen]) begin
-                                start_box_wr[i_gen] <= 1'b1;
-                                crop_x_min[i_gen]   <= box_xmin[i_gen];
-                                crop_y_min[i_gen]   <= box_ymin[i_gen];
-                                y_acc               <= nxt_y;
-                                cur_rep_y           <= rep_y;
+                            // 框外行
+                            y_valid_row[i_gen] <= 1'b0;
+                            
+                            // 1. 只有碰到了真正的顶部，才触发开始写并激活 crop_active
+                            if ((pixel_y) == box_ymin[i_gen]) begin
+                                start_crop_wr[i_gen] <= 1'b1;
+                                crop_active[i_gen]   <= 1'b1; // 激活：这是一次完整的crop开始
+                                crop_x_min[i_gen] <= box_xmin[i_gen];
+                                crop_y_min[i_gen] <= box_ymin[i_gen];
+                                if (((box_h0[i_gen] >> 1) + CROP_HEIGHT) >= box_h0[i_gen]) begin
+                                    y_valid_row[i_gen] <= 1'b1;
+                                    y_acc[i_gen]       <= (box_h0[i_gen] >> 1) + CROP_HEIGHT - box_h0[i_gen];
+                                end else begin
+                                    y_valid_row[i_gen] <= 1'b0;
+                                    y_acc[i_gen]       <= (box_h0[i_gen] >> 1) + CROP_HEIGHT;
+                                end
+                            end
+                            // 2. 框内部的后续行：仅当当前处于 active 状态（代表开头被抓到了）才继续 crop 逻辑
+                            else if ((pixel_y) > box_ymin[i_gen] && (pixel_y) < box_ymax[i_gen]) begin
+                                if (crop_active[i_gen]) begin 
+                                    if ((y_acc[i_gen] + CROP_HEIGHT) >= box_h0[i_gen]) begin
+                                        y_valid_row[i_gen] <= 1'b1;           
+                                        y_acc[i_gen]       <= y_acc[i_gen] + CROP_HEIGHT - box_h0[i_gen];
+                                    end else begin 
+                                        y_valid_row[i_gen] <= 1'b0;          
+                                        y_acc[i_gen]       <= y_acc[i_gen] + CROP_HEIGHT;
+                                    end
+                                end
                             end 
-                            else if (pixel_y > box_ymin[i_gen] && pixel_y < box_ymax[i_gen]) begin
-                                y_acc     <= nxt_y;
-                                cur_rep_y <= rep_y;
-                            end 
-                            else if (pixel_y == box_ymax[i_gen]) begin
-                                end_box_wr[i_gen] <= 1'b1;
-                                cur_rep_y         <= 0;
-                            end 
-                            else begin
-                                cur_rep_y <= 0;
+                            // 3. 框结束行：仅当处在 active 状态时，才视为完成一次完整crop
+                            else if(pixel_y == box_ymax[i_gen])begin
+                                if (crop_active[i_gen]) begin
+                                    end_crop_wr[i_gen] <= 1'b1;
+                                    crop_active[i_gen] <= 1'b0; // 结束crop状态
+                                    crop_done[i_gen]   <= 1'b1; // 标记一次完整crop已经完成
+                                end
                             end
                         end
-
-                        // ----------------------------------------------------
-                        // 2. 状态机：缓存 (Buffer) 与 异步解耦输出 (Readout)
-                        // ----------------------------------------------------
-                        case (state)
-                            S_IDLE: begin
-                                // 遇到框的左边界，且该行需要被读出时，启动缓存
-                                if (video_de_in && (pixel_x == box_xmin[i_gen]) && (cur_rep_y > 0)) begin
-                                    state <= S_BUF;
-                                    ram_wr_ptr <= 0;
-                                    ram_rep_x[0] <= rep_x;
-                                    ram_rgb[0]   <= video_rgb_in;
-                                    x_acc <= nxt_x;
-                                    ram_wr_ptr <= 1;
-                                    rep_y_reg <= cur_rep_y;
-                                end
+                    end else begin
+                        y_valid_row[i_gen] <= 1'b0;  
+                        crop_active[i_gen] <= 1'b0;   // 无效框时重置相关状态
+                        crop_done[i_gen]   <= 1'b0;
+                    end
+                end
+            end
+            
+            always_ff @(posedge clk_video or negedge rst_n) begin
+                if (!rst_n) begin
+                    x_acc[i_gen] <= 0;
+                    crop_wr_en[i_gen] <= 0;
+                end else if (box_valid[i_gen]) begin
+                    if (hs_falling || vs_rising) begin
+                        x_acc[i_gen] <= 0;
+                        crop_wr_en[i_gen] <= 0;
+                    end
+                    else if (y_valid_row[i_gen] && video_de_in && pixel_x >= box_xmin[i_gen] && pixel_x < box_xmax[i_gen]) begin
+                        
+                        if (pixel_x == box_xmin[i_gen]) begin
+                            if (((box_w0[i_gen] >> 1) + CROP_WIDTH) >= box_w0[i_gen]) begin
+                                crop_wr_en[i_gen] <= 1'b1;
+                                x_acc[i_gen]      <= (box_w0[i_gen] >> 1) + CROP_WIDTH - box_w0[i_gen];
+                            end else begin
+                                crop_wr_en[i_gen] <= 1'b0;
+                                x_acc[i_gen]      <= (box_w0[i_gen] >> 1) + CROP_WIDTH;
                             end
-                            
-                            S_BUF: begin
-                                if (video_de_in) begin
-                                    if (pixel_x < box_xmax[i_gen]) begin
-                                        ram_rep_x[ram_wr_ptr] <= rep_x;
-                                        ram_rgb[ram_wr_ptr]   <= video_rgb_in;
-                                        x_acc <= nxt_x;
-                                        ram_wr_ptr <= ram_wr_ptr + 1;
-                                    end
-                                    // 框结束，立即转入异步读取状态，此时无需考虑视频流时序
-                                    if (pixel_x == box_xmax[i_gen]) begin
-                                        state <= S_READ;
-                                        ram_max_ptr <= ram_wr_ptr;
-                                        ram_rd_ptr <= 0;
-                                        load_first <= 1'b1;
-                                    end
-                                end
+                        end 
+                        else begin
+                            if ((x_acc[i_gen] + CROP_WIDTH) >= box_w0[i_gen]) begin
+                                crop_wr_en[i_gen] <= 1'b1;
+                                x_acc[i_gen]      <= x_acc[i_gen] + CROP_WIDTH - box_w0[i_gen];
+                            end else begin
+                                crop_wr_en[i_gen] <= 1'b0;
+                                x_acc[i_gen]      <= x_acc[i_gen] + CROP_WIDTH;
                             end
-                            
-                            S_READ: begin
-                                // 第 1 个时钟周期：装载首个像素的 X 重复次数
-                                if (load_first) begin
-                                    cur_rep_x <= ram_rep_x[0];
-                                    load_first <= 1'b0;
-                                end 
-                                else if (rep_y_reg > 0) begin
-                                    // 如果当前像素还要输出 (rep_x > 0)
-                                    if (cur_rep_x > 0) begin
-                                        crop_wr_en[i_gen]   <= 1'b1;
-                                        crop_rgb_out[i_gen] <= ram_rgb[ram_rd_ptr];
-                                        
-                                        if (cur_rep_x == 1) begin
-                                            // 当前像素发完了，移动指针到下一个像素
-                                            if (ram_rd_ptr == ram_max_ptr - 1) begin
-                                                // 本行发完了，行重复计数减 1
-                                                ram_rd_ptr <= 0;
-                                                rep_y_reg <= rep_y_reg - 1;
-                                                if (rep_y_reg == 1) begin
-                                                    state <= S_IDLE; // 所有行重发完毕
-                                                end else begin
-                                                    cur_rep_x <= ram_rep_x[0]; // 重开一行
-                                                end
-                                            end else begin
-                                                ram_rd_ptr <= ram_rd_ptr + 1;
-                                                cur_rep_x <= ram_rep_x[ram_rd_ptr + 1];
-                                            end
-                                        end else begin
-                                            cur_rep_x <= cur_rep_x - 1;
-                                        end
-                                    end 
-                                    else begin
-                                        // 这个像素被 DDA 判为丢弃 (缩小操作)，直接跳过不发
-                                        crop_wr_en[i_gen] <= 1'b0;
-                                        if (ram_rd_ptr == ram_max_ptr - 1) begin
-                                            ram_rd_ptr <= 0;
-                                            rep_y_reg <= rep_y_reg - 1;
-                                            if (rep_y_reg == 1) begin
-                                                state <= S_IDLE;
-                                            end else begin
-                                                cur_rep_x <= ram_rep_x[0];
-                                            end
-                                        end else begin
-                                            ram_rd_ptr <= ram_rd_ptr + 1;
-                                            cur_rep_x <= ram_rep_x[ram_rd_ptr + 1];
-                                        end
-                                    end
-                                end else begin
-                                    state <= S_IDLE;
-                                end
-                            end
-                        endcase
+                        end
+                    end 
+                    else begin
+                        crop_wr_en[i_gen] <= 1'b0;
                     end
                 end
             end
@@ -381,10 +390,15 @@ module box_overlay_sync #(
     endgenerate
 
     // =========================================================
-    // D. 碰撞检测（并行架构） & E. 最终混叠输出 
+    // D. 碰撞检测（并行架构）
     // =========================================================
+    
+    
+    // [修复1] 把判定逻辑放入 always_comb 中
     always_ff @(posedge clk_video) begin
-        cur_hit  <= 1'b0; cur_conf <= 8'd0; cur_cls  <= 8'd0;
+        cur_hit  <= 1'b0;
+        cur_conf <= 8'd0;
+        cur_cls  <= 8'd0;
         for (idx = 0; idx < MAX_BOX_NUM; idx = idx + 1) begin
             if (box_valid[idx] && 
                 pixel_x         >= box_xmin[idx] && pixel_x         <= box_xmax[idx] &&
@@ -392,24 +406,41 @@ module box_overlay_sync #(
                 
                 if (pixel_x         < box_xmin[idx] + LINE_WIDTH || pixel_x             > box_xmax[idx] - LINE_WIDTH ||
                     (pixel_y - 1)   < box_ymin[idx] + LINE_WIDTH || (pixel_y - 1)       > box_ymax[idx] - LINE_WIDTH) begin
-                    cur_hit  <= 1'b1; cur_conf <= box_conf[idx] ; cur_cls  <= box_cls[idx] ;
+                    cur_hit  <= 1'b1;
+                    cur_conf <= box_conf[idx] ;
+                    cur_cls  <= box_cls[idx] ;
                 end
             end
         end
     end
 
+    // =========================================================
+    // E. 最终混叠输出 
+    // =========================================================
     always_ff @(posedge clk_video or negedge rst_n) begin
         if (!rst_n) begin
-            video_vs_out <= 0; video_hs_out <= 0; video_de_out <= 0; video_rgb_out <= 0;
+            video_vs_out <= 0; 
+            video_hs_out <= 0; 
+            video_de_out <= 0; 
+            video_rgb_out <= 0;
         end else begin
-            video_vs_out <= video_vs_in; video_hs_out <= video_hs_in; video_de_out <= video_de_in;
+            video_vs_out <= video_vs_in;
+            video_hs_out <= video_hs_in;
+            video_de_out <= video_de_in;
+            
             if (cur_hit) begin
-                if      (cur_cls == 0) video_rgb_out <= 24'h00_00_FF; 
-                else if (cur_cls == 1) video_rgb_out <= 24'h00_FF_00; 
-                else if (cur_cls == 2) video_rgb_out <= 24'hFF_FF_00; 
-                else if (cur_cls == 3) video_rgb_out <= 24'h00_00_00; 
-                else if (cur_cls == 4) video_rgb_out <= 24'hFF_FF_FF; 
-                else                   video_rgb_out <= 24'hFF_00_FF; 
+                if (cur_cls == 0) 
+                    video_rgb_out <= 24'h00_00_FF; 
+                else if(cur_cls == 1)
+                    video_rgb_out <= 24'h00_FF_00; 
+                else if(cur_cls == 2)
+                    video_rgb_out <= 24'hFF_FF_00; 
+                else if(cur_cls == 3)
+                    video_rgb_out <= 24'h00_00_00; 
+                else if(cur_cls == 4)
+                    video_rgb_out <= 24'hFF_FF_FF; 
+                else
+                    video_rgb_out <= 24'hFF_00_FF; 
             end else begin
                 video_rgb_out <= video_rgb_in; 
             end

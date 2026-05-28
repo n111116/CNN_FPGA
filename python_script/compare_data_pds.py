@@ -2,7 +2,7 @@ import os
 import scipy.io
 
 # 这里选择要验证的仿真层
-from CnnHardwareGenerator_pds import layer7 as layer_to_test
+from CnnHardwareGenerator_pds import layer28 as layer_to_test
 # ================= 配置参数 =================
 layer_to_test.load_mat_data()
 # 1. 原始参考数据
@@ -151,7 +151,10 @@ def compare_data():
 
                     # 遍历 所有 个 PE
                     for pe_idx in range(PE_COL_NUM):
-                        channel_idx = pe_idx * CYCLE_PERIOD_OUT + t
+                        channel_idx = pe_idx * RANGE_T + t
+
+                        # print(pe_idx,CYCLE_PERIOD_OUT,t)
+                        # print(channel_idx)
                         # ref_flat_idx = (r * IMG_COL + c) * CHANNELS + channel_idx
                         # layer7实际上只有4个输出通道
                         if layer_to_test.layer_num == 7 and channel_idx >= 4:
@@ -165,7 +168,7 @@ def compare_data():
                             pass
                             # print(channel_idx)
                         else:
-                            # 获取参考值 (Input 模式直接取, Output 模式做处理)
+                            # 获取参考值
                             expected_val = ref_raw[0][channel_idx][r][c]
                             if(expected_val < 0 and WITH_RELU):
                                 expected_val = 0
