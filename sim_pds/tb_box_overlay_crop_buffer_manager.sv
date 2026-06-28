@@ -11,8 +11,8 @@ module tb_box_overlay_crop_buffer_manager();
     parameter GRID_STRIDE_LTRB   = 1;
     parameter MAX_BOX_NUM = 10;
     
-    parameter CROP_WIDTH  = 40;
-    parameter CROP_HEIGHT = 10;
+    parameter CROP_WIDTH  = 80;
+    parameter CROP_HEIGHT = 40;
 
     // =========================================================
     // 2. 时钟与复位生成

@@ -25,6 +25,26 @@ module hdmi_loop #(
     output            hd_scl        ,
     inout             hd_sda        ,
     output            led_int       ,
+    output            ddr_init_done ,
+
+    // DDR3
+    input             clk_p         ,
+    input             clk_n         ,
+    output            mem_rst_n     ,
+    output            mem_ck        ,
+    output            mem_ck_n      ,
+    output            mem_cke       ,
+    output            mem_cs_n      ,
+    output            mem_ras_n     ,
+    output            mem_cas_n     ,
+    output            mem_we_n      ,
+    output            mem_odt       ,
+    output [14:0]     mem_a         ,
+    output [2:0]      mem_ba        ,
+    inout  [3:0]      mem_dqs       ,
+    inout  [3:0]      mem_dqs_n     ,
+    inout  [31:0]     mem_dq        ,
+    output [3:0]      mem_dm        ,
     
     // hdmi_out 
     output            tmds_clk_n    , 
@@ -55,6 +75,7 @@ module hdmi_loop #(
 
     wire                        pix_clk_5x ;
     wire                        cfg_clk    ;
+    wire                        ddr_ref_clk;
     wire                        locked     ;
     wire                        init_over  ;
     wire                        rx_init_done;
@@ -99,6 +120,8 @@ module hdmi_loop #(
     logic [31:0] post_packet_data;
     logic        post_packet_valid; 
     logic        post_frame_done;   
+    logic [$clog2(IMG_ROW_LAYER7)-1:0] layer7_line_cnt;
+    logic        ddr_read_start_toggle;
     
     // 画框模块与写字模块中间连线
     logic        video_vs_mid;
@@ -111,6 +134,12 @@ module hdmi_loop #(
     wire         final_hs_out;
     wire         final_de_out;
     wire  [23:0] final_rgb_out;
+
+    // DDR 延迟后的视频流，作为 overlay/crop 的底图
+    logic        ddr_video_vs;
+    logic        ddr_video_hs;
+    logic        ddr_video_de;
+    logic [23:0] ddr_video_rgb;
 
     // 子图裁剪与 LPRNet 通信信号 (已修改为标准 [MAX-1:0] 压缩数组)
     logic        box_wr_en;
@@ -141,6 +170,15 @@ module hdmi_loop #(
     // =========================================================
     assign pixclk_out = pixclk_in;
     assign led_int    = lprnet_frame_start;
+
+    GTP_INBUFGDS #(
+        .IOSTANDARD("DEFAULT"),
+        .TERM_DIFF("ON")
+    ) u_ddr_refclk_buf (
+        .O (ddr_ref_clk),
+        .I (clk_p),
+        .IB(clk_n)
+    );
 
     PLL u_pll (
       .clkout1(pix_clk_5x),    
@@ -320,6 +358,65 @@ module hdmi_loop #(
         .post_frame_done      (post_frame_done)
     );
 
+    always_ff @(posedge clk_pe or negedge rst_n_app_pe) begin
+        if (!rst_n_app_pe) begin
+            layer7_line_cnt <= '0;
+            ddr_read_start_toggle <= 1'b0;
+        end else if (new_line_out_1_layer7) begin
+            if (layer7_line_cnt == '0) begin
+                ddr_read_start_toggle <= ~ddr_read_start_toggle;
+            end
+
+            if (layer7_line_cnt == IMG_ROW_LAYER7 - 1) begin
+                layer7_line_cnt <= '0;
+            end else begin
+                layer7_line_cnt <= layer7_line_cnt + 1'b1;
+            end
+        end
+    end
+
+    ddr_video_delay_sync #(
+        .H_ACT   (1280),
+        .V_ACT   (720),
+        .H_TOTAL (1650),
+        .H_SYNC  (40),
+        .H_BP    (220),
+        .H_FP    (110),
+        .V_TOTAL (750),
+        .V_SYNC  (5),
+        .V_BP    (20),
+        .V_FP    (5)
+    ) u_ddr_video_delay_sync (
+        .pix_clk          (pixclk_out),
+        .ddr_ref_clk      (ddr_ref_clk),
+        .rst_n            (rstn_out),
+        .video_vs_in      (vs_in_dly2),
+        .video_de_in      (de_in_dly2),
+        .video_rgb_in     (rgb_in_dly2),
+        .read_start_toggle(ddr_read_start_toggle),
+        .video_vs_out     (ddr_video_vs),
+        .video_hs_out     (ddr_video_hs),
+        .video_de_out     (ddr_video_de),
+        .video_rgb_out    (ddr_video_rgb),
+        .frame_start_out  (),
+        .ddr_init_done    (ddr_init_done),
+        .mem_rst_n        (mem_rst_n),
+        .mem_ck           (mem_ck),
+        .mem_ck_n         (mem_ck_n),
+        .mem_cke          (mem_cke),
+        .mem_cs_n         (mem_cs_n),
+        .mem_ras_n        (mem_ras_n),
+        .mem_cas_n        (mem_cas_n),
+        .mem_we_n         (mem_we_n),
+        .mem_odt          (mem_odt),
+        .mem_a            (mem_a),
+        .mem_ba           (mem_ba),
+        .mem_dqs          (mem_dqs),
+        .mem_dqs_n        (mem_dqs_n),
+        .mem_dq           (mem_dq),
+        .mem_dm           (mem_dm)
+    );
+
 
     // =========================================================
     // 5. 视频级 OSD: 目标框图叠加 (Box Overlay)
@@ -341,11 +438,11 @@ module hdmi_loop #(
         .clk_pe      (clk_pe),
         .rst_n       (rst_n_app_video), 
         
-        // 输入信号为打拍完成的底图视频流
-        .video_vs_in (vs_in_dly2),
-        .video_hs_in (hs_in_dly2),
-        .video_de_in (de_in_dly2),
-        .video_rgb_in(rgb_in_dly2),
+        // 输入信号为 DDR 读回的同帧底图视频流
+        .video_vs_in (ddr_video_vs),
+        .video_hs_in (ddr_video_hs),
+        .video_de_in (ddr_video_de),
+        .video_rgb_in(ddr_video_rgb),
         
         // 第一级处理后的 OSD 视频流
         .video_vs_out(video_vs_mid),

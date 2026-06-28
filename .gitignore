@@ -10,3 +10,4 @@ sim_pds/sim_modelsim/**
 !sim_pds/sim_modelsim/**/*.bat
 prj_pds/**
 !prj_pds/*.fdc
+ddrprj/**
