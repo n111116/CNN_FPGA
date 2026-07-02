@@ -11,22 +11,22 @@ module crop_buffer_manager #(
     input  logic               clk_video,
     input  logic               rst_n,
     
-    input  logic               start_crop_wr [0:MAX_BOX_NUM-1],
-    input  logic               end_crop_wr   [0:MAX_BOX_NUM-1],
-    input  logic               crop_wr_en   [0:MAX_BOX_NUM-1],
-    input  logic [15:0]        x_min_in     [0:MAX_BOX_NUM-1],
-    input  logic [15:0]        y_min_in     [0:MAX_BOX_NUM-1],
-    input  logic [23:0]        crop_rgb_out [0:MAX_BOX_NUM-1],
+    input  logic [MAX_BOX_NUM-1:0]        start_crop_wr,
+    input  logic [MAX_BOX_NUM-1:0]        end_crop_wr,
+    input  logic [MAX_BOX_NUM-1:0]        crop_wr_en,
+    input  logic [MAX_BOX_NUM-1:0][15:0]  x_min_in,
+    input  logic [MAX_BOX_NUM-1:0][15:0]  y_min_in,
+    input  logic [MAX_BOX_NUM-1:0][23:0]  crop_rgb_out,
     
     // ===================================
     // 2. 读端：PE 网络时钟域 (clk_pe)
     // ===================================
     input  logic               clk_pe,
-    output logic [15:0]        x_min_out,
-    output logic [15:0]        y_min_out,
-    output logic               new_line_1,
-    output logic               data_valid,
-    output logic [23:0]        data_out
+    output logic [15:0]        x_min_out                         /* synthesis syn_preserve=1 */,
+    output logic [15:0]        y_min_out                         /* synthesis syn_preserve=1 */,
+    output logic               new_line_1                        /* synthesis syn_preserve=1 */,
+    output logic               data_valid                        /* synthesis syn_preserve=1 */,
+    output logic [23:0]        data_out                          /* synthesis syn_preserve=1 */
 );
 
     // =========================================================
@@ -42,31 +42,32 @@ module crop_buffer_manager #(
     logic [15:0]        y_min_reg        [0:MAX_BOX_NUM-1];
     
     // 写端控制信号
-    logic [0:MAX_BOX_NUM-1] box_ready_v; 
-    logic [0:MAX_BOX_NUM-1] writing_active; // [新增] 帧级写入许可锁，保证不写半截帧
+    logic [MAX_BOX_NUM-1:0] box_ready_v                          /* synthesis syn_preserve=1 */; 
+    logic [MAX_BOX_NUM-1:0] writing_active                       /* synthesis syn_preserve=1 */; // [新增] 帧级写入许可锁，保证不写半截帧
     
     // 跨时钟域同步信号 (clk_video -> clk_pe: 通知就绪)
-    logic [0:MAX_BOX_NUM-1] box_ready_sync1 ;
-    logic [0:MAX_BOX_NUM-1] box_ready_pe    ;
+    logic [MAX_BOX_NUM-1:0] box_ready_sync1                      /* synthesis syn_preserve=1 */;
+    logic [MAX_BOX_NUM-1:0] box_ready_pe                         /* synthesis syn_preserve=1 */;
 
     // 跨时钟域同步信号 (clk_pe -> clk_video: 通知读完以释放缓存)
-    logic [0:MAX_BOX_NUM]   box_read_toggle_pe ;  
-    logic [0:MAX_BOX_NUM-1] toggle_sync1       ; 
-    logic [0:MAX_BOX_NUM-1] toggle_sync2       ; 
-    logic [0:MAX_BOX_NUM-1] toggle_sync3       ; 
-    logic [0:MAX_BOX_NUM-1] box_read_done_v    ; 
+    logic [MAX_BOX_NUM-1:0] box_read_toggle_pe                   /* synthesis syn_preserve=1 */;  
+    logic [MAX_BOX_NUM-1:0] toggle_sync1                         /* synthesis syn_preserve=1 */; 
+    logic [MAX_BOX_NUM-1:0] toggle_sync2                         /* synthesis syn_preserve=1 */; 
+    logic [MAX_BOX_NUM-1:0] toggle_sync3                         /* synthesis syn_preserve=1 */; 
+    logic [MAX_BOX_NUM-1:0] box_read_done_v                      /* synthesis syn_preserve=1 */; 
     
     // 读端控制信号与状态机
-    logic [1:0] state;
+    logic [1:0] state                                             /* synthesis syn_preserve=1 */;
     localparam IDLE = 0, READING = 1, WAIT_GAP = 2;
     
-    logic [$clog2(MAX_BOX_NUM + 1):0]  read_box_idx;       
-    logic [15:0] r_row, r_col;       
-    logic [15:0] cycle_cnt;          
-    logic [15:0] cycle_cnt_gap;          
+    logic [$clog2(MAX_BOX_NUM + 1):0]  read_box_idx              /* synthesis syn_preserve=1 */;       
+    logic [15:0] r_row                                           /* synthesis syn_preserve=1 */;
+    logic [15:0] r_col                                           /* synthesis syn_preserve=1 */;       
+    logic [15:0] cycle_cnt                                       /* synthesis syn_preserve=1 */;          
+    logic [15:0] cycle_cnt_gap                                   /* synthesis syn_preserve=1 */;          
     
-    logic        rd_en_pulse; 
-    logic        rd_en_d1;
+    logic        rd_en_pulse                                     /* synthesis syn_keep=1 */; 
+    logic        rd_en_d1                                        /* synthesis syn_preserve=1 */;
     
     // =========================================================
     // 1. 跨时钟域反馈接收与 Video 域控制 (clk_video)
@@ -217,7 +218,7 @@ module crop_buffer_manager #(
             cycle_cnt     <= 0;
             cycle_cnt_gap <= 0;
             new_line_1    <= 0;
-            for (idx = 0; idx < MAX_BOX_NUM + 1; idx++) box_read_toggle_pe[idx] <= 0;
+            for (idx = 0; idx < MAX_BOX_NUM; idx++) box_read_toggle_pe[idx] <= 0;
         end else begin
             new_line_1 <= 1'b0;
             case (state)

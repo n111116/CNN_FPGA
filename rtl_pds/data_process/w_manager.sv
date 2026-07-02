@@ -1,6 +1,7 @@
 /*
  * 模块名称: w_manager
  * 功能: 支持参数化资源推断的权重管理
+ * 权重在mem中已进行预偏移
  */
 module w_manager #(
     parameter int unsigned PE_ROW_NUM   = 9,

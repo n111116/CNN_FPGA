@@ -106,6 +106,7 @@ module layer #(
         .data_input_valid(data_input_valid), 
         .data_input(data_input),             
         .data_out(window_data),
+        .line_buf_full(),
         .data_out_valid(window_valid),
         .new_line_out_1(new_line_inner_1)
     );
@@ -177,6 +178,9 @@ module layer #(
                 `INST_PE(26,  0, "mem_data/weight_layer26_page0.mem")  `INST_PE(26,  1, "mem_data/weight_layer26_page1.mem")
                 `INST_PE(27,  0, "mem_data/weight_layer27_page0.mem")  `INST_PE(27,  1, "mem_data/weight_layer27_page1.mem")
                 `INST_PE(28,  0, "mem_data/weight_layer28_page0.mem")  `INST_PE(28,  1, "mem_data/weight_layer28_page1.mem")
+                `INST_PE(29,  0, "mem_data/weight_layer29_page0.mem")  `INST_PE(29,  1, "mem_data/weight_layer29_page1.mem")
+                `INST_PE(30,  0, "mem_data/weight_layer30_page0.mem")  `INST_PE(30,  1, "mem_data/weight_layer30_page1.mem")
+                `INST_PE(31,  0, "mem_data/weight_layer31_page0.mem")  `INST_PE(31,  1, "mem_data/weight_layer31_page1.mem")
                 
                 `INST_PE(20,  2, "mem_data/weight_layer20_page2.mem")  `INST_PE(20,  3, "mem_data/weight_layer20_page3.mem")
                 `INST_PE(21,  2, "mem_data/weight_layer21_page2.mem")  `INST_PE(21,  3, "mem_data/weight_layer21_page3.mem")
@@ -187,6 +191,9 @@ module layer #(
                 `INST_PE(26,  2, "mem_data/weight_layer26_page2.mem")  `INST_PE(26,  3, "mem_data/weight_layer26_page3.mem")
                 `INST_PE(27,  2, "mem_data/weight_layer27_page2.mem")  `INST_PE(27,  3, "mem_data/weight_layer27_page3.mem")
                 `INST_PE(28,  2, "mem_data/weight_layer28_page2.mem")  `INST_PE(28,  3, "mem_data/weight_layer28_page3.mem")
+                `INST_PE(29,  2, "mem_data/weight_layer29_page2.mem")  `INST_PE(29,  3, "mem_data/weight_layer29_page3.mem")
+                `INST_PE(30,  2, "mem_data/weight_layer30_page2.mem")  `INST_PE(30,  3, "mem_data/weight_layer30_page3.mem")
+                `INST_PE(31,  2, "mem_data/weight_layer31_page2.mem")  `INST_PE(31,  3, "mem_data/weight_layer31_page3.mem")
                 
                 `INST_PE(21,  4, "mem_data/weight_layer21_page4.mem")  `INST_PE(21,  5, "mem_data/weight_layer21_page5.mem")
                 `INST_PE(22,  4, "mem_data/weight_layer22_page4.mem")  `INST_PE(22,  5, "mem_data/weight_layer22_page5.mem")
@@ -219,6 +226,12 @@ module layer #(
             logic                 conv_valid;
 
             // 强制将静态偏置字符串塞入 output_layer 模块
+            // PDS 对较长的 generate if/else 链在尾部层号上偶尔会过度优化，
+            // 因此把 LPRNet V10 的尾部卷积层放在最前面，确保 layer31 的后级一定被展开。
+            `INST_OUT(31, "mem_data/bias_layer31.mem")
+            `INST_OUT(30, "mem_data/bias_layer30.mem")
+            `INST_OUT(29, "mem_data/bias_layer29.mem")
+
             `INST_OUT( 0, "mem_data/bias_layer0.mem")
             `INST_OUT( 1, "mem_data/bias_layer1.mem")
             `INST_OUT( 2, "mem_data/bias_layer2.mem")

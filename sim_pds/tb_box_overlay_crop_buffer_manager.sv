@@ -39,14 +39,14 @@ module tb_box_overlay_crop_buffer_manager();
     logic [31:0] box_wr_data = 0;
     
     // 内部 Crop 数据链路 (Overlay -> Manager)
-    logic        crop_wr_en    [0:MAX_BOX_NUM-1];
-    logic        start_crop_wr [0:MAX_BOX_NUM-1];
-    logic        end_crop_wr   [0:MAX_BOX_NUM-1];
-    logic [15:0] crop_x_min    [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [15:0] crop_y_min    [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [15:0] crop_w0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [15:0] crop_h0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [23:0] crop_rgb_out  [0:MAX_BOX_NUM-1];
+    logic [MAX_BOX_NUM-1:0]       crop_wr_en;
+    logic [MAX_BOX_NUM-1:0]       start_crop_wr;
+    logic [MAX_BOX_NUM-1:0]       end_crop_wr;
+    logic [MAX_BOX_NUM-1:0][15:0] crop_x_min;  // [新增] 连接引脚
+    logic [MAX_BOX_NUM-1:0][15:0] crop_y_min;  // [新增] 连接引脚
+    logic [MAX_BOX_NUM-1:0][15:0] crop_w0;  // [新增] 连接引脚
+    logic [MAX_BOX_NUM-1:0][15:0] crop_h0;  // [新增] 连接引脚
+    logic [MAX_BOX_NUM-1:0][23:0] crop_rgb_out;
 
     // Manager 输出到 PE 的链路
     logic        new_line_1;

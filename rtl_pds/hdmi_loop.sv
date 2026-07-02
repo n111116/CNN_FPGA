@@ -4,8 +4,8 @@
 `include "data_process/header/layer0.vh"
 `include "data_process/header/layer7.vh"   
 `include "data_process/header/layer20.vh"
-`include "data_process/header/layer22.vh"
-`include "data_process/header/layer28.vh"  // 用于LPRNet输出维度的宏定义
+`include "data_process/header/layer24.vh"
+`include "data_process/header/layer31.vh"  // 用于LPRNet输出维度的宏定义
 
 `define UD #1
 
@@ -71,7 +71,7 @@ module hdmi_loop #(
     localparam int CROP_HEIGHT   = IMG_ROW_LAYER20;
     localparam int CROP_WIDTH    = IMG_COL_LAYER20;
     localparam int MAX_BOX_NUM   = 8;
-    localparam int LPRNET_OUT_WIDTH = $clog2(CYCLE_PERIOD_OUT_LAYER28 * PE_COL_NUM_LAYER28);
+    localparam int LPRNET_OUT_WIDTH = $clog2(CYCLE_PERIOD_OUT_LAYER31 * PE_COL_NUM_LAYER31);
 
     wire                        pix_clk_5x ;
     wire                        cfg_clk    ;
@@ -144,32 +144,41 @@ module hdmi_loop #(
     // 子图裁剪与 LPRNet 通信信号 (已修改为标准 [MAX-1:0] 压缩数组)
     logic        box_wr_en;
     logic [31:0] box_wr_data;
-    logic         start_crop_wr [0:MAX_BOX_NUM-1];
-    logic         end_crop_wr   [0:MAX_BOX_NUM-1];
-    logic         crop_wr_en    [0:MAX_BOX_NUM-1];
-    logic [15:0]  crop_x_min    [0:MAX_BOX_NUM-1]; 
-    logic [15:0]  crop_y_min    [0:MAX_BOX_NUM-1]; 
-    logic [15:0]  crop_w0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [15:0]  crop_h0       [0:MAX_BOX_NUM-1];  // [新增] 连接引脚
-    logic [23:0]  crop_rgb_out  [0:MAX_BOX_NUM-1];
+    logic [MAX_BOX_NUM-1:0]        start_crop_wr;
+    logic [MAX_BOX_NUM-1:0]        end_crop_wr;
+    logic [MAX_BOX_NUM-1:0]        crop_wr_en;
+    logic [MAX_BOX_NUM-1:0][15:0]  crop_x_min; 
+    logic [MAX_BOX_NUM-1:0][15:0]  crop_y_min; 
+    logic [MAX_BOX_NUM-1:0][15:0]  crop_w0;  // [新增] 连接引脚
+    logic [MAX_BOX_NUM-1:0][15:0]  crop_h0;  // [新增] 连接引脚
+    logic [MAX_BOX_NUM-1:0][23:0]  crop_rgb_out;
 
-    logic        lprnet_new_line;
-    logic        lprnet_data_valid;
-    logic [23:0] lprnet_rgb_data;
+    logic        lprnet_new_line/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic        lprnet_data_valid/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic [23:0] lprnet_rgb_data/*synthesis PAP_MARK_DEBUG="1"*/;
     logic [PE_PAGE_NUM_LAYER20-1:0] [DATA_WIDTH_LAYER20-1:0] lprnet_data_in ;
-    logic [15:0] crop_x_min_out;
-    logic [15:0] crop_y_min_out;
+    logic [15:0] crop_x_min_out/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic [15:0] crop_y_min_out/*synthesis PAP_MARK_DEBUG="1"*/;
     
-    logic [LPRNET_OUT_WIDTH-1:0] lprnet_out_char;
-    logic                        lprnet_out_valid;
-    logic                        lprnet_frame_start;
+    logic [LPRNET_OUT_WIDTH-1:0] lprnet_out_char/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic                        lprnet_out_valid/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic                        lprnet_frame_start/*synthesis PAP_MARK_DEBUG="1"*/;
+    logic                        char_seen_latch/*synthesis PAP_MARK_DEBUG="1"*/;
 
 
     // =========================================================
     // 1. 系统基础配置与时钟/复位管理
     // =========================================================
     assign pixclk_out = pixclk_in;
-    assign led_int    = lprnet_frame_start;
+    assign led_int    = char_seen_latch;
+
+    always_ff @(posedge clk_pe or negedge rstn_out) begin
+        if (!rstn_out) begin
+            char_seen_latch <= 1'b0;
+        end else if (lprnet_frame_start || lprnet_out_valid) begin
+            char_seen_latch <= 1'b1;
+        end
+    end
 
     GTP_INBUFGDS #(
         .IOSTANDARD("DEFAULT"),
@@ -474,8 +483,8 @@ module hdmi_loop #(
 
     crop_buffer_manager #(
         .MAX_BOX_NUM(MAX_BOX_NUM),
-        .LINE_GAP((((CYCLE_PERIOD_OUT_LAYER22 / STEP_COL_LAYER22 / STEP_ROW_LAYER22)) * CYCLE_PERIOD_IN_LAYER22 
-                * IMG_COL_LAYER22  / STEP_ROW_LAYER20)),  
+        .LINE_GAP((((CYCLE_PERIOD_OUT_LAYER24 / STEP_COL_LAYER24 / STEP_ROW_LAYER24)) * CYCLE_PERIOD_IN_LAYER24 
+                * IMG_COL_LAYER24  / STEP_ROW_LAYER20)),  
         .CROP_WIDTH(CROP_WIDTH),
         .CROP_HEIGHT(CROP_HEIGHT),
         .CYCLE_PERIOD(CYCLE_PERIOD_OUT_LAYER20 / STEP_COL_LAYER20 / STEP_ROW_LAYER20)
@@ -502,7 +511,8 @@ module hdmi_loop #(
 
     lprnet_top #(
         .CONV_POSITIVE(1),
-        .BLANK_CHAR(75)
+        .BLANK_CHAR(75),
+        .VALID_CHAR_NUM(76)
     ) u_lprnet_top (
         .clk             (clk_pe),
         .clk_en          (1'b1),
@@ -523,6 +533,7 @@ module hdmi_loop #(
     // =========================================================
     char_overlay #(
         .CROP_HEIGHT(CROP_HEIGHT),
+        .CHAR_NUM(76),
         .FONT_FILE(CHARS_FILE)
     ) u_char_overlay (
         .clk_video   (pixclk_out),

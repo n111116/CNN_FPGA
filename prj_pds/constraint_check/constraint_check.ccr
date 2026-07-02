@@ -1,0 +1,165 @@
+##### Written on 2026/07/02 11:34:12 ###############################
+
+
+##### INFO ##################################################
+
+Current device : 
+	PG2L200H-6FBB676
+
+Top Module : 
+	hdmi_loop
+
+Constraint File(s) : 
+	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc
+
+##### SUMMARY ######################################################
+
+Found 0 error(s), 42 critical warning(s), 0 warning(s), out of 796 constraint(s)
+
+
+Inapplicable constraints(except overwritten constraints):
+********************************************
+
+define_attribute {p:tmds_data_n[2]} {PAP_IO_LOC} {N24}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 2)] | Port tmds_data_n[2] has been placed at location N24, whose type is share pin.
+
+define_attribute {p:tmds_data_n[1]} {PAP_IO_LOC} {P24}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 8)] | Port tmds_data_n[1] has been placed at location P24, whose type is share pin.
+
+define_attribute {p:tmds_data_n[0]} {PAP_IO_LOC} {P25}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 14)] | Port tmds_data_n[0] has been placed at location P25, whose type is share pin.
+
+define_attribute {p:tmds_data_p[2]} {PAP_IO_LOC} {N23}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 20)] | Port tmds_data_p[2] has been placed at location N23, whose type is share pin.
+
+define_attribute {p:tmds_data_p[1]} {PAP_IO_LOC} {P23}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 26)] | Port tmds_data_p[1] has been placed at location P23, whose type is share pin.
+
+define_attribute {p:tmds_data_p[0]} {PAP_IO_LOC} {R25}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 32)] | Port tmds_data_p[0] has been placed at location R25, whose type is share pin.
+
+define_attribute {p:b_in[7]} {PAP_IO_LOC} {H24}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 50)] | Port b_in[7] has been placed at location H24, whose type is share pin.
+
+define_attribute {p:b_in[3]} {PAP_IO_LOC} {J18}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 70)] | Port b_in[3] has been placed at location J18, whose type is share pin.
+
+define_attribute {p:b_in[2]} {PAP_IO_LOC} {H18}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 75)] | Port b_in[2] has been placed at location H18, whose type is share pin.
+
+define_attribute {p:b_in[1]} {PAP_IO_LOC} {L17}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 80)] | Port b_in[1] has been placed at location L17, whose type is share pin.
+
+define_attribute {p:b_in[0]} {PAP_IO_LOC} {L18}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 85)] | Port b_in[0] has been placed at location L18, whose type is share pin.
+
+define_attribute {p:g_in[7]} {PAP_IO_LOC} {L15}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 90)] | Port g_in[7] has been placed at location L15, whose type is share pin.
+
+define_attribute {p:g_in[6]} {PAP_IO_LOC} {K16}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 95)] | Port g_in[6] has been placed at location K16, whose type is share pin.
+
+define_attribute {p:g_in[5]} {PAP_IO_LOC} {K17}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 100)] | Port g_in[5] has been placed at location K17, whose type is share pin.
+
+define_attribute {p:g_in[4]} {PAP_IO_LOC} {K15}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 105)] | Port g_in[4] has been placed at location K15, whose type is share pin.
+
+define_attribute {p:g_in[3]} {PAP_IO_LOC} {J16}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 110)] | Port g_in[3] has been placed at location J16, whose type is share pin.
+
+define_attribute {p:g_in[2]} {PAP_IO_LOC} {K22}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 115)] | Port g_in[2] has been placed at location K22, whose type is share pin.
+
+define_attribute {p:g_in[1]} {PAP_IO_LOC} {K23}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 120)] | Port g_in[1] has been placed at location K23, whose type is share pin.
+
+define_attribute {p:g_in[0]} {PAP_IO_LOC} {J24}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 125)] | Port g_in[0] has been placed at location J24, whose type is share pin.
+
+define_attribute {p:r_in[4]} {PAP_IO_LOC} {K20}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 145)] | Port r_in[4] has been placed at location K20, whose type is share pin.
+
+define_attribute {p:r_in[3]} {PAP_IO_LOC} {J20}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 150)] | Port r_in[3] has been placed at location J20, whose type is share pin.
+
+define_attribute {p:r_in[2]} {PAP_IO_LOC} {J19}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 155)] | Port r_in[2] has been placed at location J19, whose type is share pin.
+
+define_attribute {p:r_in[1]} {PAP_IO_LOC} {H19}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 160)] | Port r_in[1] has been placed at location H19, whose type is share pin.
+
+define_attribute {p:r_in[0]} {PAP_IO_LOC} {M15}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 165)] | Port r_in[0] has been placed at location M15, whose type is share pin.
+
+define_attribute {p:hd_sda} {PAP_IO_LOC} {J14}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 170)] | Port hd_sda has been placed at location J14, whose type is share pin.
+
+define_attribute {p:hd_scl} {PAP_IO_LOC} {J15}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 178)] | Port hd_scl has been placed at location J15, whose type is share pin.
+
+define_attribute {p:rstn_out} {PAP_IO_LOC} {G25}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 194)] | Port rstn_out has been placed at location G25, whose type is share pin.
+
+define_attribute {p:mem_dq[15]} {PAP_IO_LOC} {G6}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 390)] | Port mem_dq[15] has been placed at location G6, whose type is share pin.
+
+define_attribute {p:mem_dq[13]} {PAP_IO_LOC} {E6}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 404)] | Port mem_dq[13] has been placed at location E6, whose type is share pin.
+
+define_attribute {p:mem_dq[12]} {PAP_IO_LOC} {G8}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 411)] | Port mem_dq[12] has been placed at location G8, whose type is share pin.
+
+define_attribute {p:mem_dq[11]} {PAP_IO_LOC} {D6}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 418)] | Port mem_dq[11] has been placed at location D6, whose type is share pin.
+
+define_attribute {p:mem_dq[10]} {PAP_IO_LOC} {H8}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 425)] | Port mem_dq[10] has been placed at location H8, whose type is share pin.
+
+define_attribute {p:mem_dq[8]} {PAP_IO_LOC} {H6}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 439)] | Port mem_dq[8] has been placed at location H6, whose type is share pin.
+
+define_attribute {p:mem_dq[7]} {PAP_IO_LOC} {J5}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 446)] | Port mem_dq[7] has been placed at location J5, whose type is share pin.
+
+define_attribute {p:mem_dq[5]} {PAP_IO_LOC} {K7}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 460)] | Port mem_dq[5] has been placed at location K7, whose type is share pin.
+
+define_attribute {p:mem_dq[3]} {PAP_IO_LOC} {L8}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 474)] | Port mem_dq[3] has been placed at location L8, whose type is share pin.
+
+define_attribute {p:mem_dq[1]} {PAP_IO_LOC} {J6}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 488)] | Port mem_dq[1] has been placed at location J6, whose type is share pin.
+
+define_attribute {p:mem_dqs[1]} {PAP_IO_LOC} {H7}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 621)] | Port mem_dqs[1] has been placed at location H7, whose type is share pin.
+
+define_attribute {p:mem_dqs[0]} {PAP_IO_LOC} {J4}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 628)] | Port mem_dqs[0] has been placed at location J4, whose type is share pin.
+
+define_attribute {p:mem_dqs_n[1]} {PAP_IO_LOC} {G7}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 649)] | Port mem_dqs_n[1] has been placed at location G7, whose type is share pin.
+
+define_attribute {p:mem_dqs_n[0]} {PAP_IO_LOC} {H4}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 656)] | Port mem_dqs_n[0] has been placed at location H4, whose type is share pin.
+
+define_attribute {p:mem_dm[0]} {PAP_IO_LOC} {K6}
+	C: ConstraintEditor-2002: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/hdmi_loop.fdc(line number: 705)] | Port mem_dm[0] has been placed at location K6, whose type is share pin.
+
+
+Constraints with issues:
+********************************************
+
+
+Issues without commands:
+********************************************
+
+
+Unconstrained ports:
+********************************************
+
+
+Constraints with matching wildcard expressions:
+********************************************
+
+

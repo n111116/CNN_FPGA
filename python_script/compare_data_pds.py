@@ -1,8 +1,22 @@
 import os
+import argparse
 import scipy.io
 
+import CnnHardwareGenerator_pds as gen
+
+def get_layer(layer_num):
+    layer_name = f"layer{layer_num}"
+    if not hasattr(gen, layer_name):
+        raise ValueError(f"Unknown layer: {layer_name}")
+    return getattr(gen, layer_name)
+
+parser = argparse.ArgumentParser(description="Compare PDS RTL layer output with MAT reference data.")
+parser.add_argument("--layer", type=int, default=31,\
+    help="Layer number to compare, default: 31")
+args = parser.parse_args()
+
 # 这里选择要验证的仿真层
-from CnnHardwareGenerator_pds import layer28 as layer_to_test
+layer_to_test = get_layer(args.layer)
 # ================= 配置参数 =================
 layer_to_test.load_mat_data()
 # 1. 原始参考数据
@@ -28,6 +42,7 @@ SHIFT_KEY = layer_to_test.shift_key
 OUT_WIDTH = layer_to_test.bit_widths['out']
 WITH_RELU = layer_to_test.with_relu
 MAX_POOL = layer_to_test.max_pool
+REAL_CHANNELS = None
 # ================= 自动模式检测 =================
 if SIM_FILE_PATH:
     ENABLE_POST_PROCESS = "output" in os.path.basename(REF_FILE_PATH).lower()
@@ -60,11 +75,16 @@ def load_sim_data(filepath):
         print(f"Error: Simulation file not found: {filepath}")
         return None
     with open(filepath, 'r') as f:
-        for line in f:
+        for line_idx, line in enumerate(f, start=1):
             line = line.strip()
             if not line: continue
             parts = line.split()
-            row_vals = [int(p, 16) for p in parts]
+            if any(("x" in p.lower()) or ("z" in p.lower()) for p in parts):
+                raise ValueError(f"Unknown X/Z value in {filepath}:{line_idx}: {line}")
+            try:
+                row_vals = [int(p, 16) for p in parts]
+            except ValueError as exc:
+                raise ValueError(f"Invalid hex in {filepath}:{line_idx}: {line}") from exc
             data.append(row_vals)
     return data
 
@@ -103,6 +123,8 @@ def compare_data():
     sim_rows = load_sim_data(SIM_FILE_PATH)
 
     if ref_raw is None or sim_rows is None: return
+
+    real_channels = ref_raw.shape[1]
     
     if len(sim_rows) < 2:
         print(f"Error: Not enough data in Sim file ({len(sim_rows)} lines).")
@@ -155,18 +177,9 @@ def compare_data():
 
                         # print(pe_idx,CYCLE_PERIOD_OUT,t)
                         # print(channel_idx)
-                        # ref_flat_idx = (r * IMG_COL + c) * CHANNELS + channel_idx
-                        # layer7实际上只有4个输出通道
-                        if layer_to_test.layer_num == 7 and channel_idx >= 4:
+                        # 硬件通道槽位可能大于 MAT 真实输出通道数，填充槽位不参与比对。
+                        if channel_idx >= real_channels:
                             pass
-                        # layer10实际上只有5个输出通道
-                        elif layer_to_test.layer_num == 10 and channel_idx >= 5:
-                            pass
-                            # print(channel_idx)
-                        # layer28实际上只有76个输出通道
-                        elif layer_to_test.layer_num == 28 and channel_idx >= 76:
-                            pass
-                            # print(channel_idx)
                         else:
                             # 获取参考值
                             expected_val = ref_raw[0][channel_idx][r][c]

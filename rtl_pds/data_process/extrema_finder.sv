@@ -13,23 +13,24 @@ module extrema_finder #(
     input  logic                            new_line_1, // 用于重置周期计数器
     input  logic signed    [PE_COL_NUM-1:0] [DATA_WIDTH-1:0] data_in,
     
-    output logic signed    [DATA_WIDTH-1:0] val_out,            
-    output logic [$clog2(CHANNEL_OUT_NUM)-1:0] val_out_channel, // 最优通道索引
-    output logic                            val_valid
+    output logic signed    [DATA_WIDTH-1:0] val_out              /* synthesis syn_preserve=1 */,
+    output logic [$clog2(CHANNEL_OUT_NUM)-1:0] val_out_channel   /* synthesis syn_preserve=1 */, // 最优通道索引
+    output logic                            val_valid            /* synthesis syn_preserve=1 */
 );
 
-    logic [$clog2(CYCLE_PERIOD_OUT)-1:0] cycle_cnt;
+    logic [$clog2(CYCLE_PERIOD_OUT)-1:0] cycle_cnt               /* synthesis syn_preserve=1 */;
     
     // 值缓存
-    logic signed [DATA_WIDTH-1:0]        current_best;
-    logic signed [DATA_WIDTH-1:0]        cycle_best; 
+    logic signed [DATA_WIDTH-1:0]        current_best            /* synthesis syn_preserve=1 */;
+    logic signed [DATA_WIDTH-1:0]        cycle_best              /* synthesis syn_keep=1 */; 
     
     // 索引缓存
     // Total Channels = PE_COL_NUM * CYCLE_PERIOD_OUT
     localparam int CHANNEL_IDX_WIDTH = $clog2(CHANNEL_OUT_NUM);
     
-    logic [CHANNEL_IDX_WIDTH-1:0]        current_best_channel;
-    logic [$clog2(PE_COL_NUM)-1:0]       cycle_best_pe_idx; // 当前周期内哪个PE最优
+    logic [CHANNEL_IDX_WIDTH-1:0]        current_best_channel    /* synthesis syn_preserve=1 */;
+    logic [$clog2(PE_COL_NUM)-1:0]       cycle_best_pe_idx       /* synthesis syn_keep=1 */; // 当前周期内哪个PE最优
+    logic [CHANNEL_IDX_WIDTH-1:0]        current_cycle_global_idx /* synthesis syn_keep=1 */;
 
     // 初始极值定义
     localparam signed [DATA_WIDTH-1:0] temp_min = {1'b1, {(DATA_WIDTH-1){1'b0}}}; // Min Signed Int
@@ -62,6 +63,10 @@ module extrema_finder #(
         end
     end
 
+    always_comb begin
+        current_cycle_global_idx = cycle_cnt + cycle_best_pe_idx * CYCLE_PERIOD_OUT;
+    end
+
     // =========================================================
     // 2. 时序逻辑：跨周期累积极值
     // =========================================================
@@ -81,11 +86,6 @@ module extrema_finder #(
                     current_best         <= INIT_VAL;
                     current_best_channel <= 0;
                 end else if (data_input_valid) begin : if_compare
-                    
-                    // 计算当前周期的全局通道索引 : cycle_cnt + cycle_best_pe_idx * CYCLE_PERIOD_OUT
-                    logic [CHANNEL_IDX_WIDTH-1:0] current_cycle_global_idx;
-                    current_cycle_global_idx = cycle_cnt + cycle_best_pe_idx * CYCLE_PERIOD_OUT;
-    
                     // --- 更新当前最佳值与索引 ---
                     if (cycle_cnt == 0) begin
                         // 第一个周期，直接取当前周期的最佳值

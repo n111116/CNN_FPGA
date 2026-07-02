@@ -12,7 +12,8 @@ module lprnet_post_process #(
     parameter bit unsigned CONV_POSITIVE    = 1,   // 1: 找最大值, 0: 找最小值
     
     // --- CTC 参数 ---
-    parameter int unsigned BLANK_CHAR       = 75   // 空白符对应的通道索引
+    parameter int unsigned BLANK_CHAR       = 75,  // 空白符对应的通道索引
+    parameter int unsigned VALID_CHAR_NUM   = 76   // 真实类别数，包含 blank，不包含补齐通道
 ) (
     input  logic                                clk,
     input  logic                                clk_en,
@@ -24,20 +25,23 @@ module lprnet_post_process #(
     input  logic signed [PE_COL_NUM-1:0] [DATA_WIDTH-1:0]        data_input ,
     
     // 最终 CTC 解码输出
-    output logic [$clog2(CYCLE_PERIOD_OUT * PE_COL_NUM)-1:0] out_char,
-    output logic                                out_valid,
-    output logic                                frame_start_out // 提前 out_valid 一个周期
+    output logic [$clog2(CYCLE_PERIOD_OUT * PE_COL_NUM)-1:0] out_char         /* synthesis syn_preserve=1 */,
+    output logic                                out_valid                     /* synthesis syn_preserve=1 */,
+    output logic                                frame_start_out               /* synthesis syn_preserve=1 */ // 提前 out_valid 一个周期
 );
 
     localparam int unsigned CHANNEL_OUT_NUM = CYCLE_PERIOD_OUT * PE_COL_NUM;
     localparam int unsigned CH_WIDTH        = $clog2(CHANNEL_OUT_NUM);
+    localparam logic [CH_WIDTH-1:0] BLANK_CHAR_CH = BLANK_CHAR[CH_WIDTH-1:0];
+    localparam int unsigned VALID_CHAR_LIMIT = (VALID_CHAR_NUM < CHANNEL_OUT_NUM) ?
+                                               VALID_CHAR_NUM : CHANNEL_OUT_NUM;
 
     // =============================================================
     // 1. 例化 Spatial Sum (同列通道累加)
     // =============================================================
     logic signed [PE_COL_NUM-1:0] [ACC_WIDTH-1:0] ss_y_out ;
-    logic                        ss_new_line_out_1;
-    logic                        ss_output_valid;
+    logic                        ss_new_line_out_1            /* synthesis syn_preserve=1 */;
+    logic                        ss_output_valid              /* synthesis syn_preserve=1 */;
 
     lprnet_spatial_sum #(
         .PE_COL_NUM(PE_COL_NUM),
@@ -63,9 +67,9 @@ module lprnet_post_process #(
     // =============================================================
     // 2. 例化 Extrema Finder (寻找极值通道)
     // =============================================================
-    logic [ACC_WIDTH-1:0] ef_val_out;
-    logic [CH_WIDTH-1:0]          ef_val_out_channel;
-    logic                         ef_val_valid;
+    logic [ACC_WIDTH-1:0] ef_val_out                          /* synthesis syn_preserve=1 */;
+    logic [CH_WIDTH-1:0]          ef_val_out_channel           /* synthesis syn_preserve=1 */;
+    logic                         ef_val_valid                 /* synthesis syn_preserve=1 */;
 
     extrema_finder #(
         .DATA_WIDTH(ACC_WIDTH),         // 输入为累加器位宽
@@ -90,13 +94,13 @@ module lprnet_post_process #(
     // =============================================================
     // 3. CTC 前向编码与流水线输出 (Greedy Decoder)
     // =============================================================
-    logic                new_frame_flag;
-    logic                frame_started_ctc;
-    logic [CH_WIDTH-1:0] prefix_char;
+    logic                new_frame_flag                        /* synthesis syn_preserve=1 */;
+    logic                frame_started_ctc                     /* synthesis syn_preserve=1 */;
+    logic [CH_WIDTH-1:0] prefix_char                           /* synthesis syn_preserve=1 */;
     
     // 用于打拍分离 frame_start_out 和 out_valid 的中间寄存器
-    logic                ctc_match_reg;
-    logic [CH_WIDTH-1:0] ctc_char_reg;
+    logic                ctc_match_reg                         /* synthesis syn_preserve=1 */;
+    logic [CH_WIDTH-1:0] ctc_char_reg                          /* synthesis syn_preserve=1 */;
 
     // 捕获新一帧的起始标志
     always_ff @(posedge clk or negedge rst_n) begin
@@ -113,15 +117,18 @@ module lprnet_post_process #(
     end
 
     // CTC 判定组合逻辑
-    logic ctc_match;
+    logic ctc_match                                             /* synthesis syn_keep=1 */;
+    logic ef_val_in_valid_range                                 /* synthesis syn_keep=1 */;
+    assign ef_val_in_valid_range = (ef_val_out_channel < VALID_CHAR_LIMIT);
     assign ctc_match = ef_val_valid && 
-                       (ef_val_out_channel != BLANK_CHAR) && 
+                       ef_val_in_valid_range &&
+                       (ef_val_out_channel != BLANK_CHAR_CH) && 
                        (new_frame_flag || (ef_val_out_channel != prefix_char));
 
     // CTC 状态更新与流水线延迟
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            prefix_char       <= BLANK_CHAR[CH_WIDTH-1:0];
+            prefix_char       <= BLANK_CHAR_CH;
             frame_started_ctc <= 1'b0;
             frame_start_out   <= 1'b0;
             ctc_match_reg     <= 1'b0;
@@ -141,7 +148,7 @@ module lprnet_post_process #(
                         frame_started_ctc <= 1'b1;
                         frame_start_out   <= 1'b1; // 发出帧起点脉冲
                     end else begin
-                        prefix_char       <= BLANK_CHAR[CH_WIDTH-1:0]; // 隐式复位
+                        prefix_char       <= BLANK_CHAR_CH; // 隐式复位
                         frame_started_ctc <= 1'b0;
                     end
                 end else begin

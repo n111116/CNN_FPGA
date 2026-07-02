@@ -40,8 +40,8 @@ module output_layer #(
     
     // 最终输出 (已修改为压缩数组)
     output logic [PE_COL_NUM-1:0][OUT_WIDTH-1:0] final_out,
-    output logic output_valid,
-    output logic new_line_out_1
+    output logic output_valid                                    /* synthesis syn_preserve=1 */,
+    output logic new_line_out_1                                  /* synthesis syn_preserve=1 */
 );
 
     // =============================================================
@@ -55,11 +55,14 @@ module output_layer #(
     localparam CAL_PIPE_DELAY = 5 + (CYCLE_PERIOD_IN-1) * CYCLE_PERIOD_OUT + PE_COL_NUM - 2; 
     localparam TOTAL_DELAY = PE_OUT_DELAY + CAL_PIPE_DELAY; // 总延迟
 
+    localparam int unsigned CYCLE_PERIOD_IN_WIDTH  = (CYCLE_PERIOD_IN > 1)  ? $clog2(CYCLE_PERIOD_IN)  : 1;
+    localparam int unsigned CYCLE_PERIOD_OUT_WIDTH = (CYCLE_PERIOD_OUT > 1) ? $clog2(CYCLE_PERIOD_OUT) : 1;
+
     logic signed [BIAS_WIDTH-1:0] bias_mem [0:BIAS_DEPTH-1];
-    logic [$clog2(CYCLE_PERIOD_OUT)-1:0] bias_time_cnt;
-    logic [$clog2(CYCLE_PERIOD_IN)-1:0] index_in;
-    logic [$clog2(CYCLE_PERIOD_OUT)-1:0] index_out;
-    logic [TOTAL_DELAY-1:0] new_line_pipe;
+    logic [CYCLE_PERIOD_OUT_WIDTH-1:0] bias_time_cnt;
+    logic [CYCLE_PERIOD_IN_WIDTH-1:0]  index_in;
+    logic [CYCLE_PERIOD_OUT_WIDTH-1:0] index_out;
+    logic [TOTAL_DELAY-1:0] new_line_pipe                        /* synthesis syn_preserve=1 */;
 
     initial begin
         $readmemb(BIAS_FILE, bias_mem);
@@ -128,13 +131,16 @@ module output_layer #(
     // Stage 3 累加器相关信号       
     logic signed [ACC_WIDTH-1:0]  sum_stage3  [PE_COL_NUM-1:0]; 
     logic signed [ACC_WIDTH-1:0]  acc_feedback[PE_COL_NUM-1:0]; 
-    logic signed [ACC_WIDTH-1:0]  acc_shift_reg[PE_COL_NUM-1:0][CYCLE_PERIOD_OUT-2:0]; 
+    localparam int unsigned ACC_SHIFT_DEPTH = (CYCLE_PERIOD_OUT > 1) ? (CYCLE_PERIOD_OUT - 1) : 1;
+    logic signed [ACC_WIDTH-1:0]  acc_shift_reg[PE_COL_NUM-1:0][ACC_SHIFT_DEPTH-1:0]; 
 
     logic signed [ACC_WIDTH-1:0]  sum_with_bias[PE_COL_NUM-1:0];
     
-    // 移位后位宽为 ACC_WIDTH - SHIFT_KEY 位
-    logic signed [ACC_WIDTH - SHIFT_KEY - 1 : 0]  shifted_val[PE_COL_NUM-1:0]; 
-    logic signed [ACC_WIDTH - SHIFT_KEY - 1 : 0]  shifted_val_round[PE_COL_NUM-1:0]; 
+    // 移位后位宽为 ACC_WIDTH - SHIFT_KEY 位；边界参数也保持合法位宽/位移。
+    localparam int unsigned SHIFT_OUT_WIDTH = (ACC_WIDTH > SHIFT_KEY) ? (ACC_WIDTH - SHIFT_KEY) : 1;
+    localparam int unsigned SHIFT_ROUND_BIT = (SHIFT_KEY > 0) ? (SHIFT_KEY - 1) : 0;
+    logic signed [SHIFT_OUT_WIDTH-1:0]  shifted_val[PE_COL_NUM-1:0]; 
+    logic signed [SHIFT_OUT_WIDTH-1:0]  shifted_val_round[PE_COL_NUM-1:0]; 
     logic [OUT_WIDTH-1:0] stage5_result[PE_COL_NUM-1:0];
     
     // [新增] 累加器清零信号的延迟链
@@ -142,10 +148,7 @@ module output_layer #(
     logic [PE_COL_NUM-1:0] acc_clear_pipe; 
 
     // [新增] Valid 门控信号，用于屏蔽首行到来前的无效输出
-    logic valid_enable; 
-    // [新增] 最终 Output Valid 同步延迟链
-    logic [CYCLE_PERIOD_OUT-2:0] valid_sync_delay;
-
+    logic valid_enable                                           /* synthesis syn_preserve=1 */; 
     // [新增] Valid 门控逻辑：当第一个新行到达计算核心时置 1
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) valid_enable <= 1'b0;
@@ -153,10 +156,10 @@ module output_layer #(
     end
 
     // out_valid 通过循环来产生，并用new_line_out_1复位
-    logic start_out;
-    logic [$clog2(CYCLE_PERIOD_IN)-1:0] index_in_valid;
-    logic [$clog2(CYCLE_PERIOD_OUT)-1:0] index_out_valid;
-    logic [$clog2(IMG_COL)-1:0] index_col_valid;
+    logic start_out                                              /* synthesis syn_preserve=1 */;
+    logic [CYCLE_PERIOD_IN_WIDTH-1:0]  index_in_valid            /* synthesis syn_preserve=1 */;
+    logic [CYCLE_PERIOD_OUT_WIDTH-1:0] index_out_valid           /* synthesis syn_preserve=1 */;
+    logic [$clog2(IMG_COL)-1:0] index_col_valid                  /* synthesis syn_preserve=1 */;
     
     // Index 计数器逻辑 (Index In / Index Out)
     always_ff @(posedge clk or negedge rst_n) begin
@@ -256,10 +259,10 @@ module output_layer #(
             // --- Stage 3: 累加器 (Accumulator) ---
             // [修改] 清零逻辑使用延迟后的 acc_clear_pipe[c]
             always_comb begin
-                if (acc_clear_pipe[c]) // 使用对应列的延迟清零信号
-                    acc_feedback[c] = 0; 
+                if (acc_clear_pipe[c] || (CYCLE_PERIOD_OUT <= 1)) // 使用对应列的延迟清零信号
+                    acc_feedback[c] = '0; 
                 else 
-                    acc_feedback[c] = acc_shift_reg[c][CYCLE_PERIOD_OUT-2];
+                    acc_feedback[c] = acc_shift_reg[c][ACC_SHIFT_DEPTH-1];
             end
 
             integer k_acc;
@@ -267,9 +270,13 @@ module output_layer #(
                 if (clk_en) begin
                     sum_stage3[c] <= sum_stage2[c] + acc_feedback[c];
                     
-                    acc_shift_reg[c][0] <= sum_stage3[c];
-                    for (k_acc = 1; k_acc < CYCLE_PERIOD_OUT - 1; k_acc = k_acc + 1) begin
-                        acc_shift_reg[c][k_acc] <= acc_shift_reg[c][k_acc-1];
+                    if (CYCLE_PERIOD_OUT > 1) begin
+                        acc_shift_reg[c][0] <= sum_stage3[c];
+                        for (k_acc = 1; k_acc < ACC_SHIFT_DEPTH; k_acc = k_acc + 1) begin
+                            acc_shift_reg[c][k_acc] <= acc_shift_reg[c][k_acc-1];
+                        end
+                    end else begin
+                        acc_shift_reg[c][0] <= '0;
                     end
                 end
             end
@@ -284,7 +291,11 @@ module output_layer #(
             // stage5 移位结果计算（包含四舍五入）
             // 算数右移并四舍五入
             assign shifted_val[c] = (sum_with_bias[c] >>> SHIFT_KEY);
-            assign shifted_val_round[c] = shifted_val[c] + ((sum_with_bias[c] >> (SHIFT_KEY - 1)) & 1); // 四舍五入
+            if (SHIFT_KEY > 0) begin : gen_shift_round
+                assign shifted_val_round[c] = shifted_val[c] + ((sum_with_bias[c] >>> SHIFT_ROUND_BIT) & 1); // 四舍五入
+            end else begin : gen_no_shift_round
+                assign shifted_val_round[c] = shifted_val[c];
+            end
             
             // [新增] 最终输出对齐延迟链
             // 延迟量 = CYCLE_PERIOD_OUT - c - 1

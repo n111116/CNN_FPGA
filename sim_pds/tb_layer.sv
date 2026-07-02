@@ -1,16 +1,4 @@
-// 要更换目标层数时，使用查找与替换功能，把所有 "_LAYER21" 替换成 "_LAYERn"即可。
 `timescale 1ns/1ps
-`include "layer0.vh"
-`include "layer1.vh"
-`include "layer2.vh"
-`include "layer3.vh"
-`include "layer4.vh"
-`include "layer5.vh"
-`include "layer6.vh"
-`include "layer7.vh"
-`include "layer8.vh"
-`include "layer9.vh"
-`include "layer10.vh"
 
 `include "layer20.vh"
 `include "layer21.vh"
@@ -21,232 +9,220 @@
 `include "layer26.vh"
 `include "layer27.vh"
 `include "layer28.vh"
+`include "layer29.vh"
+`include "layer30.vh"
+`include "layer31.vh"
 
-module tb_layer;
+module tb_layer #(
+    parameter int TARGET_LAYER = 31
+);
 
-    // 预估最大数据量
-    localparam int MEM_DEPTH = IMG_COL_LAYER21 * IMG_ROW_LAYER21 * CYCLE_PERIOD_IN_LAYER21 * PE_PAGE_NUM_LAYER21;
+`define SELECT_LPR_PARAM(P) \
+    ((TARGET_LAYER == 20) ? P``_LAYER20 : \
+     (TARGET_LAYER == 21) ? P``_LAYER21 : \
+     (TARGET_LAYER == 22) ? P``_LAYER22 : \
+     (TARGET_LAYER == 23) ? P``_LAYER23 : \
+     (TARGET_LAYER == 24) ? P``_LAYER24 : \
+     (TARGET_LAYER == 25) ? P``_LAYER25 : \
+     (TARGET_LAYER == 26) ? P``_LAYER26 : \
+     (TARGET_LAYER == 27) ? P``_LAYER27 : \
+     (TARGET_LAYER == 28) ? P``_LAYER28 : \
+     (TARGET_LAYER == 29) ? P``_LAYER29 : \
+     (TARGET_LAYER == 30) ? P``_LAYER30 : P``_LAYER31)
 
-    // =========================================================
-    // 2. 信号定义
-    // =========================================================
+    localparam int TL_LAYER_NUM            = `SELECT_LPR_PARAM(LAYER_NUM);
+    localparam int TL_PE_PAGE_NUM          = `SELECT_LPR_PARAM(PE_PAGE_NUM);
+    localparam int TL_PE_COL_NUM           = `SELECT_LPR_PARAM(PE_COL_NUM);
+    localparam int TL_PE_ROW_NUM           = `SELECT_LPR_PARAM(PE_ROW_NUM);
+    localparam int TL_KERNEL_COL           = `SELECT_LPR_PARAM(KERNEL_COL);
+    localparam int TL_KERNEL_ROW           = `SELECT_LPR_PARAM(KERNEL_ROW);
+    localparam int TL_MAX_POOL             = `SELECT_LPR_PARAM(MAX_POOL);
+    localparam int TL_WITH_RELU            = `SELECT_LPR_PARAM(WITH_RELU);
+    localparam int TL_STEP_ROW             = `SELECT_LPR_PARAM(STEP_ROW);
+    localparam int TL_STEP_COL             = `SELECT_LPR_PARAM(STEP_COL);
+    localparam int TL_DATA_WIDTH           = `SELECT_LPR_PARAM(DATA_WIDTH);
+    localparam int TL_WEIGHT_WIDTH         = `SELECT_LPR_PARAM(WEIGHT_WIDTH);
+    localparam int TL_BIAS_WIDTH           = `SELECT_LPR_PARAM(BIAS_WIDTH);
+    localparam int TL_OUT_WIDTH            = `SELECT_LPR_PARAM(OUT_WIDTH);
+    localparam int TL_CYCLE_PERIOD_IN      = `SELECT_LPR_PARAM(CYCLE_PERIOD_IN);
+    localparam int TL_CYCLE_PERIOD_OUT     = `SELECT_LPR_PARAM(CYCLE_PERIOD_OUT);
+    localparam int TL_SHIFT_KEY            = `SELECT_LPR_PARAM(SHIFT_KEY);
+    localparam int TL_IMG_COL              = `SELECT_LPR_PARAM(IMG_COL);
+    localparam int TL_IMG_ROW              = `SELECT_LPR_PARAM(IMG_ROW);
+    localparam int TL_PE_PAGE_OUTPUT_WIDTH = `SELECT_LPR_PARAM(PE_PAGE_OUTPUT_WIDTH);
+    localparam int TL_ACC_WIDTH            = `SELECT_LPR_PARAM(ACC_WIDTH);
+    localparam int TL_MEM_DEPTH            = TL_IMG_COL * TL_IMG_ROW * TL_CYCLE_PERIOD_IN * TL_PE_PAGE_NUM;
+    localparam int TL_OUT_LINE_GAP         = (TL_CYCLE_PERIOD_OUT / TL_STEP_COL / TL_STEP_ROW) * TL_CYCLE_PERIOD_IN;
+
     logic clk;
     logic clk_en;
-    logic rst_n;                 
-    logic new_line_input_1;      
-    logic data_input_valid;      
+    logic rst_n;
+    logic new_line_input_1;
+    logic data_input_valid;
     logic output_valid;
-    // 输入数据
-    logic [PE_PAGE_NUM_LAYER21-1:0] [DATA_WIDTH_LAYER21-1:0] data_input ;
-    
-    // 输出数据
-    logic [PE_COL_NUM_LAYER21-1:0] [OUT_WIDTH_LAYER21-1:0] y_out ;
+    logic [TL_PE_PAGE_NUM-1:0][TL_DATA_WIDTH-1:0] data_input;
+    logic [TL_PE_COL_NUM-1:0][TL_OUT_WIDTH-1:0] y_out;
     logic new_line_out_1;
+    logic [TL_DATA_WIDTH-1:0] file_mem [0:TL_MEM_DEPTH-1];
+    string input_file_path;
+    string output_file_path;
 
-    // 仿真内存
-    logic [DATA_WIDTH_LAYER21-1:0] file_mem [0:MEM_DEPTH-1] ;
-
-    // =========================================================
-    // 3. 模块例化
-    // =========================================================
     layer #(
-        .LAYER_NUM(LAYER_NUM_LAYER21),
-        .PE_PAGE_NUM(PE_PAGE_NUM_LAYER21),
-        .PE_ROW_NUM(PE_ROW_NUM_LAYER21),
-        .PE_COL_NUM(PE_COL_NUM_LAYER21),
-        .MAX_POOL(MAX_POOL_LAYER21),
-        .WITH_RELU(WITH_RELU_LAYER21),
-        .KERNEL_COL(KERNEL_COL_LAYER21),
-        .KERNEL_ROW(KERNEL_ROW_LAYER21),
-        .USE_DSP_PE(USE_DSP_PE_LAYER21),
-        .DATA_WIDTH(DATA_WIDTH_LAYER21),
-        .WEIGHT_WIDTH(WEIGHT_WIDTH_LAYER21),
-        .CYCLE_PERIOD_IN(CYCLE_PERIOD_IN_LAYER21),
-        .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT_LAYER21),
-        .STEP_COL(STEP_COL_LAYER21),
-        .STEP_ROW(STEP_ROW_LAYER21),
-        .IMG_COL(IMG_COL_LAYER21),
-        .IMG_ROW(IMG_ROW_LAYER21),
-        .SHIFT_KEY(SHIFT_KEY_LAYER21),
-        .BIAS_WIDTH(BIAS_WIDTH_LAYER21),
-        .OUT_WIDTH(OUT_WIDTH_LAYER21),
-        .PE_PAGE_OUTPUT_WIDTH(PE_PAGE_OUTPUT_WIDTH_LAYER21),
-        .ACC_WIDTH(ACC_WIDTH_LAYER21)
+        .LAYER_NUM(TL_LAYER_NUM),
+        .PE_PAGE_NUM(TL_PE_PAGE_NUM),
+        .PE_ROW_NUM(TL_PE_ROW_NUM),
+        .PE_COL_NUM(TL_PE_COL_NUM),
+        .MAX_POOL(TL_MAX_POOL),
+        .WITH_RELU(TL_WITH_RELU),
+        .KERNEL_COL(TL_KERNEL_COL),
+        .KERNEL_ROW(TL_KERNEL_ROW),
+        .USE_DSP_PE("no"),
+        .DATA_WIDTH(TL_DATA_WIDTH),
+        .WEIGHT_WIDTH(TL_WEIGHT_WIDTH),
+        .CYCLE_PERIOD_IN(TL_CYCLE_PERIOD_IN),
+        .CYCLE_PERIOD_OUT(TL_CYCLE_PERIOD_OUT),
+        .STEP_COL(TL_STEP_COL),
+        .STEP_ROW(TL_STEP_ROW),
+        .IMG_COL(TL_IMG_COL),
+        .IMG_ROW(TL_IMG_ROW),
+        .SHIFT_KEY(TL_SHIFT_KEY),
+        .BIAS_WIDTH(TL_BIAS_WIDTH),
+        .OUT_WIDTH(TL_OUT_WIDTH),
+        .PE_PAGE_OUTPUT_WIDTH(TL_PE_PAGE_OUTPUT_WIDTH),
+        .ACC_WIDTH(TL_ACC_WIDTH)
     ) u_layer (
         .clk(clk),
         .clk_en(clk_en),
-        .rst_n(rst_n),                           
-        .new_line_input_1(new_line_input_1), 
-        .data_input_valid(data_input_valid), 
-        .data_input(data_input),             
+        .rst_n(rst_n),
+        .new_line_input_1(new_line_input_1),
+        .data_input_valid(data_input_valid),
+        .data_input(data_input),
         .y_out(y_out),
         .new_line_out_1(new_line_out_1),
         .output_valid(output_valid)
     );
 
-    // =========================================================
-    // 4. 时钟生成
-    // =========================================================
     initial begin
         clk = 0;
-        forever #5 clk = ~clk; // 100MHz
+        forever #5 clk = ~clk;
     end
 
-    // =========================================================
-    // 5. 激励生成 (读取文件 + 固定 4 周期模式)
-    // =========================================================
-    
-    // ----------------------------------------
-    // Step 5.1: 读取 hex 文件到内存
-    // ----------------------------------------
     initial begin
-        // 初始化内存为0
-        for(int i=0; i<MEM_DEPTH; i++) file_mem[i] = 0;
+        if (TARGET_LAYER < 20 || TARGET_LAYER > 31) begin
+            $display("Error: tb_layer TARGET_LAYER=%0d is outside LPRNet v10 range 20..31.", TARGET_LAYER);
+            $stop;
+        end
 
-        // 读取文件
-        $readmemh(INPUT_FILE_PATH_LAYER21, file_mem);
-        
+        case (TARGET_LAYER)
+            20: begin input_file_path = INPUT_FILE_PATH_LAYER20; output_file_path = OUTPUT_FILE_PATH_LAYER20; end
+            21: begin input_file_path = INPUT_FILE_PATH_LAYER21; output_file_path = OUTPUT_FILE_PATH_LAYER21; end
+            22: begin input_file_path = INPUT_FILE_PATH_LAYER22; output_file_path = OUTPUT_FILE_PATH_LAYER22; end
+            23: begin input_file_path = INPUT_FILE_PATH_LAYER23; output_file_path = OUTPUT_FILE_PATH_LAYER23; end
+            24: begin input_file_path = INPUT_FILE_PATH_LAYER24; output_file_path = OUTPUT_FILE_PATH_LAYER24; end
+            25: begin input_file_path = INPUT_FILE_PATH_LAYER25; output_file_path = OUTPUT_FILE_PATH_LAYER25; end
+            26: begin input_file_path = INPUT_FILE_PATH_LAYER26; output_file_path = OUTPUT_FILE_PATH_LAYER26; end
+            27: begin input_file_path = INPUT_FILE_PATH_LAYER27; output_file_path = OUTPUT_FILE_PATH_LAYER27; end
+            28: begin input_file_path = INPUT_FILE_PATH_LAYER28; output_file_path = OUTPUT_FILE_PATH_LAYER28; end
+            29: begin input_file_path = INPUT_FILE_PATH_LAYER29; output_file_path = OUTPUT_FILE_PATH_LAYER29; end
+            30: begin input_file_path = INPUT_FILE_PATH_LAYER30; output_file_path = OUTPUT_FILE_PATH_LAYER30; end
+            default: begin input_file_path = INPUT_FILE_PATH_LAYER31; output_file_path = OUTPUT_FILE_PATH_LAYER31; end
+        endcase
+
+        for (int i = 0; i < TL_MEM_DEPTH; i++) file_mem[i] = '0;
+        $readmemh(input_file_path, file_mem);
         $display("------------------------------------------------");
-        $display("File Read Check from: %s", INPUT_FILE_PATH_LAYER21);
-        $display("%s",$sformatf("weights_layer%0d_page%0d.mem", LAYER_NUM_LAYER21, 0));
+        $display("Target layer: %0d", TARGET_LAYER);
+        $display("File Read Check from: %s", input_file_path);
+        $display("%s", $sformatf("weight_layer%0d_page%0d.mem", TL_LAYER_NUM, 0));
         $display("Mem[0] (Pix0-Ch0): %h", file_mem[0]);
-        $display("Mem[1] (Pix0-Ch1): %h", file_mem[1]);
+        if (TL_MEM_DEPTH > 1) $display("Mem[1] (Pix0-Ch1): %h", file_mem[1]);
         $display("------------------------------------------------");
     end
 
     int addr;
-    // ----------------------------------------
-    // Step 5.2: 驱动逻辑
-    // ----------------------------------------
     initial begin
-        // --- 初始化 ---
         clk_en = 0;
         rst_n = 0;
         new_line_input_1 = 0;
         data_input_valid = 0;
-        
-        for(int p=0; p<PE_PAGE_NUM_LAYER21; p++) begin
-            data_input[p] = 0;
-        end
+        data_input = '0;
 
-        // --- 复位序列 ---
         repeat(10) @(posedge clk);
-        rst_n = 1;              
+        rst_n = 1;
         repeat(5) @(posedge clk);
-        clk_en = 1;             
+        clk_en = 1;
 
-        for (int index_y = 0; index_y < IMG_ROW_LAYER21 * 2; index_y++) begin 
-            
-            // 1. 行首同步
+        for (int index_y = 0; index_y < TL_IMG_ROW * 2; index_y++) begin
             @(posedge clk);
             new_line_input_1 = 1;
-            data_input_valid = 0; 
-            
+            data_input_valid = 0;
+
             @(posedge clk);
             new_line_input_1 = 0;
-            
-            // 2. 输入一行像素
-            for (int index_x = 0; index_x < IMG_COL_LAYER21; index_x++) begin                
-                for (int t=0; t<CYCLE_PERIOD_IN_LAYER21; t++) begin
-                    // --- A. 发送数据 (持续 1 个周期) ---
+
+            for (int index_x = 0; index_x < TL_IMG_COL; index_x++) begin
+                for (int t = 0; t < TL_CYCLE_PERIOD_IN; t++) begin
                     data_input_valid <= 1;
-                    for(int p=0; p<PE_PAGE_NUM_LAYER21; p++) begin
-
-                        // 地址计算
-                        addr = (index_y * IMG_COL_LAYER21 + index_x) * PE_PAGE_NUM_LAYER21
-                                 * CYCLE_PERIOD_IN_LAYER21 + p * CYCLE_PERIOD_IN_LAYER21 + t;
-                        data_input[p] <= file_mem[addr % MEM_DEPTH];
-                        // data_input[p] <= index_x * 16 + t + 1; // index_y*64 + 
-                        // data_input[p] <= index_y*64 + index_x + 1;
-                        // data_input[p] <= p * CYCLE_PERIOD_IN_LAYER21 + t;
-                        // data_input[0] <= 'h10;
-                        // data_input[1] <= 'h10;
-                        // data_input[2] <= 'heb;
+                    for (int p = 0; p < TL_PE_PAGE_NUM; p++) begin
+                        addr = (index_y * TL_IMG_COL + index_x) * TL_PE_PAGE_NUM
+                             * TL_CYCLE_PERIOD_IN + p * TL_CYCLE_PERIOD_IN + t;
+                        data_input[p] <= file_mem[addr % TL_MEM_DEPTH];
                     end
-                    // data_input[0] <= index_x;
-                    // data_input[1] <= index_y[0];
-                    // data_input[2] <= index_y[0];
-                    @(posedge clk); // 推进 1 个周期，DUT 此时采样到有效数据
-
+                    @(posedge clk);
                 end
-                // --- B. 空闲等待 (持续 3 个周期) ---
-                // 单像素总周期CYCLE_PERIOD / STEP_COL / STEP_ROW
-                data_input_valid <= 0;
-                repeat((CYCLE_PERIOD_OUT_LAYER21 / STEP_COL_LAYER21 / STEP_ROW_LAYER21-1)
-                *CYCLE_PERIOD_IN_LAYER21) @(posedge clk);
-            end
-            
-            // 3. 行尾间隙
-            data_input_valid = 0;
-            repeat((CYCLE_PERIOD_OUT_LAYER21 / STEP_COL_LAYER21 / STEP_ROW_LAYER21)
-                *CYCLE_PERIOD_IN_LAYER21) @(posedge clk); 
-            // if(index_y == IMG_ROW_LAYER21 - 1) begin
-            //     repeat((CYCLE_PERIOD_OUT_LAYER21 / STEP_COL_LAYER21 / STEP_ROW_LAYER21)
-            //     *CYCLE_PERIOD_IN_LAYER21) @(posedge clk);
-            // end
-            // repeat(1280*15) @(posedge clk); 
 
+                data_input_valid <= 0;
+                repeat(TL_OUT_LINE_GAP - TL_CYCLE_PERIOD_IN) @(posedge clk);
+            end
+
+            data_input_valid = 0;
+            repeat(TL_OUT_LINE_GAP) @(posedge clk);
             $display("Finished driving row %0d at time %t", index_y, $time);
         end
 
-        // 4. 结束
         data_input_valid = 0;
-        repeat(300_000) @(posedge clk); 
+        repeat(300_000) @(posedge clk);
         $stop;
     end
 
-    // =========================================================
-    // 6. 监控输出并写入文件 [新增逻辑]
-    // =========================================================
     integer out_file;
     int write_cnt;
     bit write_enable;
 
-
-    // 打开/关闭文件
     initial begin
-        out_file = $fopen(OUTPUT_FILE_PATH_LAYER21, "w");
+        #1;
+        out_file = $fopen(output_file_path, "w");
         if (!out_file) begin
-            $display("Error: Could not open output file: %s", OUTPUT_FILE_PATH_LAYER21);
+            $display("Error: Could not open output file: %s", output_file_path);
             $stop;
         end else begin
-            $display("Output file opened: %s", OUTPUT_FILE_PATH_LAYER21);
+            $display("Output file opened: %s", output_file_path);
         end
     end
 
-    // 仿真结束时关闭文件
     final begin
         if (out_file) $fclose(out_file);
     end
 
-    // 写入控制逻辑
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             write_cnt <= 0;
             write_enable <= 0;
         end else if (clk_en) begin
-            
-            // 1. 启动/重置条件：当 new_line_out_1 有效时
             if (new_line_out_1) begin
-                write_enable <= 1;  // 开启写入
-                // write_cnt <= 0;     // 重置计数器
+                write_enable <= 1;
                 $display("\nTime %t: New Line Out detected. Starting capture.", $time);
             end
             if (write_enable && output_valid) begin
-            // 2. 写入条件：使能开启 且 输出有效
-                
-                // 格式化写入：一次写入 PE_COL_NUM_LAYER21 个数据
-                for (int c = 0; c < PE_COL_NUM_LAYER21; c++) begin
+                for (int c = 0; c < TL_PE_COL_NUM; c++) begin
                     $fwrite(out_file, "%6h ", y_out[c]);
-                    // $display("Time %t: y_out = %2h .", $time, y_out[c]);
                 end
-                $fwrite(out_file, "\n"); // 换行
-
+                $fwrite(out_file, "\n");
                 write_cnt <= write_cnt + 1;
-                    
-                // end
             end
         end
     end
+
+`undef SELECT_LPR_PARAM
 
 endmodule

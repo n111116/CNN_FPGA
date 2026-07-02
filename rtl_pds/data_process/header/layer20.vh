@@ -13,7 +13,7 @@
     parameter int unsigned PE_ROW_NUM_LAYER20       = 9;  
     parameter int unsigned KERNEL_COL_LAYER20       = 3;
     parameter int unsigned KERNEL_ROW_LAYER20       = 3;  
-    parameter int unsigned CHANNEL_OUT_NUM_LAYER20  = 16;
+    parameter int unsigned CHANNEL_OUT_NUM_LAYER20  = 8;
     parameter int unsigned CHANNEL_IN_NUM_LAYER20   = 3;  
     parameter int unsigned MAX_POOL_LAYER20         = 0;
     parameter int unsigned WITH_RELU_LAYER20        = 1;
@@ -24,12 +24,12 @@
     // 2. 位宽参数 (来自 MAT)  
     parameter int unsigned DATA_WIDTH_LAYER20       = 8;
     parameter int unsigned WEIGHT_WIDTH_LAYER20     = 10;
-    parameter int unsigned BIAS_WIDTH_LAYER20       = 17;
+    parameter int unsigned BIAS_WIDTH_LAYER20       = 16;
     parameter int unsigned OUT_WIDTH_LAYER20        = 9;
 
     // 3. 周期与映射参数
     parameter int unsigned CYCLE_PERIOD_IN_LAYER20  = 1; 
-    parameter int unsigned CYCLE_PERIOD_OUT_LAYER20 = 16;
+    parameter int unsigned CYCLE_PERIOD_OUT_LAYER20 = 8;
     parameter int unsigned CYCLE_PERIOD_LAYER20     = CYCLE_PERIOD_IN_LAYER20 * CYCLE_PERIOD_OUT_LAYER20;
     parameter int unsigned SHIFT_KEY_LAYER20        = 8;
 

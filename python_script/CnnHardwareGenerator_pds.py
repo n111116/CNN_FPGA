@@ -1,44 +1,65 @@
 import scipy.io
 import numpy as np
 import os
-# 720P
+
+"""
+PDS 版本 CNN 硬件参数生成脚本。
+
+这个脚本把量化后的 MAT 文件转换为固定权重 CNN RTL 所需的三类文件：
+1. layerN.vh：每层结构参数、位宽、图像尺寸、仿真输入输出路径。
+2. weight_layerN_pageP.mem / bias_layerN.mem：按脉动阵列时序预排布后的固定权重和偏置。
+3. layerN_input_Xbit.hex：单层 testbench 使用的输入激励。
+
+需要特别注意：本工程的卷积阵列是固定权重阵列，权重不会在运行时从外部动态配置。
+换模型时需要重新运行本脚本生成 mem/header，并同步更新 top_yolo/top_lprnet、
+testbench 和 compare 脚本中的层级连接关系。
+"""
+
+# YOLO 输入视频规格。PDS 顶层当前按 HDMI 720P@60Hz 视频链路设计。
 BASE_IMG_COL = 1280
 BASE_IMG_ROW = 720
-# crop size
+
+# LPRNet 输入子图尺寸。crop_buffer_manager 输出的 RGB 子图会被整理成该尺寸。
 BASE_IMG_ROW_LPERNET = 20
 BASE_IMG_COL_LPERNET = 80
 
-# 变量的定义
-# layer_num: 当前层编号
-# pe_page_num: PE 页数 (输入通道分组数)（与上一层的 pe_col_num 相同以匹配线数）
-# pe_col_num: PE 列数 (输出通道分组数)
-# pe_row_num: PE 行数 (卷积核元素数，通常为 3x3=9)
-# img_row, img_col: 输入图像的行数和列数 (根据层级逐渐减小)
-# max_pool: 是否是max_pool层
-# with_relu_shift: 是否包含 ReLU 和 shift 操作，影响输出位宽和数据处理
-# STEP_ROW, STEP_COL: 输入数据的步长 (卷积步长)，决定了输入数据的访问模式，也影响输出特征图的尺寸
+# 关键结构参数说明
+# layer_num: RTL 层编号，也是 header/mem/hex 文件名中的 N。
+# pe_page_num: 输入通道 page 数。每个 page 处理一组输入通道 partial sum。
+# pe_col_num: 输出通道并行列数。每个 pe_col 在同一输入窗口上计算一个输出通道槽位。
+# pe_row_num: 卷积核空间维展开后的 PE 数，通常为 kernel_row * kernel_col。
+# img_row/img_col: 该层输入特征图尺寸，不是输出尺寸。
+# max_pool: 1 表示该层走 max_pool2d 路径，不生成真实卷积权重。
+# with_relu: output_layer 是否执行 ReLU/饱和处理。
+# step_row/step_col: 卷积或池化步幅，同时影响 input_layer 取窗节拍和输出尺寸。
 
-# ** cycle_period 是针对层内部的 ** 
-# ** 对输入数据，每 cycle_period_out / STEP_COL / STEP / ROW 个周期应输入一个数据
-# 每 cycle_period / STEP_COL / STEP / ROW 个周期应输入一个像素
-# cycle_period_out: 输出通道的周期 (每个PE列的输出通道数 = cycle_period_out)(内部单个 data 的保持时长)
-# cycle_period_in: 输入通道的周期 (每个PE列的输入通道数 = cycle_period_in)
-# cycle_period = cycle_period_in * cycle_period_out (每多少个时钟周期权重的访问模式重复一次，一个像素需要处理的周期数)
-# 每个PE列每 16 个输出通道重复一次，每 4 个输入通道重复一次。
-
-# 数量关系
-# 某一层的 cycle_period_out 等于下一层的 cycle_period_in，以保证数据流的连续性和匹配。
-# cycle_period * img_row * img_col / (STEP_ROW * STEP_COL) 是每层处理一帧图像的总周期数，决定了处理速度和吞吐量。
-# 每一层的一帧图像的总周期数要完全匹配。
-# 特殊情况：如果特定情况下不容易匹配，如第一层的计算量远小于其他层，可以让第一层的行间隔拉大，使得以行为单位的计算周期数匹配。
-# 例如：layer1: cycle_period=16, img_row=128, img_col=128, step_row=2, step_col=2，则每帧图像的周期数为 65536 周期。
-# layer2: cycle_period=64, img_row=64, img_col=64, step_row=2, step_col=2，则每帧图像的周期数也是 65536 周期。
-
-# 某一层的 PE 列数等于下一层的 PE 页数，以保证权重和数据的匹配。
-# 某一层的输出通道数＝PE列数 * cycle_period_out ，输入通道数＝PE页数 * cycle_period_in。
+# cycle_period 是层内部通道时间复用周期。
+# cycle_period_in: 每个输入 page 在时间上复用的输入通道数。
+# cycle_period_out: 每个输出 PE 列在时间上复用的输出通道数。
+# cycle_period = cycle_period_in * cycle_period_out，表示权重地址循环一轮的周期数。
+# 通道覆盖关系：
+#   实际输入通道数 <= pe_page_num * cycle_period_in
+#   实际输出通道数 <= pe_col_num  * cycle_period_out
+#
+# 相邻层通常需要满足：
+#   上一层 pe_col_num == 下一层 pe_page_num
+#   上一层 cycle_period_out == 下一层 cycle_period_in
+# 这样上一层输出的并行线数和时间复用节拍可以直接作为下一层输入。
+#
+# 一层处理一帧的理论周期数：
+#   cycle_period * img_row * img_col / (step_row * step_col)
+# 不同层的吞吐需要尽量匹配。若某些前级层计算量明显更小，可以在 testbench
+# 或上游输入中拉大行间隔，让整网流式节拍保持稳定。
 
 
 class CnnHardwareGenerator:
+    """单个 CNN 层的硬件配置和文件生成器。
+
+    一个实例对应 RTL 中的一个 layerN。实例化参数同时描述网络结构
+    和硬件阵列规模，因此它既是模型到硬件的映射表，也是生成
+    header/mem/hex 文件的唯一来源。
+    """
+
     def __init__(self, layer_num, pe_page_num, pe_col_num,
                  cycle_period_cin, cycle_period_cout,
                  img_row=BASE_IMG_ROW, img_col=BASE_IMG_COL,
@@ -55,7 +76,11 @@ class CnnHardwareGenerator:
                  output_vh_dir="rtl_pds/data_process/header",
                  mat_file_dir="conv_data_yolov3_new_pds"):
         """
-        初始化硬件配置生成类
+        初始化硬件配置。
+
+        pe_page_num/pe_col_num 决定空间并行规模，cycle_period_cin/
+        cycle_period_cout 决定通道时间复用规模。use_dsp 控制 PE 乘法
+        是否倾向使用 DSP，以便同一套网络根据目标 FPGA 资源做取舍。
         """
         self.layer_num = layer_num
         self.pe_page_num = pe_page_num
@@ -83,12 +108,12 @@ class CnnHardwareGenerator:
         self.weight = None
         self.bias = None
         self.shift_key = 0
-        # 默认有 relu，除第8、11层无 relu
+        # with_relu 只影响卷积路径 output_layer；max_pool 层通常不接 ReLU。
         self.with_relu = with_relu # 1 if layer_num not in [8, 11] else 0
-        # 默认上一层层号为该层 -1 ，除了第 8 层。 第 8 层的上一层与第 5 层的上一层同为 4.
+        # YOLO layer8 是从 layer4 分支出来的旧记录，当前主要保留作路径提示。
         self.prev_layer_num = layer_num - 1 if layer_num != 8 else 4
 
-        # 路径设置，对yolov3
+        # 默认按 YOLO 层名规则映射 MAT 文件。layer7/layer10 是输出分支，无 ReLU MAT。
         if(self.layer_num == 0):
             self.layer_name = "node_conv2d"
             self.relu_name = "node_relu"
@@ -101,34 +126,24 @@ class CnnHardwareGenerator:
                     self.relu_name = f"node_relu_{self.layer_num}"
                 else:
                     self.relu_name = f"node_relu_{self.layer_num - 1}"
-        # 针对 lprnetv8 的结构
-        if(self.layer_num == 20):
-            self.layer_name = "node_conv2d"
-            self.relu_name = "node_relu"
-        elif(self.layer_num == 21):
-            self.layer_name = f"node_max_pool2d"
-            self.relu_name = None
-        elif(self.layer_num == 22):
-            self.layer_name = f"node_conv2d_1"
-            self.relu_name = "node_relu_1"
-        elif(self.layer_num == 23):
-            self.layer_name = f"node_max_pool2d_1"
-            self.relu_name = None
-        elif(self.layer_num == 24):
-            self.layer_name = f"node_conv2d_2"
-            self.relu_name = "node_relu_2"
-        elif(self.layer_num == 25):
-            self.layer_name = f"node_max_pool2d_2"
-            self.relu_name = None
-        elif(self.layer_num == 26):
-            self.layer_name = f"node_conv2d_3"
-            self.relu_name = "node_relu_3"
-        elif(self.layer_num == 27):
-            self.layer_name = f"node_conv2d_4"
-            self.relu_name = "node_relu_4"
-        elif(self.layer_num == 28):
-            self.layer_name = f"node_conv2d_5"
-            self.relu_name = None
+        # LPRNet v10 层名与 YOLO 规则不同，使用显式映射复用 layer20 起始编号。
+        # 换 LPRNet 模型时，通常首先修改这张表和后面的 layer20+ 实例参数。
+        lprnetv10_layer_map = {
+            20: ("node_conv2d",       "node_relu"),
+            21: ("node_conv2d_1",     "node_relu_1"),
+            22: ("node_max_pool2d",   None),
+            23: ("node_conv2d_2",     "node_relu_2"),
+            24: ("node_conv2d_3",     "node_relu_3"),
+            25: ("node_max_pool2d_1", None),
+            26: ("node_conv2d_4",     "node_relu_4"),
+            27: ("node_conv2d_5",     "node_relu_5"),
+            28: ("node_max_pool2d_2", None),
+            29: ("node_conv2d_6",     "node_relu_6"),
+            30: ("node_conv2d_7",     "node_relu_7"),
+            31: ("node_conv2d_8",     None),
+        }
+        if self.layer_num in lprnetv10_layer_map:
+            self.layer_name, self.relu_name = lprnetv10_layer_map[self.layer_num]
         
         self.layer_mat_file = mat_file_dir + f"/{self.layer_name}.mat"
         self.relu_mat_file = mat_file_dir + f"/{self.relu_name}.mat"
@@ -142,7 +157,7 @@ class CnnHardwareGenerator:
 
         # self.load_mat_data()
     def to_bin(self, val, width):
-        """将数值转换为补码形式的二进制字符串"""
+        """将整数转换为固定宽度二进制补码字符串，用于生成 .mem 文件。"""
         val = int(val)
         if val < 0:
             val = (1 << width) + val
@@ -150,7 +165,11 @@ class CnnHardwareGenerator:
         return f"{val:0{width}b}"
 
     def load_mat_data(self):
-        """从 MAT 文件加载权重、偏置及位宽参数"""
+        """从 MAT 文件加载权重、偏置、shift 和自动推导的位宽。
+
+        卷积层读取 weight/bias；max_pool 层没有真实权重，这里只保留
+        占位位宽，使后续 header 生成逻辑保持统一。
+        """
         print(f"Loading {self.layer_mat_file}...")
         try:
             mat_data = scipy.io.loadmat(self.layer_mat_file)
@@ -163,7 +182,7 @@ class CnnHardwareGenerator:
                 # print(f"** {self.weight[0:5][0:5][0][0]} **")
                 print(f"weight.shape: {self.weight.shape}")
                 self.bias = mat_data['bias'].flatten()
-                #  所有的位宽中，data位宽恒为8，weight位宽恒为9，bias位宽是self.bias的最大绝对值（正值须加1）的二进制位宽 + 1（符号位）。
+                # 权重/偏置位宽按最大绝对值自动推导；正数侧加 1 是为了覆盖补码正值上界。
                 temp_max_bias = np.max(self.bias)
                 temp_min_bias = np.min(self.bias)
                 temp_biggest_bias = max(temp_max_bias+1, -temp_min_bias)
@@ -189,7 +208,7 @@ class CnnHardwareGenerator:
             # bw = mat_data['bit_widths'].flatten()
 
             
-            # 读取 shift_key 并取绝对值
+            # shift_k 使用 Power-of-Two 量化尺度，硬件中表现为右移位数。
             self.shift_key = abs(int(mat_data['shift_k'].item()))
             
             print(f"Parameters Loaded: BW={self.bit_widths}, Shift={self.shift_key}")
@@ -198,17 +217,31 @@ class CnnHardwareGenerator:
             raise
 
     def generate_mem_files(self):
-        """生成权重和偏置的 .mem 文件"""
-        # 1. 生成权重文件 (Per Page)
+        """生成按硬件时序预排布后的权重和偏置 .mem 文件。
+
+        权重不是简单按 MAT 原始顺序写出，而是提前补偿了脉动阵列内部的数据延迟：
+        d_manager 中 D[n] 相对 data[n] 延迟 n+1 个周期；pe_page 中第 c 个 pe_col
+        的输入又相对第 0 列额外延迟 c 个周期。因此同一个全局时间 t 下，
+        第 c 列、第 r 个卷积核位置实际看到的是更早时间步的数据。
+
+        这里用 eff_t = (t - r - c) % cycle_period 预先选择权重对应的输入/输出
+        通道时间步，使运行时 w_manager 只需顺序循环读 mem，读出的权重就已经
+        与延迟后的数据对齐。偏置只需要按输出列 c 做预偏移，因为它不沿卷积核
+        空间维 r 展开。
+        """
+        # 1. 生成每个输入 page 的权重文件。每行对应 w_manager 的一个读地址。
         for p in range(self.pe_page_num):
             filename = os.path.join(self.output_mem_dir, f"weight_layer{self.layer_num}_page{p}.mem")
             with open(filename, 'w') as f:
+                # t 是未考虑阵列延迟前的层内通道时间步。
                 for cin_step in range(self.cycle_period_cin):
                     for cout_step in range(self.cycle_period_cout):
                         t = cin_step * self.cycle_period_cout + cout_step
                         for c in range(self.pe_col_num):
                             line_bin = ""
+                            # mem 中按 r 从高到低拼接，需与 pe_col 对 W[r] 的切片顺序保持一致。
                             for r in range(self.pe_row_num - 1, -1, -1):
+                                # 权重预偏移核心：补偿卷积核 MAC 链 r 级延迟和第 c 个输出列延迟。
                                 eff_t = (t - r - c) % self.cycle_period
                                 eff_cin_step  = eff_t // self.cycle_period_cout
                                 eff_cout_step = eff_t % self.cycle_period_cout
@@ -221,18 +254,18 @@ class CnnHardwareGenerator:
                                     w_val = self.weight[current_cout_idx][current_cin_idx][mat_row_idx][mat_col_idx]
                                     # w_val = 255
                                 except IndexError:
-                                    # print(f"indexError:[current_cout_idx:{current_cout_idx}][current_cin_idx{current_cin_idx}][mat_col_idx{mat_col_idx}][mat_row_idx{mat_row_idx}]")
-                                    # 默认权重与偏置为负的最小值，使得无效输出通道尽可能不激活
+                                    # 硬件槽位可能多于真实通道；越界权重填为负极值，避免无效通道激活。
                                     w_val = - ( 1 << (self.bit_widths['weight']-1) )
                                 line_bin += self.to_bin(w_val, self.bit_widths['weight'])
                             f.write(line_bin + "\n")
         
-        # 2. 生成偏置文件
+        # 2. 生成偏置文件。偏置按输出通道时间步读取，只需补偿 pe_col 列延迟。
         bias_filename = os.path.join(self.output_mem_dir, f"bias_layer{self.layer_num}.mem")
         with open(bias_filename, 'w') as f:
             for cout_step in range(self.cycle_period_cout):
                 t = cout_step
                 for c in range(self.pe_col_num):
+                    # bias 与卷积核空间位置无关，因此只按输出列 c 做时间预偏移。
                     eff_t = (t - c) % self.cycle_period
                     eff_cout_step = eff_t % self.cycle_period_cout
                     current_cout_idx = c * self.cycle_period_cout + eff_cout_step
@@ -245,15 +278,20 @@ class CnnHardwareGenerator:
         print(f"Memory files generated in {self.output_mem_dir}")
 
     def generate_vh_file(self):
-        """生成 SystemVerilog 参数头文件 .vh"""
+        """生成 SystemVerilog 参数头文件 layerN.vh。
+
+        RTL 顶层、layer.sv 和 testbench 都依赖这些参数；修改阵列规模或
+        模型结构后必须重新生成。
+        """
         vh_filename = os.path.join(self.output_vh_dir, f"layer{self.layer_num}.vh")
         n = self.layer_num
         
-        # 预计算一些内部逻辑位宽 (参考 layer1.vh 公式)
-        # $clog2 在 Python 中用 np.ceil(np.log2()) 模拟
+        # PE 单列输出位宽：单个乘积位宽 + 卷积核元素累加增长位宽。
+        # SystemVerilog 的 $clog2 在 Python 中用 ceil(log2()) 模拟。
         pe_page_out_bw = self.bit_widths['data'] + self.bit_widths['weight'] + int(np.ceil(np.log2(self.pe_row_num)))
         # print(self.layer_num, pe_page_out_bw, int(np.ceil(np.log2(self.pe_row_num))), self.bit_widths['data'], self.bit_widths['weight'])
 
+        # output_layer 对所有输入 page 和输入通道复用步做累加，需要额外增长位宽。
         acc_bw = self.bit_widths['data'] + self.bit_widths['weight'] + int(np.ceil(np.log2(self.pe_page_num * self.cycle_period_cin * self.pe_row_num)))
 
         content = f"""// =============================================================================
@@ -310,12 +348,12 @@ class CnnHardwareGenerator:
         print(f"Header file generated: {vh_filename}")
 
     def generate_hex_files(self):
-        """生成 HEX 文件"""
-        # 生成路径为 conv_data_hex/{self.layer_name}_input_{self.bit_widths['data']}bit.hex 的hex文件
-        # 将layer_mat_file的 "input" 字段转化为 hex 形式
+        """生成单层 testbench 使用的输入 HEX 文件。
+
+        文件顺序为 row -> col -> channel，匹配 tb_layer/tb_lprnet 的读入方式。
+        """
         input_mat = scipy.io.loadmat(self.layer_mat_file)
         input_data = input_mat["input"]
-        # 使用 for 循环遍历所有元素，构建十六进制字符串列表
         hex_strings = []
         shape = input_data.shape
         for idr in range(shape[2]):
@@ -333,7 +371,7 @@ class CnnHardwareGenerator:
         print(f"HEX file generated: {hex_file_name}")
 
     def generate_layer(self):
-        """执行全流程"""
+        """执行单层生成全流程：读 MAT、生成输入 HEX、生成权重/偏置、生成 header。"""
         self.load_mat_data()
         self.generate_hex_files()
         self.generate_mem_files()
@@ -476,27 +514,43 @@ layer10 = CnnHardwareGenerator(
     img_col=int(BASE_IMG_COL/16)
 )
 
-# 从 layer20 开始是 lpernetv8 的层结构
+# 从 layer20 开始是 lprnetv10 的层结构，复用原 LPRNet 编号段
 layer20 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
+    mat_file_dir="conv_data_lprnetv10",
     layer_num=20,
     pe_page_num=3,
     pe_col_num=1,
     cycle_period_cin=1,
-    cycle_period_cout=16,
+    cycle_period_cout=8,
     bit_width_out=9,
     step_row=1,
     step_col=1,
     img_row=int(BASE_IMG_ROW_LPERNET),
     img_col=int(BASE_IMG_COL_LPERNET)
 )
+
 layer21 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
+    mat_file_dir="conv_data_lprnetv10",
     layer_num=21,
     pe_page_num=layer20.pe_col_num,
-    pe_col_num=1,
+    pe_col_num=2,
     cycle_period_cin=layer20.cycle_period_cout,
-    cycle_period_cout=layer20.cycle_period_cin,
+    cycle_period_cout=8,
+    bit_width_data=9,
+    bit_width_out=9,
+    step_row=1,
+    step_col=1,
+    img_row=int(BASE_IMG_ROW_LPERNET),
+    img_col=int(BASE_IMG_COL_LPERNET)
+)
+
+layer22 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=22,
+    pe_page_num=layer21.pe_col_num,
+    pe_col_num=layer21.pe_col_num,
+    cycle_period_cin=layer21.cycle_period_cout,
+    cycle_period_cout=layer21.cycle_period_cout,
     bit_width_data=9,
     bit_width_out=9,
     max_pool=1,
@@ -506,76 +560,110 @@ layer21 = CnnHardwareGenerator(
     img_row=int(BASE_IMG_ROW_LPERNET),
     img_col=int(BASE_IMG_COL_LPERNET)
 )
-# 特殊情况，第20层和第21层的速度远快于第22层，我们增加第20层的行间隙并在22层输入前进行解耦
-layer22 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
-    layer_num=22,
-    pe_page_num=layer21.pe_col_num,
-    pe_col_num=2,
-    cycle_period_cin=16,
-    cycle_period_cout=16,
-    bit_width_data=9,
-    bit_width_out=9,
-    step_row=1,
-    step_col=2,
-    img_row=int(BASE_IMG_ROW_LPERNET),
-    img_col=int(BASE_IMG_COL_LPERNET)
-)
+
 layer23 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
+    mat_file_dir="conv_data_lprnetv10",
     layer_num=23,
     pe_page_num=layer22.pe_col_num,
     pe_col_num=2,
-    cycle_period_cin=layer22.cycle_period_cout,
-    cycle_period_cout=layer22.cycle_period_cin*2,
+    cycle_period_cin=layer22.cycle_period_cin,
+    cycle_period_cout=8,
+    bit_width_data=9,
+    bit_width_out=9,
+    step_row=1,
+    step_col=1,
+    img_row=int(BASE_IMG_ROW_LPERNET),
+    img_col=int(BASE_IMG_COL_LPERNET)
+)
+
+layer24 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=24,
+    pe_page_num=layer23.pe_col_num,
+    pe_col_num=2,
+    cycle_period_cin=layer23.cycle_period_cout,
+    cycle_period_cout=16,
+    bit_width_data=9,
+    bit_width_out=9,
+    step_row=1,
+    step_col=1,
+    img_row=int(BASE_IMG_ROW_LPERNET),
+    img_col=int(BASE_IMG_COL_LPERNET)
+)
+
+layer25 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=25,
+    pe_page_num=layer24.pe_col_num,
+    pe_col_num=layer24.pe_col_num,
+    cycle_period_cin=layer24.cycle_period_cout,
+    cycle_period_cout=layer24.cycle_period_cout,
     bit_width_data=9,
     bit_width_out=9,
     max_pool=1,
     with_relu=0,
     step_row=2,
-    step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/1),
-    img_col=int(BASE_IMG_COL_LPERNET/2)
+    step_col=2,
+    img_row=int(BASE_IMG_ROW_LPERNET),
+    img_col=int(BASE_IMG_COL_LPERNET)
 )
-layer24 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
-    layer_num=24,
-    pe_page_num=layer23.pe_col_num,
-    pe_col_num=1,
-    cycle_period_cin= 32 // layer23.pe_col_num,
-    cycle_period_cout=64,
+
+layer26 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=26,
+    pe_page_num=layer25.pe_col_num,
+    pe_col_num=2,
+    cycle_period_cin=layer25.cycle_period_cin,
+    cycle_period_cout=16,
     bit_width_data=9,
     bit_width_out=9,
     step_row=1,
+    step_col=1,
+    img_row=int(BASE_IMG_ROW_LPERNET/2),
+    img_col=int(BASE_IMG_COL_LPERNET/2)
+)
+
+layer27 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=27,
+    pe_page_num=layer26.pe_col_num,
+    pe_col_num=2,
+    cycle_period_cin=layer26.cycle_period_cout,
+    cycle_period_cout=32,
+    bit_width_data=9,
+    bit_width_out=9,
+    kernel_col=3,
+    kernel_row=3,
+    step_row=1,
+    step_col=1,
+    img_row=int(BASE_IMG_ROW_LPERNET/2),
+    img_col=int(BASE_IMG_COL_LPERNET/2)
+)
+
+layer28 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=28,
+    pe_page_num=layer27.pe_col_num,
+    pe_col_num=layer27.pe_col_num,
+    cycle_period_cin=layer27.cycle_period_cout,
+    cycle_period_cout=layer27.cycle_period_cout,
+    bit_width_data=9,
+    bit_width_out=9,
+    max_pool=1,
+    with_relu=0,
+    step_row=2,
     step_col=2,
     img_row=int(BASE_IMG_ROW_LPERNET/2),
     img_col=int(BASE_IMG_COL_LPERNET/2)
 )
 
-layer25 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
-    layer_num=25,
-    pe_page_num=layer24.pe_col_num,
-    pe_col_num=1,
-    cycle_period_cin=layer24.cycle_period_cout,
-    cycle_period_cout=layer24.cycle_period_cin*2,
-    bit_width_data=9,
-    bit_width_out=9,
-    max_pool=1,
-    with_relu=0,
-    step_row=2,
-    step_col=1,
-    img_row=int(BASE_IMG_ROW_LPERNET/2),
-    img_col=int(BASE_IMG_COL_LPERNET/4)
-)
-
-layer26 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
-    layer_num=26,
-    pe_page_num=layer25.pe_col_num,
+layer29 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=29,
+    pe_page_num=layer28.pe_col_num,
     pe_col_num=4,
-    cycle_period_cin  = 64 // layer25.pe_col_num,
-    cycle_period_cout = 32,
+    cycle_period_cin=layer28.cycle_period_cin,
+    cycle_period_cout=32,
     bit_width_data=9,
     bit_width_out=9,
     step_row=1,
@@ -584,12 +672,12 @@ layer26 = CnnHardwareGenerator(
     img_col=int(BASE_IMG_COL_LPERNET/4)
 )
 
-layer27 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
-    layer_num=27,
-    pe_page_num=layer26.pe_col_num,
+layer30 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=30,
+    pe_page_num=layer29.pe_col_num,
     pe_col_num=2,
-    cycle_period_cin=layer26.cycle_period_cout,
+    cycle_period_cin=layer29.cycle_period_cout,
     cycle_period_cout=64,
     bit_width_data=9,
     bit_width_out=9,
@@ -601,13 +689,12 @@ layer27 = CnnHardwareGenerator(
     img_col=int(BASE_IMG_COL_LPERNET/4)
 )
 
-
-layer28 = CnnHardwareGenerator(
-    mat_file_dir="conv_data_lprnetv8_new_pds",
-    layer_num=28,
-    pe_page_num=layer27.pe_col_num,
+layer31 = CnnHardwareGenerator(
+    mat_file_dir="conv_data_lprnetv10",
+    layer_num=31,
+    pe_page_num=layer30.pe_col_num,
     pe_col_num=4,
-    cycle_period_cin=layer27.cycle_period_cout,
+    cycle_period_cin=layer30.cycle_period_cout,
     cycle_period_cout=32,
     bit_width_data=9,
     bit_width_out=10,
@@ -621,7 +708,7 @@ layer28 = CnnHardwareGenerator(
 )
 
 all_layers = [layer0, layer1, layer2, layer3, layer4, layer5, layer6, layer7, layer8, layer9, layer10, \
-    layer20, layer21, layer22, layer23, layer24, layer25, layer26, layer27, layer28]
+    layer20, layer21, layer22, layer23, layer24, layer25, layer26, layer27, layer28, layer29, layer30, layer31]
 
 # ================= 使用示例 =================
 if __name__ == "__main__":

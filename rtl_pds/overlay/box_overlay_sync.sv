@@ -36,12 +36,12 @@ module box_overlay_sync #(
     // ===================================
     // 2. Iprnet 子图相关数据 (同步于 clk_video)
     // ===================================
-    output logic               start_crop_wr [0:MAX_BOX_NUM-1],
-    output logic               end_crop_wr   [0:MAX_BOX_NUM-1],
-    output logic [15:0]        crop_x_min   [0:MAX_BOX_NUM-1],
-    output logic [15:0]        crop_y_min   [0:MAX_BOX_NUM-1],
-    output logic               crop_wr_en   [0:MAX_BOX_NUM-1],
-    output logic [23:0]        crop_rgb_out [0:MAX_BOX_NUM-1]
+    output logic [MAX_BOX_NUM-1:0]        start_crop_wr,
+    output logic [MAX_BOX_NUM-1:0]        end_crop_wr,
+    output logic [MAX_BOX_NUM-1:0][15:0]  crop_x_min,
+    output logic [MAX_BOX_NUM-1:0][15:0]  crop_y_min,
+    output logic [MAX_BOX_NUM-1:0]        crop_wr_en,
+    output logic [MAX_BOX_NUM-1:0][23:0]  crop_rgb_out
 );     
 
     // =========================================================
@@ -156,8 +156,10 @@ module box_overlay_sync #(
     logic [7:0] cur_conf;
     logic [7:0] cur_cls ;
     logic signed [15:0] pixel_x, pixel_y; // pixel_y实际上是当前行坐标+1，调用时需要注意
+    logic signed [15:0] pixel_y_curr;
     logic video_de_in_d;
     wire  hs_falling = !video_de_in && video_de_in_d;
+    assign pixel_y_curr = pixel_y - 16'sd1;
 
     // =========================================================
     // A. 例化异步 FIFO (PE Domain -> Video Domain)
@@ -206,7 +208,7 @@ module box_overlay_sync #(
     
     // word_cnt从0增长到4，总共读5次
     // box_valid不全为1，才可以读取缓存
-    assign fifo_rd_en = ~fifo_empty && (word_cnt < 4) && (box_valid[box_cnt] != 1);
+    assign fifo_rd_en = ~fifo_empty && (word_cnt < 5) && (box_valid[box_cnt] != 1);
     
     logic fifo_valid;
     always_ff @(posedge clk_video or negedge rst_n) begin
@@ -479,7 +481,7 @@ module box_overlay_sync #(
                         if (hs_falling) begin
                             y_valid_row[i_gen] <= 1'b0;
 
-                            if (pixel_y == box_ymin[i_gen]) begin
+                            if (pixel_y_curr == box_ymin[i_gen]) begin
                                 x_step[i_gen]        <= init_x_step;
                                 y_step[i_gen]        <= init_y_step;
                                 x_fp[i_gen]          <= init_x_fp;
@@ -499,11 +501,11 @@ module box_overlay_sync #(
                             end else if (crop_active[i_gen] &&
                                          !crop_emit_done[i_gen] &&
                                          !y_valid_row[i_gen] &&
-                                         (pixel_y >= box_ymin[i_gen] + y_sample[i_gen])) begin
+                                         (pixel_y_curr >= box_ymin[i_gen] + y_sample[i_gen])) begin
                                 y_valid_row[i_gen] <= 1'b1;
                             end
 
-                            if ((pixel_y == box_ymax[i_gen]) && crop_active[i_gen]) begin
+                            if ((pixel_y_curr == box_ymax[i_gen]) && crop_active[i_gen]) begin
                                 crop_active[i_gen] <= 1'b0;
                                 crop_done[i_gen]   <= 1'b1;
                             end

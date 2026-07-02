@@ -14,12 +14,8 @@ module sdp_ram #(
 );
 
     logic [WIDTH-1:0] mem [0:DEPTH-1];
-    int i;
-    // initial begin
-    //     for (i = 0; i < DEPTH; i++) begin
-    //         mem[i] = '0;
-    //     end
-    // end
+    // Do not initialize this RAM in simulation. X/Z reads are intentional
+    // probes for logic that accesses BRAM locations before they are written.
     always @(posedge clk) begin
         if (clk_en) begin
             if (we) begin

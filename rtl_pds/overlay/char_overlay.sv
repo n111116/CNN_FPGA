@@ -3,6 +3,7 @@
 module char_overlay #(
     // [修改] 去掉了 int
     parameter CROP_HEIGHT = 128,
+    parameter CHAR_NUM    = 76,
     parameter FONT_FILE   = "chars_16x16.mem"
 )(
     // [修改] 移除了 wire，直接使用 logic
@@ -32,11 +33,11 @@ module char_overlay #(
     // A. 坐标同步 FIFO
     // =========================================================
     logic [15:0] line_cnt;
-    logic        coord_fifo_wr;
-    logic [31:0] coord_fifo_din;
-    logic        coord_fifo_rd;
+    logic        coord_fifo_wr                                  /* synthesis syn_preserve=1 */;
+    logic [31:0] coord_fifo_din                                 /* synthesis syn_preserve=1 */;
+    logic        coord_fifo_rd                                  /* synthesis syn_preserve=1 */;
     logic [31:0] coord_fifo_dout;
-    logic        coord_fifo_empty;
+    logic        coord_fifo_empty                               /* synthesis syn_keep=1 */;
 
     always_ff @(posedge clk_pe or negedge rst_n_pe) begin
         if (!rst_n_pe) begin
@@ -57,8 +58,9 @@ module char_overlay #(
 
     // 内部小型 FIFO (深度 16)，作为标准的 Memory 推断，保留非压缩形式
     logic [31:0] coord_fifo [0:15];
-    logic [3:0]  coord_wr_ptr, coord_rd_ptr;
-    logic [4:0]  coord_count;
+    logic [3:0]  coord_wr_ptr                                   /* synthesis syn_preserve=1 */;
+    logic [3:0]  coord_rd_ptr                                   /* synthesis syn_preserve=1 */;
+    logic [4:0]  coord_count                                    /* synthesis syn_preserve=1 */;
 
     assign coord_fifo_empty = (coord_count == 0);
     assign coord_fifo_dout  = coord_fifo[coord_rd_ptr];
@@ -85,8 +87,9 @@ module char_overlay #(
     // =========================================================
     // B. 字符拼装与跨时钟域推入
     // =========================================================
-    logic [15:0] current_x_min, current_y_min;
-    logic [15:0] char_offset;
+    logic [15:0] current_x_min                                  /* synthesis syn_preserve=1 */;
+    logic [15:0] current_y_min                                  /* synthesis syn_preserve=1 */;
+    logic [15:0] char_offset                                    /* synthesis syn_preserve=1 */;
 
     always_ff @(posedge clk_pe or negedge rst_n_pe) begin
         if (!rst_n_pe) begin
@@ -112,18 +115,20 @@ module char_overlay #(
     // =========================================================
     // 组装发往视频域的数据包：7位字符码 + 16位X + 16位Y = 39 bits
     // =========================================================
-    logic        async_fifo_wr;
-    logic [38:0] async_fifo_din;
-    logic        async_fifo_rd;
+    logic        async_fifo_wr                                  /* synthesis syn_preserve=1 */;
+    logic [38:0] async_fifo_din                                 /* synthesis syn_preserve=1 */;
+    logic        async_fifo_rd                                  /* synthesis syn_keep=1 */;
     logic [38:0] async_fifo_dout;
-    logic        async_fifo_empty;
+    logic        async_fifo_empty                               /* synthesis syn_keep=1 */;
 
     // 独立计算坐标，自带明确的 16-bit 截断与保护
     logic [15:0] target_x;
     logic [15:0] target_y;
+    logic        out_char_visible;
 
     assign target_x = current_x_min + char_offset;
     assign target_y = (current_y_min >= 16'd16) ? (current_y_min - 16'd16) : 16'd0;
+    assign out_char_visible = (out_char < CHAR_NUM);
 
     always_ff @(posedge clk_pe or negedge rst_n_pe) begin
         if (!rst_n_pe) begin
@@ -131,7 +136,7 @@ module char_overlay #(
             async_fifo_din <= 0;
         end else begin
             async_fifo_wr <= 0;
-            if (out_valid) begin
+            if (out_valid && out_char_visible) begin
                 async_fifo_wr  <= 1'b1;
                 // 拼接时全是干净、标准的变量，彻底杜绝位宽推断错误
                 async_fifo_din <= {out_char, target_x, target_y};
@@ -177,7 +182,7 @@ module char_overlay #(
     localparam MAX_CHARS = 64; 
     
     // [修改] 将内部缓存转为压缩数组
-    logic [MAX_CHARS-1:0]        c_valid;
+    logic [MAX_CHARS-1:0]        c_valid                        /* synthesis syn_preserve=1 */;
     logic [6:0]   c_code[MAX_CHARS-1:0];
     logic [15:0]  c_x[MAX_CHARS-1:0];
     logic [15:0]  c_y[MAX_CHARS-1:0];

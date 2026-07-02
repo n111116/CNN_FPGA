@@ -18,8 +18,8 @@ module lprnet_spatial_sum #(
     
     // 输出接口
     output logic signed [PE_COL_NUM-1:0] [ACC_WIDTH-1:0]         y_out,
-    output logic                                new_line_out_1,
-    output logic                                output_valid 
+    output logic                                new_line_out_1   /* synthesis syn_preserve=1 */,
+    output logic                                output_valid     /* synthesis syn_preserve=1 */
 );
 
     localparam BRAM_DEPTH = CYCLE_PERIOD_OUT * IMG_COL;
@@ -29,8 +29,8 @@ module lprnet_spatial_sum #(
     // =============================================================
     // 1. 状态维护 (行计数与行内计数)
     // =============================================================
-    logic [ADDR_WIDTH-1:0] cnt_in_row;
-    logic [ROW_WIDTH-1:0]  row_cnt;
+    logic [ADDR_WIDTH-1:0] cnt_in_row                            /* synthesis syn_preserve=1 */;
+    logic [ROW_WIDTH-1:0]  row_cnt                               /* synthesis syn_preserve=1 */;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -56,8 +56,8 @@ module lprnet_spatial_sum #(
     end
 
     // 当前周期（Stage 0）的状态
-    logic is_first_row_s0;
-    logic is_last_row_s0;
+    logic is_first_row_s0                                        /* synthesis syn_keep=1 */;
+    logic is_last_row_s0                                         /* synthesis syn_keep=1 */;
     assign is_first_row_s0 = (row_cnt == 0);
     assign is_last_row_s0  = (row_cnt == IMG_ROW - 1);
 
@@ -66,23 +66,23 @@ module lprnet_spatial_sum #(
     // 2. 流水线信号定义
     // =============================================================
     // Stage 1
-    logic                  valid_s1;
+    logic                  valid_s1                              /* synthesis syn_preserve=1 */;
     logic [ADDR_WIDTH-1:0] cnt_in_row_s1;
-    logic                  is_first_row_s1;
-    logic                  is_last_row_s1;
+    logic                  is_first_row_s1                       /* synthesis syn_preserve=1 */;
+    logic                  is_last_row_s1                        /* synthesis syn_preserve=1 */;
     logic signed [DATA_WIDTH-1:0] data_input_s1 [PE_COL_NUM-1:0];
     
     // Stage 2
-    logic                  valid_s2;
+    logic                  valid_s2                              /* synthesis syn_preserve=1 */;
     logic [ADDR_WIDTH-1:0] cnt_in_row_s2;
-    logic                  is_last_row_s2;
+    logic                  is_last_row_s2                        /* synthesis syn_preserve=1 */;
     logic signed [ACC_WIDTH-1:0]  add_op_a [PE_COL_NUM-1:0];
     logic signed [ACC_WIDTH-1:0]  add_op_b [PE_COL_NUM-1:0];
 
     // Stage 3
-    logic                  valid_s3;
+    logic                  valid_s3                              /* synthesis syn_preserve=1 */;
     logic [ADDR_WIDTH-1:0] cnt_in_row_s3;
-    logic                  is_last_row_s3;
+    logic                  is_last_row_s3                        /* synthesis syn_preserve=1 */;
     logic signed [ACC_WIDTH-1:0]  sum_s3 [PE_COL_NUM-1:0];
 
 

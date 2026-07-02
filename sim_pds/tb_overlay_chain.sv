@@ -19,12 +19,12 @@ module tb_overlay_chain();
     logic        v_vs_out, v_hs_out, v_de_out; logic [23:0] v_rgb_out;
 
     logic        box_wr_en = 0; logic [31:0] box_wr_data = 0;
-    logic        crop_wr_en   [0:MAX_BOX_NUM-1];
-    logic        start_crop_wr [0:MAX_BOX_NUM-1];
-    logic        end_crop_wr   [0:MAX_BOX_NUM-1];
-    logic [15:0] crop_x_min   [0:MAX_BOX_NUM-1];
-    logic [15:0] crop_y_min   [0:MAX_BOX_NUM-1];
-    logic [23:0] crop_rgb_out [0:MAX_BOX_NUM-1];
+    logic [MAX_BOX_NUM-1:0]       crop_wr_en;
+    logic [MAX_BOX_NUM-1:0]       start_crop_wr;
+    logic [MAX_BOX_NUM-1:0]       end_crop_wr;
+    logic [MAX_BOX_NUM-1:0][15:0] crop_x_min;
+    logic [MAX_BOX_NUM-1:0][15:0] crop_y_min;
+    logic [MAX_BOX_NUM-1:0][23:0] crop_rgb_out;
 
     logic        new_line_1, data_valid;
     logic [23:0] data_out;

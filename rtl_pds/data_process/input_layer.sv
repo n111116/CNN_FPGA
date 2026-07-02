@@ -25,14 +25,15 @@ module input_layer #(
     // [修改]: 压缩数组形式
     output logic [PE_ROW_NUM-1:0][PE_PAGE_NUM-1:0][DATA_WIDTH-1:0] data_out,
     output logic                     line_buf_full,
-    output logic                     data_out_valid,
-    output logic                     new_line_out_1
+    output logic                     data_out_valid             /* synthesis syn_preserve=1 */,
+    output logic                     new_line_out_1             /* synthesis syn_preserve=1 */
 );
 
     // 每次读出STEP_ROW行，最少需要KENNEL - KERNEL_ROW/2行
     // KERNEL_ROW - KERNEL_ROW/2 - STEP_ROW > 0时，读出的值不能马上使用
     // 须屏蔽第前 KERNEL_ROW - KERNEL_ROW/2 - STEP_ROW行
-    localparam INVALID_ROWS_START = KERNEL_ROW - KERNEL_ROW/2 - STEP_ROW;
+    localparam int signed   INVALID_ROWS_START_RAW = KERNEL_ROW - KERNEL_ROW/2 - STEP_ROW;
+    localparam int unsigned INVALID_ROWS_START     = (INVALID_ROWS_START_RAW > 0) ? INVALID_ROWS_START_RAW : 0;
 
     // =============================================================
     // 1. 数据打包
@@ -49,25 +50,30 @@ module input_layer #(
     // =============================================================
     // 2. Ping-Pong 行缓存 (速率匹配逻辑) 
     // =============================================================
-    localparam PP_DEPTH = IMG_COL * CYCLE_PERIOD_IN;
-    logic [$clog2(PP_DEPTH)-1:0] pp_wr_cnt;
-    logic [$clog2(PP_DEPTH)-1:0] pp_rd_cnt;
-    logic [$clog2(CYCLE_PERIOD_OUT / STEP_COL)-1:0] pp_rd_cnt_cycle;
+    localparam int unsigned PP_DEPTH           = IMG_COL * CYCLE_PERIOD_IN;
+    localparam int unsigned PP_ADDR_WIDTH      = (PP_DEPTH > 1) ? $clog2(PP_DEPTH) : 1;
+    localparam int unsigned PP_RD_CYCLE_PERIOD = ((CYCLE_PERIOD_OUT / STEP_COL) > 0) ? (CYCLE_PERIOD_OUT / STEP_COL) : 1;
+    localparam int unsigned PP_RD_CYCLE_WIDTH  = (PP_RD_CYCLE_PERIOD > 1) ? $clog2(PP_RD_CYCLE_PERIOD) : 1;
+    localparam int unsigned PP_RD_CYCLE_RESET  = (PP_RD_CYCLE_PERIOD > 1) ? 1 : 0;
+    logic [PP_ADDR_WIDTH-1:0]     pp_wr_cnt                     /* synthesis syn_preserve=1 */;
+    logic [PP_ADDR_WIDTH-1:0]     pp_rd_cnt                     /* synthesis syn_preserve=1 */;
+    logic [PP_RD_CYCLE_WIDTH-1:0] pp_rd_cnt_cycle               /* synthesis syn_preserve=1 */;
     logic [$clog2(STEP_ROW != 1 ? STEP_ROW : 2)-1:0] pp_wr_sel;    
-    logic pp_rd_active; 
+    logic pp_rd_active                                          /* synthesis syn_preserve=1 */; 
     
-    logic [1:0] pending_rows; 
+    logic [1:0] pending_rows                                    /* synthesis syn_preserve=1 */; 
     
     logic [KERNEL_ROW-1:0] we_line_ram;
     logic [KERNEL_ROW-1:0] re_line_ram;
     // 行读出有效与行读出信号
-    logic line_out_valid;
+    logic line_out_valid                                        /* synthesis syn_preserve=1 */;
     // [修改]: 压缩数组形式
     logic [KERNEL_ROW-1:0][FIFO_WIDTH-1:0] line_out;
     logic [KERNEL_ROW-1:0][FIFO_WIDTH-1:0] line_ram_out;
 
-    localparam LB_DEPTH = IMG_COL*CYCLE_PERIOD_IN;
-    logic [$clog2(LB_DEPTH)-1:0] lb_waddr,lb_raddr;
+    localparam int unsigned LB_DEPTH      = IMG_COL*CYCLE_PERIOD_IN;
+    localparam int unsigned LB_ADDR_WIDTH = (LB_DEPTH > 1) ? $clog2(LB_DEPTH) : 1;
+    logic [LB_ADDR_WIDTH-1:0] lb_waddr,lb_raddr;
     
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -112,8 +118,8 @@ module input_layer #(
         end
     endgenerate
 
-    logic row_written_flag;            // 写入地址达到最后一行的开头时，开始读取
-    logic row_read_flag;                // 读取地址达到最后一个地址，读取完成
+    logic row_written_flag                                      /* synthesis syn_keep=1 */;            // 写入地址达到最后一行的开头时，开始读取
+    logic row_read_flag                                         /* synthesis syn_keep=1 */;                // 读取地址达到最后一个地址，读取完成
     
     always_comb begin
         row_written_flag = (pp_wr_cnt == 0) && data_input_valid && (pp_wr_sel == STEP_ROW - 1);
@@ -129,7 +135,7 @@ module input_layer #(
             pp_wr_sel    <= STEP_ROW - 1;   // 第一个new_line_input_1到来后，pp_wr_sel会变为0
             pending_rows <= 0;
             line_buf_full <= 0;
-            pp_rd_cnt_cycle <= 1;   // 预设为1，保证每行开头时不会立即读取
+            pp_rd_cnt_cycle <= PP_RD_CYCLE_RESET;   // 预设为1，保证每行开头时不会立即读取
         end else if (clk_en) begin
             // Write Logic
             if(new_line_input_1) begin
@@ -150,7 +156,7 @@ module input_layer #(
                 end
             end
             // Read Logic
-            if(pp_rd_cnt_cycle == CYCLE_PERIOD_OUT / STEP_COL - 1) begin
+            if(pp_rd_cnt_cycle == PP_RD_CYCLE_PERIOD - 1) begin
                 pp_rd_cnt_cycle <= 0;
             end else begin
                 pp_rd_cnt_cycle <= pp_rd_cnt_cycle + 1;
@@ -171,7 +177,8 @@ module input_layer #(
         end
     end
 
-    logic pixel_valid, stream_valid;
+    logic pixel_valid                                           /* synthesis syn_preserve=1 */;
+    logic stream_valid                                          /* synthesis syn_preserve=1 */;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -200,7 +207,8 @@ module input_layer #(
     logic [$clog2(CYCLE_PERIOD_IN+1)-1:0] index_in;
     logic [$clog2(IMG_COL)-1:0] index_x;
     logic [$clog2(IMG_ROW)-1:0] index_y;
-    logic [$clog2(INVALID_ROWS_START):0]invalid_rows;
+    localparam int unsigned INVALID_ROWS_WIDTH = (INVALID_ROWS_START > 0) ? $clog2(INVALID_ROWS_START + 1) : 1;
+    logic [INVALID_ROWS_WIDTH-1:0] invalid_rows;
 
     // Index in
     always_ff @(posedge clk or negedge rst_n) begin
@@ -248,7 +256,11 @@ module input_layer #(
         end else if (clk_en) begin
             if(stream_valid && (index_x == IMG_COL - STEP_COL) && (index_in == CYCLE_PERIOD_IN - 1)) begin
                 if (invalid_rows != 0) begin
-                    invalid_rows <= invalid_rows - STEP_ROW; 
+                    if (invalid_rows > STEP_ROW) begin
+                        invalid_rows <= invalid_rows - STEP_ROW;
+                    end else begin
+                        invalid_rows <= '0;
+                    end
                 end
             end
         end
@@ -262,8 +274,8 @@ module input_layer #(
     logic [$clog2(PIXEL_PP_DEPTH > 1 ? PIXEL_PP_DEPTH : 2)-1:0] pixel_pp_rd_cnt;
     logic [$clog2(CYCLE_PERIOD_OUT > 1 ? CYCLE_PERIOD_OUT : 2)-1:0] pixel_pp_rd_cnt_cycle;
     logic [$clog2(STEP_COL > 1 ? STEP_COL : 2)-1:0] pixel_pp_wr_sel;
-    logic pixel_pp_rd_active;
-    logic [1:0] pending_pixels;
+    logic pixel_pp_rd_active                                    /* synthesis syn_preserve=1 */;
+    logic [1:0] pending_pixels                                  /* synthesis syn_preserve=1 */;
     
     // [修改]: 压缩数组形式
     logic [KERNEL_COL-1:0] we_pixel_ram;
@@ -281,8 +293,11 @@ module input_layer #(
     // KERNEL_COL/2 是卷积核中心距右边缘的距离
     // 二者相等时，卷积核的中心坐标就是有效图像的起始坐标
     // 不相等时则需要通过移位寄存器进行匹配
-    localparam KERNEL_DELAY_LENGTH = (KERNEL_COL/2 - (STEP_COL - 1)) * CYCLE_PERIOD;
-    logic [KERNEL_DELAY_LENGTH-1:0] pixel_pp_rd_active_shift_reg;
+    localparam int signed   KERNEL_DELAY_LENGTH_RAW = (KERNEL_COL/2 - (STEP_COL - 1)) * CYCLE_PERIOD;
+    localparam int unsigned KERNEL_DELAY_LENGTH     = (KERNEL_DELAY_LENGTH_RAW > 0) ? KERNEL_DELAY_LENGTH_RAW : 0;
+    localparam int unsigned KERNEL_DELAY_WIDTH      = (KERNEL_DELAY_LENGTH > 0) ? KERNEL_DELAY_LENGTH : 1;
+    localparam int unsigned KERNEL_DELAY_LAST       = (KERNEL_DELAY_LENGTH > 0) ? (KERNEL_DELAY_LENGTH - 1) : 0;
+    logic [KERNEL_DELAY_WIDTH-1:0] pixel_pp_rd_active_shift_reg  /* synthesis syn_preserve=1 */;
     
     // stream_valid 逻辑
     generate
@@ -297,15 +312,16 @@ module input_layer #(
                     end else begin
                         pixel_pp_rd_active_shift_reg <= {pixel_pp_rd_active_shift_reg[KERNEL_DELAY_LENGTH-2:0], pixel_pp_rd_active};
                     end
-                    stream_valid <= pixel_pp_rd_active_shift_reg[KERNEL_DELAY_LENGTH-1];
+                    stream_valid <= pixel_pp_rd_active_shift_reg[KERNEL_DELAY_LAST];
                 end
             end
         end else begin
-            assign pixel_pp_rd_active_shift_reg = pixel_pp_rd_active;
             always_ff @(posedge clk or negedge rst_n) begin
                 if (!rst_n) begin
+                    pixel_pp_rd_active_shift_reg <= '0;
                     stream_valid <= 0;
                 end else if (clk_en) begin
+                    pixel_pp_rd_active_shift_reg <= '0;
                     stream_valid <= pixel_pp_rd_active;
                 end
             end
@@ -319,7 +335,7 @@ module input_layer #(
         for (genvar c = 0; c < KERNEL_COL - STEP_COL; c++) begin : gen_we_left
             assign we_pixel_ram[c] = pixel_valid;
             if(KERNEL_DELAY_LENGTH >= 1) begin
-                assign re_pixel_ram[c] = pixel_pp_rd_active_shift_reg[KERNEL_DELAY_LENGTH-1];
+                assign re_pixel_ram[c] = pixel_pp_rd_active_shift_reg[KERNEL_DELAY_LAST];
             end else begin
                 assign re_pixel_ram[c] = pixel_pp_rd_active;
             end
@@ -368,12 +384,12 @@ module input_layer #(
         end
     endgenerate
 
-    logic pixel_col_written_flag;
-    logic pixel_col_read_flag;
+    logic pixel_col_written_flag                                /* synthesis syn_keep=1 */;
+    logic pixel_col_read_flag                                   /* synthesis syn_keep=1 */;
 
     always_comb begin
-        pixel_col_written_flag <= (pixel_pp_wr_cnt == 0) && line_out_valid && (pixel_pp_wr_sel == STEP_COL - 1);
-        pixel_col_read_flag    <= pixel_pp_rd_active && (pixel_pp_rd_cnt == PIXEL_PP_DEPTH - 1);
+        pixel_col_written_flag = (pixel_pp_wr_cnt == 0) && line_out_valid && (pixel_pp_wr_sel == STEP_COL - 1);
+        pixel_col_read_flag    = pixel_pp_rd_active && (pixel_pp_rd_cnt == PIXEL_PP_DEPTH - 1);
     end 
     // 列（像素）缓存控制逻辑
     always_ff @(posedge clk or negedge rst_n) begin
@@ -506,7 +522,7 @@ module input_layer #(
                 if(CYCLE_PERIOD_OUT == 1 && new_line_out_1 == 1) begin
                     new_line_out_1 <= 0;
                 end else if(KERNEL_DELAY_LENGTH >= 1) begin
-                    new_line_out_1 <= pixel_pp_rd_active_shift_reg[KERNEL_DELAY_LENGTH-1] && (index_x == 0) && (index_in == 0);
+                    new_line_out_1 <= pixel_pp_rd_active_shift_reg[KERNEL_DELAY_LAST] && (index_x == 0) && (index_in == 0);
                 end else begin
                     new_line_out_1 <= pixel_pp_rd_active && (index_x == 0) && (index_in == 0);
                 end

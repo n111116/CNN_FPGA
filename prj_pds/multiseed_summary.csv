@@ -1,0 +1,35 @@
+version,2022.2-SP6.4<build 146967>
+project name,hdmi_loop.pds
+
+Single Seed:
+Seed,State,Convergence,Setup(Slow),Setup(Fast),Hold(Slow),Hold(Fast),Recovery(Slow),Recovery(Fast),Removal(Slow),Removal(Fast),PBM-GP,PBM-PreGP,PBM-PostGP,LP,Total Placement Cpu Time,Detailed routing,Total Routing Cpu Time,Wire Length After Post-GP,Wire Length After LP,Wire Length After DP,Routing Arc Length,Worst Slack After GP Timing,Worst Slack After LP Timing,Worst Slack Before RP,Worst Slack Before DP,Worst Slack After DP,Worst Slack After Placement,Worst Slack After TA By Preroute,TNS After DP,TNS Before Route,Setup(Slow) Total Failing TNS,Setup(Slow) Total Failing Endpoints,Hold(Slow) Total Failing THS,Hold(Slow) Total Failing Endpoints,Power
+single,OK,OK,0.290,1.991,0.100,0.099,0.601,2.859,0.283,0.192,6.83,NA,0.02,2.02,240.61,171.83,255.37,NA,NA,NA,799647,NA,NA,-644,-644,107,-681,NA,0,NA,0.000,0,0.000,0,NA
+Pass Rate/Convergence Rate,100.00%,100.00%
+
+Synthesize:
+control_set,890
+Synthesize Performance Summary:
+slack category,Synthesize Setup WNS,Synthesize Setup TNS,Synthesize Recovery WNS,Synthesize Recovery TNS
+slack value,-0.219,-7.100,3.638,0.000
+Synthesize Process Cpu Time,0h:2m:19s
+
+Device Map:
+Device Map Resource Usage Summary:
+Logic Utilization,LUT,FF,DRM,APM,Distributed RAM,HSSTHP,USCM,HCKB,RCKB
+Used,38812,93976,261,706,1782,NA,7,0,2
+Available,159800,319600,415,740,39500,NA,32,120,40
+Utilization(%),25%,30%,63%,96%,5%,NA,22%,0%,5%
+Device Map Process Cpu Time,0h:0m:44s
+
+Project Configurations:
+top module,hdmi_loop
+compile," -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} 
+ -system_verilog "
+synthesize," -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} 
+ -ads "
+device map,
+place & route,
+
+Test Parameters Configurations:
+testparam,
+
