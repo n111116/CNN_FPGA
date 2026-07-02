@@ -251,7 +251,7 @@ PDS 版本中遇到过“ModelSim 仿真正常，但综合、DeviceMap 或上板
 - `hdmi_loop.sv`：`lprnet_out_valid`、`lprnet_frame_start`、`lprnet_out_char`，以及 crop 到 LPRNet 的 `lprnet_new_line`、`lprnet_data_valid`。
 - `char_overlay.sv`：坐标 FIFO、字符 FIFO、`c_valid` 字符缓存、字体 ROM 地址流水线、`char_pixel` 和最终视频 mux。
 
-实际调试中，曾在 PDS Fabric Debugger 中插入一个 FLA debug core。这里说的是综合工具中实际插入的 debug 采样信号，不是 RTL 代码里的 `PAP_MARK_DEBUG` 或 `syn_preserve` 注解。`prj_pds/log/debugger.log` 中该 core 的采样宽度为 `0x3b`，即 59 bit，主要包含以下信号：
+实际调试中，曾在 PDS Fabric Debugger 中插入一个 FLA debug core。这里说的是综合工具中实际插入的 debug 采样信号，不是 RTL 代码里的 `PAP_MARK_DEBUG` 或 `syn_preserve` 注解。我的`prj_pds/log/debugger.log` 中该 core 主要包含以下信号：
 
 | Debug 信号 | 位宽 | 含义 |
 | --- | --- | --- |
