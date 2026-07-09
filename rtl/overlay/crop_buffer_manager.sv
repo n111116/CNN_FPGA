@@ -33,7 +33,24 @@ module crop_buffer_manager #(
     // 变量统一定义区
     // =========================================================
     localparam int PIXELS_PER_BOX = CROP_WIDTH * CROP_HEIGHT;
-    localparam int ADDR_WIDTH     = $clog2(PIXELS_PER_BOX);
+    // my_fifo 的指针/满空判断要求深度为 2 的幂；读写计数仍按 PIXELS_PER_BOX 结束。
+    localparam int BOX_FIFO_DEPTH =
+        (PIXELS_PER_BOX <= 2)     ? 2     :
+        (PIXELS_PER_BOX <= 4)     ? 4     :
+        (PIXELS_PER_BOX <= 8)     ? 8     :
+        (PIXELS_PER_BOX <= 16)    ? 16    :
+        (PIXELS_PER_BOX <= 32)    ? 32    :
+        (PIXELS_PER_BOX <= 64)    ? 64    :
+        (PIXELS_PER_BOX <= 128)   ? 128   :
+        (PIXELS_PER_BOX <= 256)   ? 256   :
+        (PIXELS_PER_BOX <= 512)   ? 512   :
+        (PIXELS_PER_BOX <= 1024)  ? 1024  :
+        (PIXELS_PER_BOX <= 2048)  ? 2048  :
+        (PIXELS_PER_BOX <= 4096)  ? 4096  :
+        (PIXELS_PER_BOX <= 8192)  ? 8192  :
+        (PIXELS_PER_BOX <= 16384) ? 16384 :
+        (PIXELS_PER_BOX <= 32768) ? 32768 : 65536;
+    localparam int ADDR_WIDTH     = $clog2(BOX_FIFO_DEPTH);
     
     genvar i_gen;
     int    idx;
@@ -137,7 +154,7 @@ module crop_buffer_manager #(
         for (i_gen = 0; i_gen < MAX_BOX_NUM; i_gen++) begin : gen_box_fifos
             my_fifo #(
                 .DATA_WIDTH(24),
-                .FIFO_DEPTH(PIXELS_PER_BOX) 
+                .FIFO_DEPTH(BOX_FIFO_DEPTH)
             ) 
             // ip_fifo 
             u_crop_fifo (

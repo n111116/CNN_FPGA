@@ -1,5 +1,12 @@
 transcript on
 
+if {![info exists SCRIPT_DIR]} {
+    set SCRIPT_DIR [pwd]
+}
+if {![info exists ROOT_DIR]} {
+    set ROOT_DIR [file normalize [file join $SCRIPT_DIR .. ..]]
+}
+
 # 1. 清理并创建工作库
 if {[file exists rtl_work]} {
     vdel -lib rtl_work -all
@@ -8,27 +15,26 @@ vlib rtl_work
 vmap work rtl_work
 
 # 2. 定义路径变量
-set INC_PATH "../../rtl_pds/data_process/header"
-set MEM_DATA_PATH "../../mem_data/"
-file copy -force {*}[glob ../../rtl_pds/data_process/mem_data/*.mem] .
+set INC_PATH [file join $ROOT_DIR rtl_pds data_process header]
+set MEM_DATA_PATH [file join $ROOT_DIR rtl_pds data_process mem_data]
 
 # 3. 编译 RTL 模块
 # 建议加上 +incdir+，防止 RTL 模块内部也有 `include
 vlog -work rtl_work \
     +incdir+$INC_PATH \
     +define+DATA_PATH="$MEM_DATA_PATH" \
-    ../../rtl_pds/overlay/*.sv
+    {*}[glob [file join $ROOT_DIR rtl_pds overlay *.sv]]
 vlog -work rtl_work \
     +incdir+$INC_PATH \
     +define+DATA_PATH="$MEM_DATA_PATH" \
-    ../../rtl_pds/my_fifo.sv
+    [file join $ROOT_DIR rtl_pds my_fifo.sv]
 
 # 4. 编译测试平台
 # 确保这里包含了 incdir，否则找不到 .vh 文件
 vlog -work rtl_work -sv \
      +incdir+$INC_PATH \
      +define+DATA_PATH="$MEM_DATA_PATH" \
-     ../tb_overlay_chain.sv
+     [file join $ROOT_DIR sim_pds tb_overlay_chain.sv]
 
 # 5. (可选) 物理拷贝 .mem 文件
 # 如果你的 $readmemh("file.mem") 里面没写路径，就必须执行这一行

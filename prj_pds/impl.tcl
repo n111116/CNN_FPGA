@@ -1216,7 +1216,6 @@ add_design "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/ddr_rd_l
 add_design "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/ddr_video_delay_sync.sv"
 add_design "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/ddr_wr_line_ram.sv"
 add_design "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/rd_ctrl.v"
-add_design "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/sync_vg.v"
 add_design "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/wr_cmd_trans.v"
 add_design "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/wr_ctrl.v"
 add_design "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/wr_rd_ctrl_top.v"
@@ -1309,6 +1308,159 @@ dev_map
 pnr 
 report_timing 
 gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+remove_fic "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/synthesize/hdmi_loop_syn.fic"
+add_fic "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/synthesize/hdmi_loop_syn.fic"
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+remove_fic "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/synthesize/hdmi_loop_syn.fic"
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+add_fic "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/synthesize/hdmi_loop_syn.fic"
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+remove_fic "C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/synthesize/hdmi_loop_syn.fic"
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
 set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
 compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
 synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 

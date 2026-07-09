@@ -225,12 +225,21 @@ module layer #(
             logic                 conv_new_line_1;
             logic                 conv_valid;
 
-            // 强制将静态偏置字符串塞入 output_layer 模块
-            // PDS 对较长的 generate if/else 链在尾部层号上偶尔会过度优化，
-            // 因此把 LPRNet V10 的尾部卷积层放在最前面，确保 layer31 的后级一定被展开。
-            `INST_OUT(31, "mem_data/bias_layer31.mem")
-            `INST_OUT(30, "mem_data/bias_layer30.mem")
+            // 强制将静态偏置字符串塞入 output_layer 模块。
+            // PDS 对较长的 generate if/else 链在尾部层号上偶尔会过度优化；
+            // LPRNet V10 的层号整体提前匹配，避免后端只展开前几层。
+            `INST_OUT(20, "mem_data/bias_layer20.mem")
+            `INST_OUT(21, "mem_data/bias_layer21.mem")
+            `INST_OUT(22, "mem_data/bias_layer22.mem")
+            `INST_OUT(23, "mem_data/bias_layer23.mem")
+            `INST_OUT(24, "mem_data/bias_layer24.mem")
+            `INST_OUT(25, "mem_data/bias_layer25.mem")
+            `INST_OUT(26, "mem_data/bias_layer26.mem")
+            `INST_OUT(27, "mem_data/bias_layer27.mem")
+            `INST_OUT(28, "mem_data/bias_layer28.mem")
             `INST_OUT(29, "mem_data/bias_layer29.mem")
+            `INST_OUT(30, "mem_data/bias_layer30.mem")
+            `INST_OUT(31, "mem_data/bias_layer31.mem")
 
             `INST_OUT( 0, "mem_data/bias_layer0.mem")
             `INST_OUT( 1, "mem_data/bias_layer1.mem")
@@ -244,16 +253,6 @@ module layer #(
             `INST_OUT( 9, "mem_data/bias_layer9.mem")
             `INST_OUT(10, "mem_data/bias_layer10.mem")
             `INST_OUT(11, "mem_data/bias_layer11.mem")
-            
-            `INST_OUT(20, "mem_data/bias_layer20.mem")
-            `INST_OUT(21, "mem_data/bias_layer21.mem")
-            `INST_OUT(22, "mem_data/bias_layer22.mem")
-            `INST_OUT(23, "mem_data/bias_layer23.mem")
-            `INST_OUT(24, "mem_data/bias_layer24.mem")
-            `INST_OUT(25, "mem_data/bias_layer25.mem")
-            `INST_OUT(26, "mem_data/bias_layer26.mem")
-            `INST_OUT(27, "mem_data/bias_layer27.mem")
-            `INST_OUT(28, "mem_data/bias_layer28.mem")
             begin : dummy_out
             end
             
@@ -291,6 +290,185 @@ module layer #(
                     assign new_line_out_1 = pool_new_line_1;
                 end
                 // 列数等于page数
+                assign y_out[p] = pool_y_out;
+            end
+        end
+    endgenerate
+
+endmodule
+
+// LPRNet 专用直接例化层。
+// 与 layer 的计算结构相同，但权重和 bias 文件由上层直接传入，
+// 避免 PDS 在很长的 LAYER_NUM generate if/else 链中错展开。
+module lprnet_layer_direct #(
+    parameter PE_PAGE_NUM      = 3,
+    parameter PE_ROW_NUM       = 9,
+    parameter KERNEL_COL       = 3,
+    parameter KERNEL_ROW       = 3,
+    parameter PE_COL_NUM       = 4,
+    parameter MAX_POOL         = 0,
+    parameter WITH_RELU        = 1,
+    parameter DATA_WIDTH       = 7,
+    parameter WEIGHT_WIDTH     = 9,
+    parameter CYCLE_PERIOD_OUT = 4,
+    parameter CYCLE_PERIOD_IN  = 1,
+    parameter CYCLE_PERIOD     = CYCLE_PERIOD_OUT * CYCLE_PERIOD_IN,
+    parameter IMG_COL          = 128,
+    parameter IMG_ROW          = 128,
+    parameter STEP_ROW         = 1,
+    parameter STEP_COL         = 1,
+    parameter USE_DSP_PE       = "no",
+    parameter SHIFT_KEY        = 9,
+    parameter BIAS_WIDTH       = 14,
+    parameter OUT_WIDTH        = 8,
+    parameter PE_PAGE_OUTPUT_WIDTH = DATA_WIDTH + WEIGHT_WIDTH + $clog2(PE_ROW_NUM + 1),
+    parameter ACC_WIDTH        = PE_PAGE_OUTPUT_WIDTH + $clog2(PE_PAGE_NUM),
+    parameter WEIGHT_FILE0     = "mem_data/weight_layer20_page0.mem",
+    parameter WEIGHT_FILE1     = "mem_data/weight_layer20_page1.mem",
+    parameter WEIGHT_FILE2     = "mem_data/weight_layer20_page2.mem",
+    parameter WEIGHT_FILE3     = "mem_data/weight_layer20_page3.mem",
+    parameter BIAS_FILE        = "mem_data/bias_layer20.mem"
+) (
+    input  logic                     clk,
+    input  logic                     clk_en,
+    input  logic                     rst_n,
+    input  logic                     new_line_input_1,
+    input  logic                     data_input_valid,
+    input  logic [PE_PAGE_NUM-1:0][DATA_WIDTH-1:0] data_input,
+    output logic [PE_COL_NUM-1:0][OUT_WIDTH-1:0]   y_out,
+    output logic                     new_line_out_1,
+    output logic                     output_valid
+);
+
+    logic [PE_ROW_NUM-1:0][PE_PAGE_NUM-1:0][DATA_WIDTH-1:0] window_data;
+    logic window_valid;
+    logic new_line_inner_1;
+
+    input_layer #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .PE_PAGE_NUM(PE_PAGE_NUM),
+        .PE_ROW_NUM(PE_ROW_NUM),
+        .KERNEL_COL(KERNEL_COL),
+        .KERNEL_ROW(KERNEL_ROW),
+        .CYCLE_PERIOD_IN(CYCLE_PERIOD_IN),
+        .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT),
+        .STEP_COL(STEP_COL),
+        .STEP_ROW(STEP_ROW),
+        .IMG_COL(IMG_COL),
+        .IMG_ROW(IMG_ROW)
+    ) u_input_layer (
+        .clk(clk),
+        .clk_en(clk_en),
+        .rst_n(rst_n),
+        .new_line_input_1(new_line_input_1),
+        .data_input_valid(data_input_valid),
+        .data_input(data_input),
+        .data_out(window_data),
+        .line_buf_full(),
+        .data_out_valid(window_valid),
+        .new_line_out_1(new_line_inner_1)
+    );
+
+    genvar p, r;
+    generate
+        if (MAX_POOL == 0) begin : gen_conv
+            logic signed [PE_PAGE_NUM-1:0][PE_COL_NUM-1:0][PE_PAGE_OUTPUT_WIDTH-1:0] page_y_out;
+            logic [PE_COL_NUM-1:0][OUT_WIDTH-1:0] conv_y_out;
+            logic conv_new_line_1;
+            logic conv_valid;
+
+            for (p = 0; p < PE_PAGE_NUM; p = p + 1) begin : gen_pages
+                logic [PE_ROW_NUM-1:0][DATA_WIDTH-1:0] data_in_for_page;
+
+                for (r = 0; r < PE_ROW_NUM; r = r + 1) begin : map_data
+                    assign data_in_for_page[r] = window_data[r][p];
+                end
+
+                if (p == 0) begin : page0
+                    pe_page #(
+                        .PE_ROW_NUM(PE_ROW_NUM), .PE_COL_NUM(PE_COL_NUM), .DATA_WIDTH(DATA_WIDTH),
+                        .USE_DSP_PE(USE_DSP_PE), .WEIGHT_WIDTH(WEIGHT_WIDTH), .CYCLE_PERIOD(CYCLE_PERIOD),
+                        .OUTPUT_WIDTH(PE_PAGE_OUTPUT_WIDTH), .WEIGHT_FILE(WEIGHT_FILE0)
+                    ) u_pe_page (
+                        .clk(clk), .clk_en(clk_en), .new_line_1(new_line_inner_1),
+                        .data(data_in_for_page), .y_out(page_y_out[p])
+                    );
+                end else if (p == 1) begin : page1
+                    pe_page #(
+                        .PE_ROW_NUM(PE_ROW_NUM), .PE_COL_NUM(PE_COL_NUM), .DATA_WIDTH(DATA_WIDTH),
+                        .USE_DSP_PE(USE_DSP_PE), .WEIGHT_WIDTH(WEIGHT_WIDTH), .CYCLE_PERIOD(CYCLE_PERIOD),
+                        .OUTPUT_WIDTH(PE_PAGE_OUTPUT_WIDTH), .WEIGHT_FILE(WEIGHT_FILE1)
+                    ) u_pe_page (
+                        .clk(clk), .clk_en(clk_en), .new_line_1(new_line_inner_1),
+                        .data(data_in_for_page), .y_out(page_y_out[p])
+                    );
+                end else if (p == 2) begin : page2
+                    pe_page #(
+                        .PE_ROW_NUM(PE_ROW_NUM), .PE_COL_NUM(PE_COL_NUM), .DATA_WIDTH(DATA_WIDTH),
+                        .USE_DSP_PE(USE_DSP_PE), .WEIGHT_WIDTH(WEIGHT_WIDTH), .CYCLE_PERIOD(CYCLE_PERIOD),
+                        .OUTPUT_WIDTH(PE_PAGE_OUTPUT_WIDTH), .WEIGHT_FILE(WEIGHT_FILE2)
+                    ) u_pe_page (
+                        .clk(clk), .clk_en(clk_en), .new_line_1(new_line_inner_1),
+                        .data(data_in_for_page), .y_out(page_y_out[p])
+                    );
+                end else begin : page3
+                    pe_page #(
+                        .PE_ROW_NUM(PE_ROW_NUM), .PE_COL_NUM(PE_COL_NUM), .DATA_WIDTH(DATA_WIDTH),
+                        .USE_DSP_PE(USE_DSP_PE), .WEIGHT_WIDTH(WEIGHT_WIDTH), .CYCLE_PERIOD(CYCLE_PERIOD),
+                        .OUTPUT_WIDTH(PE_PAGE_OUTPUT_WIDTH), .WEIGHT_FILE(WEIGHT_FILE3)
+                    ) u_pe_page (
+                        .clk(clk), .clk_en(clk_en), .new_line_1(new_line_inner_1),
+                        .data(data_in_for_page), .y_out(page_y_out[p])
+                    );
+                end
+            end
+
+            output_layer #(
+                .PE_PAGE_NUM(PE_PAGE_NUM), .PE_COL_NUM(PE_COL_NUM), .PE_ROW_NUM(PE_ROW_NUM),
+                .WITH_RELU(WITH_RELU), .PE_OUT_WIDTH(PE_PAGE_OUTPUT_WIDTH), .BIAS_WIDTH(BIAS_WIDTH),
+                .ACC_WIDTH(ACC_WIDTH), .SHIFT_KEY(SHIFT_KEY), .OUT_WIDTH(OUT_WIDTH),
+                .IMG_COL(IMG_COL / STEP_COL), .CYCLE_PERIOD_OUT(CYCLE_PERIOD_OUT),
+                .CYCLE_PERIOD_IN(CYCLE_PERIOD_IN), .CYCLE_PERIOD(CYCLE_PERIOD), .BIAS_FILE(BIAS_FILE)
+            ) u_output_layer (
+                .clk(clk), .clk_en(clk_en), .rst_n(rst_n),
+                .new_line_in(new_line_inner_1), .page_y_out(page_y_out),
+                .final_out(conv_y_out), .output_valid(conv_valid), .new_line_out_1(conv_new_line_1)
+            );
+
+            assign y_out          = conv_y_out;
+            assign output_valid   = conv_valid;
+            assign new_line_out_1 = conv_new_line_1;
+        end else begin : gen_pool
+            for (p = 0; p < PE_PAGE_NUM; p = p + 1) begin : gen_pages
+                logic [PE_ROW_NUM-1:0][DATA_WIDTH-1:0] data_in_for_page;
+                logic [OUT_WIDTH-1:0] pool_y_out;
+                logic pool_new_line_1;
+                logic pool_valid;
+
+                for (r = 0; r < PE_ROW_NUM; r = r + 1) begin : map_data
+                    assign data_in_for_page[r] = window_data[r][p];
+                end
+
+                max_pool2d #(
+                    .PE_ROW_NUM(PE_ROW_NUM),
+                    .DATA_WIDTH(DATA_WIDTH)
+                ) u_max_pool2d (
+                    .clk(clk),
+                    .rst_n(rst_n),
+                    .clk_en(clk_en),
+                    .new_line_1(new_line_inner_1),
+                    .input_valid(window_valid),
+                    .data(data_in_for_page),
+                    .new_line_out_1(pool_new_line_1),
+                    .output_valid(pool_valid),
+                    .y_out(pool_y_out)
+                );
+
+                if (p == 0) begin : valid_page
+                    assign output_valid   = pool_valid;
+                    assign new_line_out_1 = pool_new_line_1;
+                end
+
                 assign y_out[p] = pool_y_out;
             end
         end

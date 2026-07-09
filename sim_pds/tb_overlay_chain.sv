@@ -8,6 +8,8 @@ module tb_overlay_chain();
     parameter MAX_BOX_NUM = 3;
     parameter CROP_WIDTH  = 20;
     parameter CROP_HEIGHT = 12;
+    localparam [15:0] FLUSH_X_MIN = 16'd1279;
+    localparam [15:0] FLUSH_Y_MIN = 16'd719;
 
     logic clk_video = 0; logic clk_pe = 0; logic rst_n = 0;
     always #5 clk_video = ~clk_video;  
@@ -59,7 +61,7 @@ module tb_overlay_chain();
 
     char_overlay #(
         .CROP_HEIGHT(CROP_HEIGHT),
-        .FONT_FILE("chars_16x16.mem") 
+        .FONT_FILE("mem_data/chars_16x16.mem")
     ) u_char_overlay (
         .clk_video(clk_video), .rst_n_video(rst_n),
         .video_vs_in(v_vs_mid), .video_hs_in(v_hs_mid), .video_de_in(v_de_mid), .video_rgb_in(v_rgb_mid),
@@ -73,38 +75,67 @@ module tb_overlay_chain();
     // LPRNet 检测延迟模拟 【修复：加入Semaphore互斥锁防踩踏】
     // =========================================================
     int line_tracker = 0;
+    bit crop_is_flush_for_lpr = 0;
+    bit sending_flush_chars = 0;
+    int normal_lpr_frame_count = 0;
+    int flush_lpr_frame_count = 0;
+    int flush_char_attempt_count = 0;
+    int flush_char_fifo_write_count = 0;
     semaphore lprnet_sem = new(1); // 互斥锁，保证同时只有一个检测在写入总线
 
     always @(posedge clk_pe) begin
         if (rst_n) begin
             if (new_line_1) begin
+                if (line_tracker == 0) begin
+                    crop_is_flush_for_lpr = (x_min_out == FLUSH_X_MIN) && (y_min_out == FLUSH_Y_MIN);
+                end
                 if (line_tracker == CROP_HEIGHT - 1) begin
+                    automatic bit is_flush;
+                    is_flush = crop_is_flush_for_lpr;
                     line_tracker = 0;
-                    fork send_lprnet_chars(); join_none
+                    fork send_lprnet_chars(is_flush); join_none
                 end else line_tracker++;
             end
         end
     end
 
     // 使用 automatic 关键字确保多个后台进程变量不冲突
-    task automatic send_lprnet_chars();
+    task automatic send_lprnet_chars(input bit is_flush);
         int wait_cycles;
+        lprnet_sem.get(1); // 【加锁】获取总线写入权
+
         wait_cycles = 3000 + $urandom_range(0, 2000);
         repeat (wait_cycles) @(posedge clk_pe);
-        
-        lprnet_sem.get(1); // 【加锁】获取总线写入权
         
         @(posedge clk_pe); frame_start_out <= 1; 
         @(posedge clk_pe); frame_start_out <= 0;
         
         // 1="沪", 51="A"
+        if (is_flush) sending_flush_chars <= 1'b1;
         out_valid <= 1; out_char <= 7'd1;  @(posedge clk_pe);
         out_valid <= 1; out_char <= 7'd51; @(posedge clk_pe);
         out_valid <= 0; out_char <= 0;
-        $display("[%0t] Mock LPRNet '沪A' Sent to Overlay.", $time);
+
+        if (is_flush) begin
+            flush_lpr_frame_count++;
+            $display("[%0t] Mock LPRNet '沪A' Sent for flush black crop.", $time);
+        end else begin
+            normal_lpr_frame_count++;
+            $display("[%0t] Mock LPRNet '沪A' Sent to Overlay.", $time);
+        end
+        sending_flush_chars <= 1'b0;
         
         lprnet_sem.put(1); // 【解锁】释放总线
     endtask
+
+    always @(posedge clk_pe) begin
+        if (rst_n && sending_flush_chars && out_valid && (out_char < 76)) begin
+            flush_char_attempt_count++;
+            if (u_char_overlay.async_fifo_wr) begin
+                flush_char_fifo_write_count++;
+            end
+        end
+    end
 
     // ---------------------------------------------------------
     // 以下测试激励和截图逻辑不变 (省略重复部分，保持与上一版相同)
@@ -112,6 +143,17 @@ module tb_overlay_chain();
     initial begin
         #100 rst_n = 1; #100;
         for (int frame = 0; frame < 3; frame++) generate_video_frame(frame);
+        if (flush_lpr_frame_count == 0) begin
+            $error("No flush black crop was generated after the last real crop.");
+        end
+        if (flush_char_attempt_count == 0) begin
+            $error("The test did not exercise char_overlay flush-character suppression.");
+        end
+        if (flush_char_fifo_write_count != 0) begin
+            $error("Flush black crop character was pushed into char_overlay FIFO.");
+        end
+        $display("Overlay chain flush check: normal_lpr_frames=%0d flush_lpr_frames=%0d flush_chars_seen=%0d",
+                 normal_lpr_frame_count, flush_lpr_frame_count, flush_char_attempt_count);
         #2000 $finish;
     end
 

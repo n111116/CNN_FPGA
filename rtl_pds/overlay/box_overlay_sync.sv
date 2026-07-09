@@ -190,6 +190,8 @@ module box_overlay_sync #(
     // B. Video 域：读取 FIFO 与 33 拍长包解析
     // =========================================================
     logic [5:0]  word_cnt; 
+    logic        packet_busy;
+    logic [2:0]  rd_req_cnt;
 
     logic [7:0]  tmp_idx_x, tmp_idx_y, tmp_conf, tmp_cls;
     logic signed [8:0] tmp_L, tmp_T, tmp_B, tmp_R;
@@ -206,28 +208,40 @@ module box_overlay_sync #(
     logic [MAX_BOX_NUM-1 : 0] box_valid;
     logic [7:0]         box_cnt; 
     
-    // word_cnt从0增长到4，总共读5次
-    // box_valid不全为1，才可以读取缓存
-    assign fifo_rd_en = ~fifo_empty && (word_cnt < 5) && (box_valid[box_cnt] != 1);
+    // 每个 box 包共 5 个 word。my_fifo 的 dout 相对 rd_en 延迟 1 拍，
+    // 因此使用独立的读请求计数，避免多读下一个包的首 word。
+    assign fifo_rd_en = packet_busy && ~fifo_empty && (rd_req_cnt < 3'd5);
     
     logic fifo_valid;
     always_ff @(posedge clk_video or negedge rst_n) begin
         if (!rst_n) begin
             box_cnt <= 1'b0;
             fifo_valid <= 1'b0;
+            packet_busy <= 1'b0;
+            rd_req_cnt <= 3'd0;
         end else begin
             fifo_valid <= fifo_rd_en;
-            // if(word_cnt == 0) begin
-            //     // 没在读并且rd_en为0时自增1（轮询），开始读后不再自增，在读取过程中保持稳定。
-            //     if(~fifo_rd_en) begin
-            //         if(box_cnt < MAX_BOX_NUM - 1)begin
-            //             box_cnt <= box_cnt + 1;
-            //         end else begin
-            //             box_cnt <= 0;
-            //         end
-            //     end
-            // end
+
+            if (packet_busy && fifo_rd_en) begin
+                rd_req_cnt <= rd_req_cnt + 1'b1;
+            end
+
+            if (!packet_busy && (word_cnt == 0)) begin
+                if (box_valid[box_cnt]) begin
+                    if (box_cnt < MAX_BOX_NUM - 1) begin
+                        box_cnt <= box_cnt + 1'b1;
+                    end else begin
+                        box_cnt <= 0;
+                    end
+                end else if (!fifo_empty) begin
+                    packet_busy <= 1'b1;
+                    rd_req_cnt  <= 3'd0;
+                end
+            end
+
             if(word_cnt == 6) begin
+                packet_busy <= 1'b0;
+                rd_req_cnt  <= 3'd0;
                 if(box_cnt < MAX_BOX_NUM - 1)begin
                     box_cnt <= box_cnt + 1;
                 end else begin

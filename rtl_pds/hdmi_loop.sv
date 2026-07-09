@@ -70,7 +70,24 @@ module hdmi_loop #(
     localparam int CONF_THRESH   = 8'h40; // 阈值可调
     localparam int CROP_HEIGHT   = IMG_ROW_LAYER20;
     localparam int CROP_WIDTH    = IMG_COL_LAYER20;
-    localparam int MAX_BOX_NUM   = 8;
+    localparam int MAX_BOX_NUM   = 6;
+    localparam int HDMI_FIFO_MIN_DEPTH = IMG_COL / 2;
+    localparam int HDMI_FIFO_DEPTH =
+        (HDMI_FIFO_MIN_DEPTH <= 2)     ? 2     :
+        (HDMI_FIFO_MIN_DEPTH <= 4)     ? 4     :
+        (HDMI_FIFO_MIN_DEPTH <= 8)     ? 8     :
+        (HDMI_FIFO_MIN_DEPTH <= 16)    ? 16    :
+        (HDMI_FIFO_MIN_DEPTH <= 32)    ? 32    :
+        (HDMI_FIFO_MIN_DEPTH <= 64)    ? 64    :
+        (HDMI_FIFO_MIN_DEPTH <= 128)   ? 128   :
+        (HDMI_FIFO_MIN_DEPTH <= 256)   ? 256   :
+        (HDMI_FIFO_MIN_DEPTH <= 512)   ? 512   :
+        (HDMI_FIFO_MIN_DEPTH <= 1024)  ? 1024  :
+        (HDMI_FIFO_MIN_DEPTH <= 2048)  ? 2048  :
+        (HDMI_FIFO_MIN_DEPTH <= 4096)  ? 4096  :
+        (HDMI_FIFO_MIN_DEPTH <= 8192)  ? 8192  :
+        (HDMI_FIFO_MIN_DEPTH <= 16384) ? 16384 :
+        (HDMI_FIFO_MIN_DEPTH <= 32768) ? 32768 : 65536;
     localparam int LPRNET_OUT_WIDTH = $clog2(CYCLE_PERIOD_OUT_LAYER31 * PE_COL_NUM_LAYER31);
 
     wire                        pix_clk_5x ;
@@ -300,7 +317,7 @@ module hdmi_loop #(
     // 视频帧特征 FIFO，支持外部模块读写并联 
     my_fifo #(
         .DATA_WIDTH(32),
-        .FIFO_DEPTH(IMG_COL/2)
+        .FIFO_DEPTH(HDMI_FIFO_DEPTH)
     ) u_hdmi_fifo (
         .rd_clk         (clk_pe),
         .wr_clk         (pixclk_out),

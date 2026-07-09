@@ -278,4 +278,3 @@ PDS 对部分 SystemVerilog 写法支持不如 Vivado 完整，`rtl` 和 `rtl_pd
 - 修改模型后先跑单层，再跑整网，最后接 `hdmi_loop`。
 - 生成器、RTL 顶层、testbench、compare 脚本要同步修改，不要只改其中一处。
 - 对 MaxPool 层特别注意通道数和 `cycle_period_cout`，池化通常改变空间尺寸，不改变通道组织。
-- 保留 `doc` 下的调试记录。这个工程涉及视频时序、CNN 流水、DDR 和 overlay，多写一条记录往往能省很多回头路。

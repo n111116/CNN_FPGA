@@ -33,7 +33,26 @@ module crop_buffer_manager #(
     // 变量统一定义区
     // =========================================================
     localparam int PIXELS_PER_BOX = CROP_WIDTH * CROP_HEIGHT;
-    localparam int ADDR_WIDTH     = $clog2(PIXELS_PER_BOX);
+    // my_fifo 的指针/满空判断要求深度为 2 的幂；读写计数仍按 PIXELS_PER_BOX 结束。
+    localparam int BOX_FIFO_DEPTH =
+        (PIXELS_PER_BOX <= 2)     ? 2     :
+        (PIXELS_PER_BOX <= 4)     ? 4     :
+        (PIXELS_PER_BOX <= 8)     ? 8     :
+        (PIXELS_PER_BOX <= 16)    ? 16    :
+        (PIXELS_PER_BOX <= 32)    ? 32    :
+        (PIXELS_PER_BOX <= 64)    ? 64    :
+        (PIXELS_PER_BOX <= 128)   ? 128   :
+        (PIXELS_PER_BOX <= 256)   ? 256   :
+        (PIXELS_PER_BOX <= 512)   ? 512   :
+        (PIXELS_PER_BOX <= 1024)  ? 1024  :
+        (PIXELS_PER_BOX <= 2048)  ? 2048  :
+        (PIXELS_PER_BOX <= 4096)  ? 4096  :
+        (PIXELS_PER_BOX <= 8192)  ? 8192  :
+        (PIXELS_PER_BOX <= 16384) ? 16384 :
+        (PIXELS_PER_BOX <= 32768) ? 32768 : 65536;
+    localparam int ADDR_WIDTH     = $clog2(BOX_FIFO_DEPTH);
+    localparam [15:0] FLUSH_X_MIN = 16'd1279;
+    localparam [15:0] FLUSH_Y_MIN = 16'd719;
     
     genvar i_gen;
     int    idx;
@@ -65,9 +84,17 @@ module crop_buffer_manager #(
     logic [15:0] r_col                                           /* synthesis syn_preserve=1 */;       
     logic [15:0] cycle_cnt                                       /* synthesis syn_preserve=1 */;          
     logic [15:0] cycle_cnt_gap                                   /* synthesis syn_preserve=1 */;          
+    logic        flush_pending                                   /* synthesis syn_preserve=1 */;
+    logic [$clog2(MAX_BOX_NUM + 1):0] flush_scan_count           /* synthesis syn_preserve=1 */;
     
+    logic        out_en_pulse                                    /* synthesis syn_keep=1 */;
     logic        rd_en_pulse                                     /* synthesis syn_keep=1 */; 
-    logic        rd_en_d1                                        /* synthesis syn_preserve=1 */;
+    logic        out_en_d1                                       /* synthesis syn_preserve=1 */;
+    logic        black_read_d1                                   /* synthesis syn_preserve=1 */;
+    logic        current_box_ready                               /* synthesis syn_preserve=1 */;
+    logic [15:0] current_x_min                                   /* synthesis syn_preserve=1 */;
+    logic [15:0] current_y_min                                   /* synthesis syn_preserve=1 */;
+    logic [23:0] current_ram_q                                   /* synthesis syn_preserve=1 */;
     
     // =========================================================
     // 1. 跨时钟域反馈接收与 Video 域控制 (clk_video)
@@ -152,9 +179,20 @@ module crop_buffer_manager #(
     logic [23:0] ram_q [0:MAX_BOX_NUM-1];
     int ii;
     always_comb begin
+        current_box_ready = 1'b0;
+        current_x_min     = 16'd0;
+        current_y_min     = 16'd0;
+        current_ram_q     = 24'd0;
         for (ii = 0; ii < MAX_BOX_NUM; ii++) begin
-            if (ii == read_box_idx) fifo_rd_en[ii] = rd_en_pulse;
-            else                    fifo_rd_en[ii] = 1'b0;
+            if ((read_box_idx < MAX_BOX_NUM) && (ii == read_box_idx)) fifo_rd_en[ii] = rd_en_pulse;
+            else                                                       fifo_rd_en[ii] = 1'b0;
+
+            if ((read_box_idx < MAX_BOX_NUM) && (ii == read_box_idx)) begin
+                current_box_ready = box_ready_pe[ii];
+                current_x_min     = x_min_reg[ii];
+                current_y_min     = y_min_reg[ii];
+                current_ram_q     = ram_q[ii];
+            end
         end
     end
 
@@ -170,7 +208,7 @@ module crop_buffer_manager #(
 
             my_fifo #(
                 .DATA_WIDTH(24),
-                .FIFO_DEPTH(PIXELS_PER_BOX) 
+                .FIFO_DEPTH(BOX_FIFO_DEPTH)
             ) 
             // ip_fifo 
             u_crop_fifo (
@@ -218,6 +256,8 @@ module crop_buffer_manager #(
             cycle_cnt     <= 0;
             cycle_cnt_gap <= 0;
             new_line_1    <= 0;
+            flush_pending <= 1'b0;
+            flush_scan_count <= 0;
             for (idx = 0; idx < MAX_BOX_NUM; idx++) box_read_toggle_pe[idx] <= 0;
         end else begin
             new_line_1 <= 1'b0;
@@ -228,12 +268,24 @@ module crop_buffer_manager #(
                     cycle_cnt <= 0;
                     cycle_cnt_gap <= 0;
                     
-                    if (box_ready_pe[read_box_idx]) begin
-                        x_min_out <= x_min_reg[read_box_idx];
-                        y_min_out <= y_min_reg[read_box_idx];
+                    if (current_box_ready) begin
+                        x_min_out <= current_x_min;
+                        y_min_out <= current_y_min;
+                        flush_pending <= 1'b0;
+                        flush_scan_count <= 0;
+                        state <= READING;
+                    end else if (flush_pending && (flush_scan_count == MAX_BOX_NUM - 1)) begin
+                        x_min_out <= FLUSH_X_MIN;
+                        y_min_out <= FLUSH_Y_MIN;
+                        read_box_idx <= MAX_BOX_NUM;
+                        flush_pending <= 1'b0;
+                        flush_scan_count <= 0;
                         state <= READING;
                     end else begin
                         read_box_idx <= (read_box_idx == MAX_BOX_NUM - 1) ? 0 : (read_box_idx + 1);
+                        if (flush_pending) begin
+                            flush_scan_count <= flush_scan_count + 1'b1;
+                        end
                     end
                 end
                 
@@ -247,7 +299,7 @@ module crop_buffer_manager #(
                         if (r_col == CROP_WIDTH - 1) begin
                             r_col     <= 0;
                             state     <= WAIT_GAP;
-                            if (r_row == CROP_HEIGHT - 1) begin
+                            if ((r_row == CROP_HEIGHT - 1) && (read_box_idx < MAX_BOX_NUM)) begin
                                 box_read_toggle_pe[read_box_idx] <= ~box_read_toggle_pe[read_box_idx];
                             end
                         end else begin
@@ -259,11 +311,22 @@ module crop_buffer_manager #(
                 WAIT_GAP: begin
                     if (cycle_cnt_gap == LINE_GAP - 1) begin
                         if(r_row == CROP_HEIGHT - 1) begin
-                            state     <= IDLE;
-                            if (read_box_idx >= MAX_BOX_NUM - 1) 
+                            if (read_box_idx == MAX_BOX_NUM) begin
+                                flush_pending <= 1'b0;
+                                flush_scan_count <= 0;
+                                state <= IDLE;
                                 read_box_idx <= 0;
-                            else 
-                                read_box_idx <= read_box_idx + 1;
+                            end else begin
+                                // 真实子图读完后，先扫描一圈其它 box。
+                                // 如果没有新的 ready 子图，IDLE 会用 read_box_idx == MAX_BOX_NUM 补一张黑图排空 LPRNet。
+                                flush_pending <= 1'b1;
+                                flush_scan_count <= 0;
+                                state <= IDLE;
+                                if (read_box_idx >= MAX_BOX_NUM - 1)
+                                    read_box_idx <= 0;
+                                else
+                                    read_box_idx <= read_box_idx + 1;
+                            end
                         end else begin
                             r_row <= r_row + 1;
                             state     <= READING;
@@ -282,19 +345,26 @@ module crop_buffer_manager #(
     // =========================================================
     // 5. 提取数据与生成 Valid 延迟
     // =========================================================
-    assign rd_en_pulse = (state == READING) && (cycle_cnt == 0);
+    assign out_en_pulse = (state == READING) && (cycle_cnt == 0);
+    assign rd_en_pulse  = out_en_pulse && (read_box_idx < MAX_BOX_NUM);
 
     always_ff @(posedge clk_pe or negedge rst_n) begin
         if (!rst_n) begin
-            rd_en_d1   <= 0;
-            data_valid <= 0;
-            data_out   <= 0;
+            out_en_d1      <= 0;
+            black_read_d1  <= 0;
+            data_valid     <= 0;
+            data_out       <= 0;
         end else begin
-            rd_en_d1   <= rd_en_pulse;
-            data_valid <= rd_en_d1; 
+            out_en_d1     <= out_en_pulse;
+            black_read_d1 <= (read_box_idx == MAX_BOX_NUM);
+            data_valid    <= out_en_d1;
             
-            if (rd_en_d1) begin
-                data_out <= (read_box_idx < MAX_BOX_NUM) ? ram_q[read_box_idx] : 24'd0;
+            if (out_en_d1) begin
+                if (black_read_d1) begin
+                    data_out <= 24'd0;
+                end else begin
+                    data_out <= current_ram_q;
+                end
             end
         end
     end

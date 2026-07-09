@@ -273,7 +273,7 @@ module tb_box_overlay_crop_buffer_manager();
             else if (frame_no == 1) begin
                 if (y == 100)  fork send_box_data(1, 1, 1, 99, 1, 1, 1, 1); join_none 
                 if (y == 101) fork send_box_data(2, 13, 4, 90, 15, 15, 15, 15); join_none
-                if (y == 102) fork send_box_data(3, 6, 7, 85, 10,  8, 10, 10); join_none
+                if (y == 102) fork send_box_data(2, 6, 7, 85, 10,  8, 68, 10); join_none
             end
             else if (frame_no == 2) begin
                 if (y == 100) fork send_box_data(4, 2, 2, 95, 12, 12, 12, 12); join_none 

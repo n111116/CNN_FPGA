@@ -138,4 +138,3 @@ C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/top_lprnet.sv|C:/Users/D
 
 
 
-
