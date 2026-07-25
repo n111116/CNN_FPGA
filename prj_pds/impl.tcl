@@ -1468,3 +1468,13 @@ dev_map
 pnr 
 report_timing 
 gen_bit_stream 
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+set_arch -family Logos2 -device PG2L200H -speedgrade -6 -package FBB676
+compile -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} -system_verilog -top_module hdmi_loop
+synthesize -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} -ads -selected_syn_tool_opt 2 
+dev_map 
+pnr 
+report_timing 
+gen_bit_stream 
+report_power 

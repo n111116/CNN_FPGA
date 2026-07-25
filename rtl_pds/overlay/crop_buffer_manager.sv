@@ -51,8 +51,8 @@ module crop_buffer_manager #(
         (PIXELS_PER_BOX <= 16384) ? 16384 :
         (PIXELS_PER_BOX <= 32768) ? 32768 : 65536;
     localparam int ADDR_WIDTH     = $clog2(BOX_FIFO_DEPTH);
-    localparam [15:0] FLUSH_X_MIN = 16'd1279;
-    localparam [15:0] FLUSH_Y_MIN = 16'd719;
+    localparam [15:0] FLUSH_X_MIN = 16'd1280;
+    localparam [15:0] FLUSH_Y_MIN = 16'd720;
     
     genvar i_gen;
     int    idx;

@@ -4927,10 +4927,10 @@
             <data>RAM(GB)</data>
         </column_headers>
         <row>
-            <data>0h:0m:45s</data>
-            <data>0h:0m:47s</data>
-            <data>0h:1m:30s</data>
-            <data>1,817</data>
+            <data>0h:0m:22s</data>
+            <data>0h:0m:24s</data>
+            <data>0h:1m:38s</data>
+            <data>1,815</data>
             <data>WINDOWS 10 x86_64</data>
             <data>12th Gen Intel(R) Core(TM) i5-12400F</data>
             <data>16</data>

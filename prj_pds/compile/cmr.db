@@ -181,9 +181,9 @@
             <data>RAM(GB)</data>
         </column_headers>
         <row>
-            <data>0h:0m:9s</data>
-            <data>0h:0m:9s</data>
-            <data>0h:1m:27s</data>
+            <data>0h:0m:26s</data>
+            <data>0h:0m:26s</data>
+            <data>0h:1m:30s</data>
             <data>422</data>
             <data>WINDOWS 10 x86_64</data>
             <data>12th Gen Intel(R) Core(TM) i5-12400F</data>

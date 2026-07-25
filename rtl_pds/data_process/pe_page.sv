@@ -16,9 +16,9 @@ module pe_page #(
     input  logic                     clk,
     input  logic                     clk_en,
     input  logic                     new_line_1,  // 用于重置地址计数器的新行信号，相比每行的第一组data提前1个周期
-    // [修改]：改为压缩数组
+    
     input  logic [PE_ROW_NUM-1:0][DATA_WIDTH-1:0]    data,  // 一行输入数据
-    // [修改]：改为压缩数组
+    
     output logic signed [PE_COL_NUM-1:0][OUTPUT_WIDTH-1:0] y_out  // 每个pe_col的输出
 );
 

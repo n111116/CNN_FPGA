@@ -210,12 +210,6 @@ PDS 版本的常用脚本位于 `sim_pds/sim_modelsim`：
 
 ModelSim 脚本不要并行运行同一个 `rtl_work` 工作库。并行跑多个 `.bat` 容易遇到 `_opt` 优化库锁，导致看起来像编译失败的假错误。
 
-## 仿真 X/Z 约定
-
-`rtl_pds/data_process/sdp_ram.sv` 中的 BRAM 仿真模型故意不做初始化。这样如果代码读到了尚未写入的 RAM 地址，ModelSim 输出中会出现 `x/z`，可以及时暴露 valid、new_line 或读写地址时序问题。
-
-因此不要为了让比较脚本通过而给 BRAM 加零初始化。正确处理方式是修复数据有效控制和缓存预热逻辑。`python_script/compare_data_pds.py` 也会把任何 `x/z` 当成错误处理。
-
 ## PDS 与 Xilinx 版本的关系
 
 早期工程在 `rtl`、`prj`、`sim` 中，主要服务 Xilinx K7-325T。PDS 版本在 `rtl_pds`、`prj_pds`、`sim_pds` 中，目标器件为 PG2L200H-6FBB676。
@@ -230,19 +224,34 @@ ModelSim 脚本不要并行运行同一个 `rtl_work` 工作库。并行跑多�
 
 ## PDS 综合与 Debug 经验
 
-PDS 版本中遇到过“ModelSim 仿真正常，但综合、DeviceMap 或上板行为异常”的情况。曾出现过 `LPRNet` 在综合结果中消失，或者`u_char_overlay` 在综合/映射后资源异常偏小，看起来只剩少量寄存器、没有有效 LUT 的现象。这类问题不一定是算法错误，也不一定能从普通时序报告中直接看出来。
+PDS 版本中遇到过“ModelSim 仿真正常，但综合、DeviceMap 或上板行为异常”的情况。典型现象包括 `u_lprnet_top` 资源被优化到 0、`u_char_overlay` 只剩少量寄存器、资源树中出现异常并列顶层，或者插入 debug 后电路行为突然恢复。遇到这类问题时，不要只看时序报告，应同时检查资源层级、可观察性、RTL 写法和 PDS 工程缓存状态。
 
-如果 LPRNet 或字符叠加逻辑在综合结果中不可见，或者资源明显不符合预期，可以先尝试清除 PDS 缓存后重新跑流程：删除工程生成的 `compile`、`synthesize`、`device_map` 等缓存/中间结果文件夹，再重新 compile、synthesize 和 DeviceMap。有时 PDS 的增量缓存会保留错误的层级解析或优化结果，清缓存后可以恢复正常。
+建议按下面顺序排查：
 
-还遇到过与 `prj_pds/synthesize/hdmi_loop_syn.fic` 相关的缓存现象：LPRNet 输出一开始上板异常，插入 PDS Fabric Debugger 后正常；随后复制整个工程，在复制后的工程中删除 `synthesize/hdmi_loop_syn.fic`，并从已有综合结果继续往后跑，生成的 bit 流也能正常识别字符。这个现象说明 `.fic` 或 PDS 工程内部状态可能会影响后续流程复用的网表/优化信息。需要注意，这不是一个稳定的“修复公式”：同一个复制工程删除 `.fic` 后如果直接从头重新跑完整流程，曾出现上板后连 YOLO 都不工作的情况。因此遇到仿真正常、资源和时序看起来也正常但上板行为异常时，应记录当次 PDS 工程状态、是否插入过 Fabric Debugger、是否删除过 `.fic`、以及从哪个流程阶段继续运行；不要只用“清缓存后从头跑”作为唯一判断依据。
+- 先看 PDS 资源树。`u_lprnet_top`、`u_char_overlay`、各层 convolution/pool 资源规模应与网络结构相符。如果层级消失或资源明显过小，优先怀疑综合解析或 DeviceMap 优化异常。
+- 再看链路脉冲。LPRNet 字符链路应至少确认 crop 输入、layer `new_line_out_1`、layer `output_valid`、post process 输出和 `char_overlay` 写入路径是否逐段活动。
+- 清缓存只能作为排除手段。删除 `compile`、`synthesize`、`device_map` 或 `.fic` 后重跑，有时能改变结果，但它不是稳定修复方式。若问题反复出现，应回到 RTL 写法和层级展开方式上解决。
+- `syn_preserve`、`PAP_MARK_DEBUG` 和 Fabric Debugger 主要用于诊断和提高可观察性，不等价于保住完整功能模块。真正稳定的修复应让工具能明确、静态地解析需要保留的逻辑。
+- PDS 版本 RTL 尽量使用简单、显式、静态的可综合写法。对 LPRNet 这类层数不多但参数差异大的网络，优先显式例化各层并直接传入固定 mem 文件名。
 
-但如果问题反复出现，通常要进一步检查 RTL 写法和综合优化边界。`syn_preserve` 不是“保住整个功能模块”的保险丝，它主要保寄存器，不一定保组合逻辑、ROM、FIFO、mux 路径，也不一定能阻止 DeviceMap 做跨层常量传播和死逻辑删除。例如只给 `char_overlay` 内部寄存器加 `syn_preserve`，如果上游 `lprnet_out_valid`、`lprnet_frame_start` 或 `lprnet_out_char` 被工具误判为恒定/不可达，那么字符写入路径仍会被认为是死逻辑，最终画字 mux 和字体 ROM 仍可能被优化掉。
+PDS 写法上需要特别注意：
 
-实测中，把关键 debug 信号接到顶层引脚或加 `PAP_MARK_DEBUG` 后，电路可能突然正常。这通常说明 debug 改变了综合/映射可观察性或布局布线结果：
+- 不要在可综合 RTL 中依赖 `$sformatf("bias_layer%0d.mem", LAYER_NUM)` 这类动态字符串选择 mem 文件。
+- 避免“复杂宏批量例化 + 通用 layer 内部长 generate-if 链 + 静态字符串选择”的组合。ModelSim 可能接受，但 PDS 的层级解析和资源映射可能不稳定。
+- 模块端口上的多维数组尽量写成 packed 形式，例如 `logic [B:0][A:0] xx`，避免 unpacked 端口形式 `logic [A:0] xx [B:0]`。
+- 对大数组、memory、FIFO 状态和 generate 结构，优先使用 PDS 工程中已经验证过的写法。
 
-- 如果加 debug 后资源恢复正常，优先怀疑 PDS 优化或 DeviceMap 对相关 RTL 的处理存在问题。
-- 如果只有真正接到顶层引脚才正常，而仅保留 `syn_preserve` 不正常，要继续检查跨时钟域、复位释放、时序约束和布局相关问题。
-- debug 引脚是顶层可观察输出，约束强度通常高于普通 preserve 属性，工具不能随意删除会影响外部引脚的逻辑。
+## PDS Debug 详细记录
+
+### LPRNet v10 例化方式
+
+LPRNet v10 迁移时，曾出现过资源树异常、`lprnet_layer_direct` 被识别成与 `hdmi_loop` 并列的候选顶层、或者 `u_lprnet_top` 资源被优化到 0 的情况。最终能正常识别字符，主要不是因为把 debug 信号插入 `.fic`，而是因为调整了 LPRNet 各层的例化方式。
+
+原先 `top_lprnet.sv` 通过宏批量例化参数化 `layer`，而 `layer.sv` 内部又用较长的 `LAYER_NUM` generate-if 链选择权重和 bias 文件。PDS 在这种组合下容易出现层级解析或资源映射异常。当前更稳的写法是：LPRNet 使用 `lprnet_layer_direct`，并在 `top_lprnet.sv` 中显式例化 layer20 到 layer31；每一层直接传入固定的 `weight_layerXX_pageY.mem` 和 `bias_layerXX.mem` 文件名。
+
+这样 PDS parser 看到的是普通、明确的层级实例，综合资源树也更容易保持正确。ModelSim 中仍应通过 `9b_Run_test_lprnet.bat` 和 `9e_Run_test_crop_buffer_lprnet.bat` 验证整网功能；PDS 中则要同时检查 `u_lprnet_top` 层级下是否真实展开了各层资源，不能只看语法编译通过。
+
+### LPRNet 链路观测点
 
 调试 LPRNet 字符链路时，不要只保留 `char_overlay`。建议保住从 LPRNet 最后一层到字符叠加的完整链路：
 
@@ -251,7 +260,22 @@ PDS 版本中遇到过“ModelSim 仿真正常，但综合、DeviceMap 或上板
 - `hdmi_loop.sv`：`lprnet_out_valid`、`lprnet_frame_start`、`lprnet_out_char`，以及 crop 到 LPRNet 的 `lprnet_new_line`、`lprnet_data_valid`。
 - `char_overlay.sv`：坐标 FIFO、字符 FIFO、`c_valid` 字符缓存、字体 ROM 地址流水线、`char_pixel` 和最终视频 mux。
 
-实际调试中，曾在 PDS Fabric Debugger 中插入一个 FLA debug core。这里说的是综合工具中实际插入的 debug 采样信号，不是 RTL 代码里的 `PAP_MARK_DEBUG` 或 `syn_preserve` 注解。我的`prj_pds/log/debugger.log` 中该 core 主要包含以下信号：
+调试 LPRNet v10 迁移时，曾加入一组位于 `top_lprnet.sv` 内部的 sticky debug 寄存器，用来把单周期脉冲转换成“出现过一次就保持为 1”的状态位：
+
+| Debug 信号 | 含义 |
+| --- | --- |
+| `dbg_input_new_line_seen` | `top_lprnet` 顶层输入 `new_line_input_1` 是否曾经到达。 |
+| `dbg_input_valid_seen` | `top_lprnet` 顶层输入 `data_input_valid` 是否曾经到达。 |
+| `dbg_new_line_seen[11:0]` | layer20 到 layer31 的 `new_line_out_1` 是否曾经出现过，`bit0` 对应 layer20，`bit11` 对应 layer31。 |
+| `dbg_out_valid_seen[11:0]` | layer20 到 layer31 的 `output_valid` 是否曾经出现过，`bit0` 对应 layer20，`bit11` 对应 layer31。 |
+| `dbg_post_frame_seen` | `lprnet_post_process` 是否曾经输出 `frame_start_out`。 |
+| `dbg_post_char_seen` | `lprnet_post_process` 是否曾经输出字符有效脉冲 `out_valid`。 |
+
+这些信号的作用是分段定位问题，而不是算法功能的一部分。例如 `dbg_input_*` 为 1 但 `dbg_new_line_seen` 始终为 0，说明 crop buffer 到 LPRNet 顶层的输入已经进来，问题集中在 layer20 内部的输入窗口缓存或后续展开；如果 `dbg_new_line_seen` 只有 `0x001`，说明 layer20 已经输出，但 layer21 没有继续产生有效行。由于这些 sticky 位是寄存器，观察起来比抓单周期 `new_line_out_1` 更可靠。
+
+### Fabric Debugger 信号
+
+实际调试中，曾在 PDS Fabric Debugger 中插入一个 FLA debug core。这里说的是综合工具中实际插入的 debug 采样信号，不是 RTL 代码里的 `PAP_MARK_DEBUG` 或 `syn_preserve` 注解。`prj_pds/log/debugger.log` 中该 core 主要包含以下信号：
 
 | Debug 信号 | 位宽 | 含义 |
 | --- | --- | --- |
@@ -267,11 +291,21 @@ PDS 版本中遇到过“ModelSim 仿真正常，但综合、DeviceMap 或上板
 
 这些信号覆盖了从 box 裁剪开始、crop buffer 完成、LPRNet 输入、LPRNet 输出到字符坐标对齐的主路径。若加上这组实际 debug core 后上板行为恢复正常，而移除后又异常，说明问题更可能与 PDS 综合/映射的可观察性、优化边界或布局布线变化有关。注意这些信号不一定都在同一个时钟域；如果在同一个 FLA core 中跨时钟采样，波形更适合判断“有没有脉冲/数据是否活动”，不适合作为严格周期级时序关系的唯一依据。
 
-PDS 对部分 SystemVerilog 写法支持不如 Vivado 完整，`rtl` 和 `rtl_pds` 下的 `layer` 相关文件存在写法差异，主要就是为了绕开这些限制：
+### 缓存、fic 与 preserve 现象
 
-- 不要在可综合 RTL 中依赖 `$sformatf("bias_layer%0d.mem", LAYER_NUM)` 这类动态字符串来选择 mem 文件。PDS 可能把它判定为不可综合，或无法正确解析初始化文件。PDS 版本应使用工具能静态解析的路径、显式 `if/generate/case` 分支，或由 Python 生成固定文件名引用。
-- 模块端口上的多维数组尽量写成 packed 形式，例如 `logic [B:0][A:0] xx`。避免写成 unpacked 端口形式 `logic [A:0] xx [B:0]`，PDS 在层级解析、端口连接和综合时更容易出问题。转换为 packed 后，代码内部按下标引用的逻辑含义通常可以保持一致。
-- 对跨模块的大数组、memory、FIFO 状态和 generate 结构，尽量使用 PDS 已验证过的写法；如果 Design hierarchy 解析失败或资源突然异常，优先怀疑语法支持和优化推断，而不是先假定算法错了。
+如果 LPRNet 或字符叠加逻辑在综合结果中不可见，或者资源明显不符合预期，可以先尝试清除 PDS 缓存后重新跑流程：删除工程生成的 `compile`、`synthesize`、`device_map` 等缓存/中间结果文件夹，再重新 compile、synthesize 和 DeviceMap。有时 PDS 的增量缓存会保留错误的层级解析或优化结果，清缓存后可以恢复正常。
+
+还遇到过与 `prj_pds/synthesize/hdmi_loop_syn.fic` 相关的缓存现象：LPRNet 输出一开始上板异常，插入 PDS Fabric Debugger 后正常；随后复制整个工程，在复制后的工程中删除 `synthesize/hdmi_loop_syn.fic`，并从已有综合结果继续往后跑，生成的 bit 流也能正常识别字符。这个现象说明 `.fic` 或 PDS 工程内部状态可能会影响后续流程复用的网表/优化信息。
+
+需要注意，这不是一个稳定的“修复公式”：同一个复制工程删除 `.fic` 后如果直接从头重新跑完整流程，曾出现上板后连 YOLO 都不工作的情况。因此遇到仿真正常、资源和时序看起来也正常但上板行为异常时，应记录当次 PDS 工程状态、是否插入过 Fabric Debugger、是否删除过 `.fic`、以及从哪个流程阶段继续运行；不要只用“清缓存后从头跑”作为唯一判断依据。
+
+`syn_preserve` 不是“保住整个功能模块”的保险丝，它主要保寄存器，不一定保组合逻辑、ROM、FIFO、mux 路径，也不一定能阻止 DeviceMap 做跨层常量传播和死逻辑删除。例如只给 `char_overlay` 内部寄存器加 `syn_preserve`，如果上游 `lprnet_out_valid`、`lprnet_frame_start` 或 `lprnet_out_char` 被工具误判为恒定/不可达，那么字符写入路径仍会被认为是死逻辑，最终画字 mux 和字体 ROM 仍可能被优化掉。
+
+实测中，把关键 debug 信号接到顶层引脚或加 `PAP_MARK_DEBUG` 后，电路可能突然正常。这通常说明 debug 改变了综合/映射可观察性或布局布线结果：
+
+- 如果加 debug 后资源恢复正常，优先怀疑 PDS 优化或 DeviceMap 对相关 RTL 的处理存在问题。
+- 如果只有真正接到顶层引脚才正常，而仅保留 `syn_preserve` 不正常，要继续检查跨时钟域、复位释放、时序约束和布局相关问题。
+- debug 引脚是顶层可观察输出，约束强度通常高于普通 preserve 属性，工具不能随意删除会影响外部引脚的逻辑。
 
 ## 开发建议
 
