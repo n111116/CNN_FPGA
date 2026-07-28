@@ -3,7 +3,7 @@ project name,hdmi_loop.pds
 
 Single Seed:
 Seed,State,Convergence,Setup(Slow),Setup(Fast),Hold(Slow),Hold(Fast),Recovery(Slow),Recovery(Fast),Removal(Slow),Removal(Fast),PBM-GP,PBM-PreGP,PBM-PostGP,LP,Total Placement Cpu Time,Detailed routing,Total Routing Cpu Time,Wire Length After Post-GP,Wire Length After LP,Wire Length After DP,Routing Arc Length,Worst Slack After GP Timing,Worst Slack After LP Timing,Worst Slack Before RP,Worst Slack Before DP,Worst Slack After DP,Worst Slack After Placement,Worst Slack After TA By Preroute,TNS After DP,TNS Before Route,Setup(Slow) Total Failing TNS,Setup(Slow) Total Failing Endpoints,Hold(Slow) Total Failing THS,Hold(Slow) Total Failing Endpoints,Power
-single,OK,OK,0.217,1.991,0.102,0.099,0.010,2.528,0.354,0.234,4.72,NA,0.00,1.69,139.25,150.08,242.97,NA,NA,NA,759922,NA,NA,-446,-446,375,-1025,NA,0,NA,0.000,0,0.000,0,7.589
+single,OK,OK,0.217,1.991,0.101,0.099,0.091,2.516,0.362,0.247,3.89,NA,0.00,1.50,125.77,141.99,235.34,NA,NA,NA,770327,NA,NA,-744,-744,321,-976,NA,0,NA,0.000,0,0.000,0,NA
 Pass Rate/Convergence Rate,100.00%,100.00%
 
 Synthesize:
@@ -11,21 +11,22 @@ control_set,863
 Synthesize Performance Summary:
 slack category,Synthesize Setup WNS,Synthesize Setup TNS,Synthesize Recovery WNS,Synthesize Recovery TNS
 slack value,-0.219,-7.100,3.638,0.000
-Synthesize Process Cpu Time,0h:1m:16s
+Synthesize Process Cpu Time,0h:1m:27s
 
 Device Map:
 Device Map Resource Usage Summary:
 Logic Utilization,LUT,FF,DRM,APM,Distributed RAM,HSSTHP,USCM,HCKB,RCKB
-Used,37264,93302,258.5,682,1782,NA,7,0,2
+Used,37253,93303,258.5,682,1782,NA,7,0,2
 Available,159800,319600,415,740,39500,NA,32,120,40
 Utilization(%),24%,30%,63%,93%,5%,NA,22%,0%,5%
-Device Map Process Cpu Time,0h:0m:24s
+Device Map Process Cpu Time,0h:0m:27s
 
 Project Configurations:
 top module,hdmi_loop
 compile," -include_path {C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/header	C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data} 
  -system_verilog "
-synthesize," -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} "
+synthesize," -dir {C:/pango/PDS_2022.2-SP6.4/syn/bin/synplify_pro.exe} 
+ -ads "
 device map,
 place & route,
 

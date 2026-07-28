@@ -71,6 +71,7 @@ module hdmi_loop #(
     localparam int CROP_HEIGHT   = IMG_ROW_LAYER20;
     localparam int CROP_WIDTH    = IMG_COL_LAYER20;
     localparam int MAX_BOX_NUM   = 6;
+    localparam logic [$clog2(IMG_ROW_LAYER7)-1:0] DDR_READ_START_LINE = 6; // 第7个 YOLO layer7 new_line 后启动 DDR 读
     localparam int HDMI_FIFO_MIN_DEPTH = IMG_COL / 2;
     localparam int HDMI_FIFO_DEPTH =
         (HDMI_FIFO_MIN_DEPTH <= 2)     ? 2     :
@@ -389,7 +390,7 @@ module hdmi_loop #(
             layer7_line_cnt <= '0;
             ddr_read_start_toggle <= 1'b0;
         end else if (new_line_out_1_layer7) begin
-            if (layer7_line_cnt == '0) begin
+            if (layer7_line_cnt == DDR_READ_START_LINE) begin
                 ddr_read_start_toggle <= ~ddr_read_start_toggle;
             end
 

@@ -1,7 +1,7 @@
 
 ----------------------------------------------------------------------------------------------------
 | Tool Version : Fabric Compiler (version 2022.2-SP6.4 <build 146967>)
-| Date         : Thu Jul  9 11:37:48 2026
+| Date         : Thu Jul  9 14:33:27 2026
 | Design       : hdmi_loop
 | Device       : PG2L200H
 | Speed Grade  : -6
@@ -1702,9 +1702,9 @@ Clock Skew  :    -0.069  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_711_852/CR3                  tco                   0.260       5.742 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay[3]/opit_0_inv_L6QL5Q_perm/L5Q
                                    net (fanout=4)        0.415       6.157         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay [3]
  CLMA_711_846/Y1                   td                    0.235       6.392 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N240_7/gateop_perm/L6
-                                   net (fanout=2)        0.876       7.268         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159647
+                                   net (fanout=2)        0.876       7.268         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159639
  CLMA_717_859/Y3                   td                    0.223       7.491 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N320_1_3/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.126       7.617         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159650
+                                   net (fanout=1)        0.126       7.617         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159642
  CLMA_717_859/Y0                   td                    0.078       7.695 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325/gateop_perm/L6
                                    net (fanout=8)        0.625       8.320         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325
  CLMA_717_853/CE1                                                          r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/cpd_state_reg[0]/opit_0_inv/CE
@@ -1769,9 +1769,9 @@ Clock Skew  :    -0.069  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_711_852/CR3                  tco                   0.260       5.742 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay[3]/opit_0_inv_L6QL5Q_perm/L5Q
                                    net (fanout=4)        0.415       6.157         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay [3]
  CLMA_711_846/Y1                   td                    0.235       6.392 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N240_7/gateop_perm/L6
-                                   net (fanout=2)        0.876       7.268         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159647
+                                   net (fanout=2)        0.876       7.268         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159639
  CLMA_717_859/Y3                   td                    0.223       7.491 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N320_1_3/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.126       7.617         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159650
+                                   net (fanout=1)        0.126       7.617         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159642
  CLMA_717_859/Y0                   td                    0.078       7.695 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325/gateop_perm/L6
                                    net (fanout=8)        0.625       8.320         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325
  CLMA_717_853/CE1                                                          r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/cpd_state_reg[6]/opit_0_inv_L6Q_perm/CE
@@ -1836,9 +1836,9 @@ Clock Skew  :    -0.069  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_711_852/CR3                  tco                   0.260       5.742 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay[3]/opit_0_inv_L6QL5Q_perm/L5Q
                                    net (fanout=4)        0.415       6.157         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay [3]
  CLMA_711_846/Y1                   td                    0.235       6.392 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N240_7/gateop_perm/L6
-                                   net (fanout=2)        0.876       7.268         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159647
+                                   net (fanout=2)        0.876       7.268         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159639
  CLMA_717_859/Y3                   td                    0.223       7.491 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N320_1_3/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.126       7.617         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159650
+                                   net (fanout=1)        0.126       7.617         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159642
  CLMA_717_859/Y0                   td                    0.078       7.695 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325/gateop_perm/L6
                                    net (fanout=8)        0.625       8.320         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325
  CLMA_717_853/CE1                                                          r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/cpd_state_reg[9]/opit_0_inv_L6Q_perm/CE
@@ -2955,11 +2955,11 @@ Clock Skew  :    -0.142  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_441_1182/CR2                 td                    0.305       4.588 r       ms72xx_ctl/iic_dri/N120_8_muxf7_perm/L7
                                    net (fanout=1)        0.650       5.238         ms72xx_ctl/iic_dri/N120
  CLMS_405_1177/Y3                  td                    0.223       5.461 r       ms72xx_ctl/iic_dri/N493_or[0]_5/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.476       5.937         ms72xx_ctl/iic_dri/_N159520
+                                   net (fanout=1)        0.476       5.937         ms72xx_ctl/iic_dri/_N159512
  CLMA_417_1188/Y2                  td                    0.240       6.177 r       ms72xx_ctl/iic_dri/N493_or[0]_6/LUT6_inst_perm/L6
                                    net (fanout=1)        0.126       6.303         ms72xx_ctl/iic_dri/N493
  CLMA_417_1188/Y0                  td                    0.206       6.509 f       ms72xx_ctl/iic_dri/sda_out/opit_0_L6Q_perm/L6
-                                   net (fanout=1)        2.631       9.140         ms72xx_ctl/iic_dri/_N158929
+                                   net (fanout=1)        2.631       9.140         ms72xx_ctl/iic_dri/_N158921
  IOLHR_16_1200/TX_DATA[0]                                                  f       ms72xx_ctl.iic_sda_tri/opit_1/TX_DATA[0]
 
  Data arrival time                                                   9.140         Logic Levels: 4  
@@ -3073,7 +3073,7 @@ Clock Skew  :    -0.081  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_447_1188/Y0                  td                    0.240       6.410 r       ms72xx_ctl/U1_ms7200_ctl/N8_7/LUT6_inst_perm/L6
                                    net (fanout=3)        0.125       6.535         ms72xx_ctl/U1_ms7200_ctl/N8
  CLMA_447_1188/Y3                  td                    0.188       6.723 r       ms72xx_ctl/U1_ms7200_ctl/freq_ensure_ce_mux/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.283       7.006         ms72xx_ctl/U1_ms7200_ctl/_N159305
+                                   net (fanout=1)        0.283       7.006         ms72xx_ctl/U1_ms7200_ctl/_N159297
  CLMS_447_1183/B4                                                          r       ms72xx_ctl/U1_ms7200_ctl/freq_ensure/opit_0_L6Q_perm/I4
 
  Data arrival time                                                   7.006         Logic Levels: 5  
@@ -6131,7 +6131,7 @@ Clock Skew  :    -0.149  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_591_1165/Q2                  tco                   0.213       3.445 r       rstn_1ms[7]/opit_0_inv_AQ_perm/Q
                                    net (fanout=2)        0.417       3.862         rstn_1ms[7]      
  CLMA_591_1164/Y0                  td                    0.101       3.963 r       N156_10/gateop_perm/L6
-                                   net (fanout=1)        0.257       4.220         _N159337         
+                                   net (fanout=1)        0.257       4.220         _N159329         
  CLMA_591_1164/Y1                  td                    0.235       4.455 r       N156_14/LUT6_inst_perm/L6
                                    net (fanout=3665)     1.417       5.872         nt_rstn_out      
  CLMS_447_1171/RS                                                          r       ms72xx_ctl/rstn_temp1/opit_0_inv/RS
@@ -6381,7 +6381,7 @@ Path Class  : combinational timing path
  CLMA_591_1165/Q2                  tco                   0.213       3.445 r       rstn_1ms[7]/opit_0_inv_AQ_perm/Q
                                    net (fanout=2)        0.417       3.862         rstn_1ms[7]      
  CLMA_591_1164/Y0                  td                    0.101       3.963 r       N156_10/gateop_perm/L6
-                                   net (fanout=1)        0.257       4.220         _N159337         
+                                   net (fanout=1)        0.257       4.220         _N159329         
  CLMA_591_1164/Y1                  td                    0.235       4.455 r       N156_14/LUT6_inst_perm/L6
                                    net (fanout=3665)     4.535       8.990         nt_rstn_out      
  IOLHR_16_942/DO_P                 td                    0.641       9.631 r       rstn_out_obuf/opit_1/DO_P
@@ -8006,9 +8006,9 @@ Clock Skew  :    -0.046  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_711_852/CR3                  tco                   0.140       3.637 f       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay[3]/opit_0_inv_L6QL5Q_perm/L5Q
                                    net (fanout=4)        0.229       3.866         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay [3]
  CLMA_711_846/Y1                   td                    0.123       3.989 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N240_7/gateop_perm/L6
-                                   net (fanout=2)        0.475       4.464         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159647
+                                   net (fanout=2)        0.475       4.464         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159639
  CLMA_717_859/Y3                   td                    0.125       4.589 f       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N320_1_3/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.075       4.664         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159650
+                                   net (fanout=1)        0.075       4.664         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159642
  CLMA_717_859/Y0                   td                    0.040       4.704 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325/gateop_perm/L6
                                    net (fanout=8)        0.335       5.039         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325
  CLMA_717_853/CE1                                                          r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/cpd_state_reg[0]/opit_0_inv/CE
@@ -8073,9 +8073,9 @@ Clock Skew  :    -0.046  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_711_852/CR3                  tco                   0.140       3.637 f       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay[3]/opit_0_inv_L6QL5Q_perm/L5Q
                                    net (fanout=4)        0.229       3.866         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay [3]
  CLMA_711_846/Y1                   td                    0.123       3.989 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N240_7/gateop_perm/L6
-                                   net (fanout=2)        0.475       4.464         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159647
+                                   net (fanout=2)        0.475       4.464         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159639
  CLMA_717_859/Y3                   td                    0.125       4.589 f       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N320_1_3/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.075       4.664         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159650
+                                   net (fanout=1)        0.075       4.664         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159642
  CLMA_717_859/Y0                   td                    0.040       4.704 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325/gateop_perm/L6
                                    net (fanout=8)        0.335       5.039         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325
  CLMA_717_853/CE1                                                          r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/cpd_state_reg[6]/opit_0_inv_L6Q_perm/CE
@@ -8140,9 +8140,9 @@ Clock Skew  :    -0.046  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_711_852/CR3                  tco                   0.140       3.637 f       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay[3]/opit_0_inv_L6QL5Q_perm/L5Q
                                    net (fanout=4)        0.229       3.866         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/sure_delay [3]
  CLMA_711_846/Y1                   td                    0.123       3.989 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N240_7/gateop_perm/L6
-                                   net (fanout=2)        0.475       4.464         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159647
+                                   net (fanout=2)        0.475       4.464         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159639
  CLMA_717_859/Y3                   td                    0.125       4.589 f       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N320_1_3/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.075       4.664         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159650
+                                   net (fanout=1)        0.075       4.664         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/_N159642
  CLMA_717_859/Y0                   td                    0.040       4.704 r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325/gateop_perm/L6
                                    net (fanout=8)        0.335       5.039         u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/N325
  CLMA_717_853/CE1                                                          r       u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_cpd_ctrl/cpd_state_reg[9]/opit_0_inv_L6Q_perm/CE
@@ -9251,11 +9251,11 @@ Clock Skew  :    -0.111  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_441_1182/CR2                 td                    0.172       2.642 f       ms72xx_ctl/iic_dri/N120_8_muxf7_perm/L7
                                    net (fanout=1)        0.389       3.031         ms72xx_ctl/iic_dri/N120
  CLMS_405_1177/Y3                  td                    0.125       3.156 f       ms72xx_ctl/iic_dri/N493_or[0]_5/LUT6_inst_perm/L6
-                                   net (fanout=1)        0.293       3.449         ms72xx_ctl/iic_dri/_N159520
+                                   net (fanout=1)        0.293       3.449         ms72xx_ctl/iic_dri/_N159512
  CLMA_417_1188/Y2                  td                    0.125       3.574 f       ms72xx_ctl/iic_dri/N493_or[0]_6/LUT6_inst_perm/L6
                                    net (fanout=1)        0.075       3.649         ms72xx_ctl/iic_dri/N493
  CLMA_417_1188/Y0                  td                    0.125       3.774 f       ms72xx_ctl/iic_dri/sda_out/opit_0_L6Q_perm/L6
-                                   net (fanout=1)        1.595       5.369         ms72xx_ctl/iic_dri/_N158929
+                                   net (fanout=1)        1.595       5.369         ms72xx_ctl/iic_dri/_N158921
  IOLHR_16_1200/TX_DATA[0]                                                  f       ms72xx_ctl.iic_sda_tri/opit_1/TX_DATA[0]
 
  Data arrival time                                                   5.369         Logic Levels: 4  
@@ -12431,7 +12431,7 @@ Clock Skew  :    -0.099  (Capture Clock Delay - Launch Clock Delay + Clock Pessi
  CLMA_591_1165/Q2                  tco                   0.125       2.023 f       rstn_1ms[7]/opit_0_inv_AQ_perm/Q
                                    net (fanout=2)        0.230       2.253         rstn_1ms[7]      
  CLMA_591_1164/Y0                  td                    0.066       2.319 f       N156_10/gateop_perm/L6
-                                   net (fanout=1)        0.148       2.467         _N159337         
+                                   net (fanout=1)        0.148       2.467         _N159329         
  CLMA_591_1164/Y1                  td                    0.122       2.589 f       N156_14/LUT6_inst_perm/L6
                                    net (fanout=3665)     0.863       3.452         nt_rstn_out      
  CLMS_447_1171/RS                                                          f       ms72xx_ctl/rstn_temp1/opit_0_inv/RS
@@ -12681,7 +12681,7 @@ Path Class  : combinational timing path
  CLMA_591_1165/Q2                  tco                   0.125       2.023 f       rstn_1ms[7]/opit_0_inv_AQ_perm/Q
                                    net (fanout=2)        0.230       2.253         rstn_1ms[7]      
  CLMA_591_1164/Y0                  td                    0.066       2.319 f       N156_10/gateop_perm/L6
-                                   net (fanout=1)        0.148       2.467         _N159337         
+                                   net (fanout=1)        0.148       2.467         _N159329         
  CLMA_591_1164/Y1                  td                    0.122       2.589 f       N156_14/LUT6_inst_perm/L6
                                    net (fanout=3665)     2.899       5.488         nt_rstn_out      
  IOLHR_16_942/DO_P                 td                    0.353       5.841 f       rstn_out_obuf/opit_1/DO_P
@@ -12934,7 +12934,7 @@ Inputs and Outputs :
 
 
 Flow Command: report_timing 
-Peak memory: 4,419 MB
-Total CPU time to report_timing completion : 0h:0m:40s
-Process Total CPU time to report_timing completion : 0h:0m:49s
-Total real time to report_timing completion : 0h:1m:4s
+Peak memory: 4,415 MB
+Total CPU time to report_timing completion : 0h:0m:23s
+Process Total CPU time to report_timing completion : 0h:0m:28s
+Total real time to report_timing completion : 0h:1m:17s

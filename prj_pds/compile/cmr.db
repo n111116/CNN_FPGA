@@ -181,10 +181,10 @@
             <data>RAM(GB)</data>
         </column_headers>
         <row>
-            <data>0h:0m:26s</data>
-            <data>0h:0m:26s</data>
-            <data>0h:1m:30s</data>
-            <data>422</data>
+            <data>0h:0m:24s</data>
+            <data>0h:0m:24s</data>
+            <data>0h:1m:21s</data>
+            <data>421</data>
             <data>WINDOWS 10 x86_64</data>
             <data>12th Gen Intel(R) Core(TM) i5-12400F</data>
             <data>16</data>
@@ -1633,10 +1633,10 @@
     CHARS_FILE = ../data_process/mem_data/chars_16x16.mem</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 203)] Elaborating instance u_ddr_refclk_buf</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 204)] Elaborating instance u_ddr_refclk_buf</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 209)] Elaborating instance u_pll</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 210)] Elaborating instance u_pll</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/ipcore/PLL/PLL.v(line number: 18)] Elaborating module PLL</data>
@@ -1645,7 +1645,7 @@
             <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/ipcore/PLL/PLL.v(line number: 302)] Elaborating instance u_gpll</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 216)] Elaborating instance u_ms72</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 217)] Elaborating instance u_ms72</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/ipcore/ms72/ms72.v(line number: 18)] Elaborating module ms72</data>
@@ -1654,7 +1654,7 @@
             <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/ipcore/ms72/ms72.v(line number: 300)] Elaborating instance u_gpll</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 222)] Elaborating instance ms72xx_ctl</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 223)] Elaborating instance ms72xx_ctl</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/drive_hdmi/ms72xx_ctl.v(line number: 22)] Elaborating module ms72xx_ctl</data>
@@ -1706,7 +1706,7 @@
     DATA_BYTE = 2'b01</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 321)] Elaborating instance u_hdmi_fifo</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 322)] Elaborating instance u_hdmi_fifo</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/my_fifo.sv(line number: 1)] Elaborating module my_fifo</data>
@@ -1717,7 +1717,7 @@
     FIFO_DEPTH = 32'b00000000000000000000000001000000</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 344)] Elaborating instance u_layer_data_adapter</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 345)] Elaborating instance u_layer_data_adapter</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/layer_data_adapter.sv(line number: 3)] Elaborating module layer_data_adapter</data>
@@ -1734,10 +1734,10 @@
     OUT_WIDTH_LAYER23 = 32'b00000000000000000000000000001001</data>
         </row>
         <row>
-            <data message="5">Verilog-2019: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 338)] Width mismatch between port layer23_data and signal bound to it for instantiated module layer_data_adapter</data>
+            <data message="5">Verilog-2019: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 339)] Width mismatch between port layer23_data and signal bound to it for instantiated module layer_data_adapter</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 369)] Elaborating instance u_top_yolo</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 370)] Elaborating instance u_top_yolo</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/top_yolo.sv(line number: 18)] Elaborating module top_yolo</data>
@@ -5551,7 +5551,7 @@
             <data message="4">[C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/activation_lut.sv(line number: 29)] Loading memory data from file C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data/sigmoid_lut_9bit_to_8bit_h.mem</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 415)] Elaborating instance u_ddr_video_delay_sync</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 416)] Elaborating instance u_ddr_video_delay_sync</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/ddr/ddr_video_delay_sync.sv(line number: 1)] Elaborating module ddr_video_delay_sync</data>
@@ -7934,7 +7934,7 @@
             <data message="5">Verilog-2023: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/prj_pds/ipcore/ddr3_test/ddr3_test.v(line number: 323)] Give initial value 0 for the no drive pin ddr_zqcs_req in module instance hdmi_loop/u_ddr_video_delay_sync/u_ddr3_test.u_ips_ddrc_top</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 462)] Elaborating instance u_box_overlay_sync</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 463)] Elaborating instance u_box_overlay_sync</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/overlay/box_overlay_sync.sv(line number: 1)] Elaborating module box_overlay_sync</data>
@@ -7998,7 +7998,7 @@
             <data message="5">Verilog-2021: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/overlay/box_overlay_sync.sv(line number: 110)] Net gen_crop_fifo[5].calc_sample.has_frac_1 in box_overlay_sync(original module box_overlay_sync) does not have a driver, tie it to 0</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 508)] Elaborating instance u_crop_buffer_manager</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 509)] Elaborating instance u_crop_buffer_manager</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/overlay/crop_buffer_manager.sv(line number: 1)] Elaborating module crop_buffer_manager</data>
@@ -8078,7 +8078,7 @@
     FIFO_DEPTH = 32'b00000000000000000000100000000000</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 533)] Elaborating instance u_lprnet_top</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 534)] Elaborating instance u_lprnet_top</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/top_lprnet.sv(line number: 17)] Elaborating module lprnet_top</data>
@@ -12346,7 +12346,7 @@
     CONV_POSITIVE = 1'b1</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 555)] Elaborating instance u_char_overlay</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 556)] Elaborating instance u_char_overlay</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/overlay/char_overlay.sv(line number: 3)] Elaborating module char_overlay</data>
@@ -12375,7 +12375,7 @@
             <data message="4">[C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/overlay/char_overlay.sv(line number: 263)] Loading memory data from file C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/data_process/mem_data/chars_16x16.mem</data>
         </row>
         <row>
-            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 588)] Elaborating instance rgb2tmds</data>
+            <data message="4">Verilog-0004: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/hdmi_loop.sv(line number: 589)] Elaborating instance rgb2tmds</data>
         </row>
         <row>
             <data message="4">Verilog-0003: [C:/Users/Datou21/Desktop/PDS/back1/cnn_usb_copy/rtl_pds/drive_hdmi/rgb2tmds.v(line number: 21)] Elaborating module rgb2tmds</data>
