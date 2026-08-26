@@ -6436,44 +6436,44 @@
         </row>
         <row>
             <data>Use of CLMA</data>
-            <data>16012</data>
+            <data>16058</data>
             <data>30075</data>
             <data>54</data>
             <row>
                 <data>  FF</data>
-                <data>69816</data>
+                <data>70184</data>
                 <data>240600</data>
                 <data>30</data>
             </row>
             <row>
                 <data>  LUT</data>
-                <data>33377</data>
+                <data>33803</data>
                 <data>120300</data>
-                <data>28</data>
+                <data>29</data>
             </row>
             <row>
                 <data>  LUT-FF pairs</data>
-                <data>14637</data>
+                <data>14627</data>
                 <data>120300</data>
                 <data>13</data>
             </row>
         </row>
         <row>
             <data>Use of CLMS</data>
-            <data>4859</data>
+            <data>4731</data>
             <data>9875</data>
-            <data>50</data>
+            <data>48</data>
             <row>
                 <data>  FF</data>
-                <data>23492</data>
+                <data>23124</data>
                 <data>79000</data>
                 <data>30</data>
             </row>
             <row>
                 <data>  LUT</data>
-                <data>10644</data>
+                <data>10259</data>
                 <data>39500</data>
-                <data>27</data>
+                <data>26</data>
             </row>
             <row>
                 <data>  LUT-FF pairs</data>
@@ -6532,15 +6532,15 @@
         </row>
         <row>
             <data>Use of HARD0</data>
-            <data>5762</data>
+            <data>5804</data>
             <data>25050</data>
             <data>24</data>
         </row>
         <row>
             <data>Use of HCKB</data>
-            <data>26</data>
+            <data>28</data>
             <data>120</data>
-            <data>22</data>
+            <data>24</data>
             <row>
                 <data> HCKB dataused</data>
                 <data>0</data>
@@ -6777,7 +6777,7 @@
         </column_headers>
         <row>
             <data>hdmi_loop</data>
-            <data>36926</data>
+            <data>36919</data>
             <data>93308</data>
             <data>1782</data>
             <data>682</data>
@@ -6829,7 +6829,7 @@
                 <data>0</data>
                 <row>
                     <data>U1_ms7200_ctl</data>
-                    <data>63</data>
+                    <data>64</data>
                     <data>53</data>
                     <data>0</data>
                     <data>0</data>
@@ -6856,7 +6856,7 @@
                 </row>
                 <row>
                     <data>U2_ms7210_ctl</data>
-                    <data>73</data>
+                    <data>72</data>
                     <data>64</data>
                     <data>0</data>
                     <data>0</data>
@@ -6964,7 +6964,7 @@
                 </row>
                 <row>
                     <data>encoder[0].dataencoder</data>
-                    <data>54</data>
+                    <data>55</data>
                     <data>46</data>
                     <data>0</data>
                     <data>0</data>
@@ -7018,7 +7018,7 @@
                 </row>
                 <row>
                     <data>encoder[1].dataencoder</data>
-                    <data>65</data>
+                    <data>64</data>
                     <data>47</data>
                     <data>0</data>
                     <data>0</data>
@@ -7128,7 +7128,7 @@
             <row>
                 <data>u_box_overlay_sync</data>
                 <data>5903</data>
-                <data>2107</data>
+                <data>2106</data>
                 <data>544</data>
                 <data>72</data>
                 <data>0.5</data>
@@ -7181,7 +7181,7 @@
             </row>
             <row>
                 <data>u_char_overlay</data>
-                <data>5967</data>
+                <data>5968</data>
                 <data>2880</data>
                 <data>16</data>
                 <data>0</data>
@@ -7207,7 +7207,7 @@
                 <data>0</data>
                 <row>
                     <data>u_char_async_fifo</data>
-                    <data>25</data>
+                    <data>24</data>
                     <data>42</data>
                     <data>0</data>
                     <data>0</data>
@@ -7235,7 +7235,7 @@
             </row>
             <row>
                 <data>u_crop_buffer_manager</data>
-                <data>545</data>
+                <data>540</data>
                 <data>801</data>
                 <data>0</data>
                 <data>0</data>
@@ -7342,7 +7342,7 @@
                 </row>
                 <row>
                     <data>gen_box_fifos[3].u_crop_fifo</data>
-                    <data>55</data>
+                    <data>54</data>
                     <data>72</data>
                     <data>0</data>
                     <data>0</data>
@@ -7369,7 +7369,7 @@
                 </row>
                 <row>
                     <data>gen_box_fifos[4].u_crop_fifo</data>
-                    <data>53</data>
+                    <data>55</data>
                     <data>72</data>
                     <data>0</data>
                     <data>0</data>
@@ -7424,8 +7424,8 @@
             </row>
             <row>
                 <data>u_ddr_video_delay_sync</data>
-                <data>5207</data>
-                <data>5868</data>
+                <data>5202</data>
+                <data>5869</data>
                 <data>39</data>
                 <data>0</data>
                 <data>16</data>
@@ -7450,8 +7450,8 @@
                 <data>2</data>
                 <row>
                     <data>u_ddr3_test</data>
-                    <data>4710</data>
-                    <data>4935</data>
+                    <data>4704</data>
+                    <data>4936</data>
                     <data>39</data>
                     <data>0</data>
                     <data>0</data>
@@ -7503,8 +7503,8 @@
                     </row>
                     <row>
                         <data>u_ddrphy_top</data>
-                        <data>3423</data>
-                        <data>3145</data>
+                        <data>3415</data>
+                        <data>3146</data>
                         <data>0</data>
                         <data>0</data>
                         <data>0</data>
@@ -7529,8 +7529,8 @@
                         <data>2</data>
                         <row>
                             <data>ddrphy_calib_top</data>
-                            <data>386</data>
-                            <data>367</data>
+                            <data>381</data>
+                            <data>366</data>
                             <data>0</data>
                             <data>0</data>
                             <data>0</data>
@@ -7636,7 +7636,7 @@
                             </row>
                             <row>
                                 <data>ddrphy_main_ctrl</data>
-                                <data>11</data>
+                                <data>12</data>
                                 <data>12</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -7663,8 +7663,8 @@
                             </row>
                             <row>
                                 <data>ddrphy_rdcal</data>
-                                <data>76</data>
-                                <data>66</data>
+                                <data>74</data>
+                                <data>65</data>
                                 <data>0</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -7690,7 +7690,7 @@
                             </row>
                             <row>
                                 <data>ddrphy_wrcal</data>
-                                <data>77</data>
+                                <data>75</data>
                                 <data>94</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -7717,7 +7717,7 @@
                             </row>
                             <row>
                                 <data>ddrphy_wrlvl</data>
-                                <data>33</data>
+                                <data>31</data>
                                 <data>38</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -7772,7 +7772,7 @@
                         </row>
                         <row>
                             <data>ddrphy_dfi</data>
-                            <data>302</data>
+                            <data>303</data>
                             <data>79</data>
                             <data>0</data>
                             <data>0</data>
@@ -7853,7 +7853,7 @@
                         </row>
                         <row>
                             <data>ddrphy_info</data>
-                            <data>52</data>
+                            <data>53</data>
                             <data>60</data>
                             <data>0</data>
                             <data>0</data>
@@ -7880,7 +7880,7 @@
                         </row>
                         <row>
                             <data>ddrphy_reset_ctrl</data>
-                            <data>67</data>
+                            <data>66</data>
                             <data>79</data>
                             <data>0</data>
                             <data>0</data>
@@ -7907,7 +7907,7 @@
                             <row>
                                 <data>ddrphy_pll_lock_debounce</data>
                                 <data>34</data>
-                                <data>22</data>
+                                <data>23</data>
                                 <data>0</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -7988,8 +7988,8 @@
                         </row>
                         <row>
                             <data>ddrphy_slice_top</data>
-                            <data>2520</data>
-                            <data>2420</data>
+                            <data>2515</data>
+                            <data>2421</data>
                             <data>0</data>
                             <data>0</data>
                             <data>0</data>
@@ -8122,8 +8122,8 @@
                             </row>
                             <row>
                                 <data>i_dqs_group[0].ddrphy_data_slice</data>
-                                <data>659</data>
-                                <data>619</data>
+                                <data>655</data>
+                                <data>620</data>
                                 <data>0</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -8148,7 +8148,7 @@
                                 <data>0</data>
                                 <row>
                                     <data>ddrphy_data_slice_dqs_gate_cal</data>
-                                    <data>121</data>
+                                    <data>120</data>
                                     <data>63</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8174,7 +8174,7 @@
                                     <data>0</data>
                                     <row>
                                         <data>ddrphy_dqs_gate_coarse_cal</data>
-                                        <data>80</data>
+                                        <data>79</data>
                                         <data>34</data>
                                         <data>0</data>
                                         <data>0</data>
@@ -8229,7 +8229,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_data_slice_wrcal</data>
-                                    <data>70</data>
+                                    <data>69</data>
                                     <data>82</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8256,7 +8256,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_data_slice_wrlvl</data>
-                                    <data>53</data>
+                                    <data>51</data>
                                     <data>52</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8310,8 +8310,8 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_dqsi_rdel_cal</data>
-                                    <data>172</data>
-                                    <data>124</data>
+                                    <data>170</data>
+                                    <data>125</data>
                                     <data>0</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8337,7 +8337,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_wdata_path_adj</data>
-                                    <data>142</data>
+                                    <data>144</data>
                                     <data>123</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8365,7 +8365,7 @@
                             </row>
                             <row>
                                 <data>i_dqs_group[1].ddrphy_data_slice</data>
-                                <data>607</data>
+                                <data>604</data>
                                 <data>593</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -8391,7 +8391,7 @@
                                 <data>0</data>
                                 <row>
                                     <data>ddrphy_data_slice_dqs_gate_cal</data>
-                                    <data>72</data>
+                                    <data>71</data>
                                     <data>55</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8417,7 +8417,7 @@
                                     <data>0</data>
                                     <row>
                                         <data>ddrphy_dqs_gate_coarse_cal</data>
-                                        <data>30</data>
+                                        <data>29</data>
                                         <data>25</data>
                                         <data>0</data>
                                         <data>0</data>
@@ -8472,7 +8472,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_data_slice_wrcal</data>
-                                    <data>72</data>
+                                    <data>71</data>
                                     <data>81</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8499,7 +8499,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_data_slice_wrlvl</data>
-                                    <data>51</data>
+                                    <data>49</data>
                                     <data>52</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8580,7 +8580,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_wdata_path_adj</data>
-                                    <data>138</data>
+                                    <data>139</data>
                                     <data>112</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8634,7 +8634,7 @@
                                 <data>0</data>
                                 <row>
                                     <data>ddrphy_data_slice_dqs_gate_cal</data>
-                                    <data>72</data>
+                                    <data>71</data>
                                     <data>55</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8660,7 +8660,7 @@
                                     <data>0</data>
                                     <row>
                                         <data>ddrphy_dqs_gate_coarse_cal</data>
-                                        <data>31</data>
+                                        <data>30</data>
                                         <data>26</data>
                                         <data>0</data>
                                         <data>0</data>
@@ -8715,7 +8715,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_data_slice_wrcal</data>
-                                    <data>67</data>
+                                    <data>69</data>
                                     <data>78</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8742,7 +8742,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_data_slice_wrlvl</data>
-                                    <data>47</data>
+                                    <data>45</data>
                                     <data>52</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8823,7 +8823,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_wdata_path_adj</data>
-                                    <data>138</data>
+                                    <data>139</data>
                                     <data>112</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8851,8 +8851,8 @@
                             </row>
                             <row>
                                 <data>i_dqs_group[3].ddrphy_data_slice</data>
-                                <data>601</data>
-                                <data>594</data>
+                                <data>600</data>
+                                <data>593</data>
                                 <data>0</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -8903,7 +8903,7 @@
                                     <data>0</data>
                                     <row>
                                         <data>ddrphy_dqs_gate_coarse_cal</data>
-                                        <data>30</data>
+                                        <data>29</data>
                                         <data>25</data>
                                         <data>0</data>
                                         <data>0</data>
@@ -8930,7 +8930,7 @@
                                     </row>
                                     <row>
                                         <data>ddrphy_gatecal</data>
-                                        <data>46</data>
+                                        <data>47</data>
                                         <data>30</data>
                                         <data>0</data>
                                         <data>0</data>
@@ -8958,8 +8958,8 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_data_slice_wrcal</data>
-                                    <data>68</data>
-                                    <data>82</data>
+                                    <data>71</data>
+                                    <data>81</data>
                                     <data>0</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -8985,7 +8985,7 @@
                                 </row>
                                 <row>
                                     <data>ddrphy_data_slice_wrlvl</data>
-                                    <data>48</data>
+                                    <data>45</data>
                                     <data>52</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -9095,8 +9095,8 @@
                         </row>
                         <row>
                             <data>ddrphy_training_ctrl</data>
-                            <data>2</data>
-                            <data>7</data>
+                            <data>3</data>
+                            <data>8</data>
                             <data>0</data>
                             <data>0</data>
                             <data>0</data>
@@ -9312,7 +9312,7 @@
                     </row>
                     <row>
                         <data>u_ips_ddrc_top</data>
-                        <data>1287</data>
+                        <data>1289</data>
                         <data>1788</data>
                         <data>39</data>
                         <data>0</data>
@@ -9418,7 +9418,7 @@
                             <data>0</data>
                             <row>
                                 <data>mcdq_dcd_bm</data>
-                                <data>99</data>
+                                <data>98</data>
                                 <data>74</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -9444,7 +9444,7 @@
                                 <data>0</data>
                                 <row>
                                     <data>mcdq_dcd_rowaddr</data>
-                                    <data>13</data>
+                                    <data>12</data>
                                     <data>8</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -9472,7 +9472,7 @@
                             </row>
                             <row>
                                 <data>mcdq_dcd_sm</data>
-                                <data>38</data>
+                                <data>39</data>
                                 <data>69</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -9500,7 +9500,7 @@
                         </row>
                         <row>
                             <data>mcdq_dcp_top</data>
-                            <data>568</data>
+                            <data>570</data>
                             <data>594</data>
                             <data>38</data>
                             <data>0</data>
@@ -9526,7 +9526,7 @@
                             <data>0</data>
                             <row>
                                 <data>mcdq_dcp_back_ctrl</data>
-                                <data>382</data>
+                                <data>384</data>
                                 <data>402</data>
                                 <data>0</data>
                                 <data>0</data>
@@ -9552,8 +9552,8 @@
                                 <data>0</data>
                                 <row>
                                     <data>PRE_PASS_LOOP[0].timing_pre_pass</data>
-                                    <data>15</data>
-                                    <data>13</data>
+                                    <data>16</data>
+                                    <data>14</data>
                                     <data>0</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -10119,7 +10119,7 @@
                                 </row>
                                 <row>
                                     <data>TRDA2ACT_LOOP[5].trda2act_timing</data>
-                                    <data>4</data>
+                                    <data>5</data>
                                     <data>5</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -10605,7 +10605,7 @@
                                 </row>
                                 <row>
                                     <data>timing_ref_pass</data>
-                                    <data>16</data>
+                                    <data>17</data>
                                     <data>9</data>
                                     <data>0</data>
                                     <data>0</data>
@@ -10877,7 +10877,7 @@
                         </row>
                         <row>
                             <data>mcdq_dfi</data>
-                            <data>46</data>
+                            <data>47</data>
                             <data>85</data>
                             <data>0</data>
                             <data>0</data>
@@ -10904,7 +10904,7 @@
                         </row>
                         <row>
                             <data>mcdq_ui_axi</data>
-                            <data>133</data>
+                            <data>132</data>
                             <data>312</data>
                             <data>0</data>
                             <data>0</data>
@@ -11339,7 +11339,7 @@
             </row>
             <row>
                 <data>u_layer_data_adapter</data>
-                <data>43</data>
+                <data>44</data>
                 <data>434</data>
                 <data>0</data>
                 <data>0</data>
@@ -11366,7 +11366,7 @@
             </row>
             <row>
                 <data>u_lprnet_top</data>
-                <data>11084</data>
+                <data>11080</data>
                 <data>45400</data>
                 <data>527</data>
                 <data>293</data>
@@ -11393,7 +11393,7 @@
                 <row>
                     <data>u_layer20</data>
                     <data>467</data>
-                    <data>2321</data>
+                    <data>2322</data>
                     <data>0</data>
                     <data>27</data>
                     <data>1.5</data>
@@ -12499,7 +12499,7 @@
                     <row>
                         <data>u_input_layer</data>
                         <data>174</data>
-                        <data>709</data>
+                        <data>710</data>
                         <data>0</data>
                         <data>0</data>
                         <data>1.5</data>
@@ -12823,8 +12823,8 @@
                 </row>
                 <row>
                     <data>u_layer21</data>
-                    <data>749</data>
-                    <data>1899</data>
+                    <data>750</data>
+                    <data>1898</data>
                     <data>41</data>
                     <data>18</data>
                     <data>4</data>
@@ -13470,7 +13470,7 @@
                     </row>
                     <row>
                         <data>gen_conv.u_output_layer</data>
-                        <data>198</data>
+                        <data>201</data>
                         <data>701</data>
                         <data>0</data>
                         <data>0</data>
@@ -13497,8 +13497,8 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>179</data>
-                        <data>300</data>
+                        <data>177</data>
+                        <data>299</data>
                         <data>41</data>
                         <data>0</data>
                         <data>1</data>
@@ -14227,7 +14227,7 @@
                 </row>
                 <row>
                     <data>u_layer23</data>
-                    <data>1249</data>
+                    <data>1250</data>
                     <data>2977</data>
                     <data>81</data>
                     <data>36</data>
@@ -15495,7 +15495,7 @@
                     </row>
                     <row>
                         <data>gen_conv.u_output_layer</data>
-                        <data>252</data>
+                        <data>253</data>
                         <data>725</data>
                         <data>0</data>
                         <data>0</data>
@@ -15847,8 +15847,8 @@
                 </row>
                 <row>
                     <data>u_layer24</data>
-                    <data>1238</data>
-                    <data>3500</data>
+                    <data>1236</data>
+                    <data>3501</data>
                     <data>81</data>
                     <data>36</data>
                     <data>8.5</data>
@@ -17115,8 +17115,8 @@
                     </row>
                     <row>
                         <data>gen_conv.u_output_layer</data>
-                        <data>238</data>
-                        <data>1181</data>
+                        <data>237</data>
+                        <data>1182</data>
                         <data>0</data>
                         <data>0</data>
                         <data>1</data>
@@ -17142,7 +17142,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>260</data>
+                        <data>259</data>
                         <data>528</data>
                         <data>81</data>
                         <data>0</data>
@@ -17467,7 +17467,7 @@
                 </row>
                 <row>
                     <data>u_layer25</data>
-                    <data>439</data>
+                    <data>436</data>
                     <data>473</data>
                     <data>81</data>
                     <data>0</data>
@@ -17547,7 +17547,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>261</data>
+                        <data>258</data>
                         <data>415</data>
                         <data>81</data>
                         <data>0</data>
@@ -17899,7 +17899,7 @@
                 </row>
                 <row>
                     <data>u_layer26</data>
-                    <data>1233</data>
+                    <data>1234</data>
                     <data>3790</data>
                     <data>81</data>
                     <data>36</data>
@@ -19194,7 +19194,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>247</data>
+                        <data>248</data>
                         <data>656</data>
                         <data>81</data>
                         <data>0</data>
@@ -19519,7 +19519,7 @@
                 </row>
                 <row>
                     <data>u_layer27</data>
-                    <data>1234</data>
+                    <data>1235</data>
                     <data>5188</data>
                     <data>81</data>
                     <data>36</data>
@@ -20166,7 +20166,7 @@
                     </row>
                     <row>
                         <data>gen_conv.gen_pages[1].page1.u_pe_page</data>
-                        <data>375</data>
+                        <data>374</data>
                         <data>901</data>
                         <data>0</data>
                         <data>18</data>
@@ -20759,7 +20759,7 @@
                         </row>
                         <row>
                             <data>u_w_manager</data>
-                            <data>7</data>
+                            <data>6</data>
                             <data>9</data>
                             <data>0</data>
                             <data>0</data>
@@ -20814,7 +20814,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>248</data>
+                        <data>250</data>
                         <data>914</data>
                         <data>81</data>
                         <data>0</data>
@@ -21139,7 +21139,7 @@
                 </row>
                 <row>
                     <data>u_layer28</data>
-                    <data>359</data>
+                    <data>358</data>
                     <data>315</data>
                     <data>0</data>
                     <data>0</data>
@@ -21219,7 +21219,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>181</data>
+                        <data>180</data>
                         <data>257</data>
                         <data>0</data>
                         <data>0</data>
@@ -21409,7 +21409,7 @@
                 </row>
                 <row>
                     <data>u_layer29</data>
-                    <data>2162</data>
+                    <data>2163</data>
                     <data>9315</data>
                     <data>0</data>
                     <data>72</data>
@@ -23757,7 +23757,7 @@
                     </row>
                     <row>
                         <data>gen_conv.u_output_layer</data>
-                        <data>482</data>
+                        <data>480</data>
                         <data>5121</data>
                         <data>0</data>
                         <data>0</data>
@@ -23784,7 +23784,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>198</data>
+                        <data>201</data>
                         <data>1264</data>
                         <data>0</data>
                         <data>0</data>
@@ -25297,7 +25297,7 @@
                 </row>
                 <row>
                     <data>u_layer31</data>
-                    <data>496</data>
+                    <data>495</data>
                     <data>5870</data>
                     <data>0</data>
                     <data>8</data>
@@ -25944,7 +25944,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>62</data>
+                        <data>61</data>
                         <data>66</data>
                         <data>0</data>
                         <data>0</data>
@@ -26216,7 +26216,7 @@
             </row>
             <row>
                 <data>u_top_yolo</data>
-                <data>7053</data>
+                <data>7061</data>
                 <data>34027</data>
                 <data>656</data>
                 <data>317</data>
@@ -26242,7 +26242,7 @@
                 <data>0</data>
                 <row>
                     <data>u_layer0</data>
-                    <data>450</data>
+                    <data>453</data>
                     <data>2616</data>
                     <data>0</data>
                     <data>27</data>
@@ -26269,7 +26269,7 @@
                     <row>
                         <data>genblk1.gen_pages[0].pe_inst.u_pe_page</data>
                         <data>17</data>
-                        <data>522</data>
+                        <data>520</data>
                         <data>0</data>
                         <data>9</data>
                         <data>0</data>
@@ -26321,8 +26321,8 @@
                         </row>
                         <row>
                             <data>pe_col_inst[0].u_pe_col</data>
-                            <data>2</data>
-                            <data>93</data>
+                            <data>4</data>
+                            <data>95</data>
                             <data>0</data>
                             <data>9</data>
                             <data>0</data>
@@ -26482,8 +26482,8 @@
                             </row>
                             <row>
                                 <data>pe_inst[0].u_pe_5</data>
-                                <data>0</data>
-                                <data>14</data>
+                                <data>1</data>
+                                <data>15</data>
                                 <data>0</data>
                                 <data>1</data>
                                 <data>0</data>
@@ -26509,8 +26509,8 @@
                             </row>
                             <row>
                                 <data>pe_inst[0].u_pe_6</data>
-                                <data>0</data>
-                                <data>5</data>
+                                <data>1</data>
+                                <data>6</data>
                                 <data>0</data>
                                 <data>1</data>
                                 <data>0</data>
@@ -26591,8 +26591,8 @@
                         </row>
                         <row>
                             <data>u_w_manager</data>
-                            <data>15</data>
-                            <data>29</data>
+                            <data>13</data>
+                            <data>25</data>
                             <data>0</data>
                             <data>0</data>
                             <data>0</data>
@@ -26619,8 +26619,8 @@
                     </row>
                     <row>
                         <data>genblk1.gen_pages[1].pe_inst.u_pe_page</data>
-                        <data>29</data>
-                        <data>540</data>
+                        <data>31</data>
+                        <data>544</data>
                         <data>0</data>
                         <data>9</data>
                         <data>0</data>
@@ -26942,8 +26942,8 @@
                         </row>
                         <row>
                             <data>u_w_manager</data>
-                            <data>27</data>
-                            <data>61</data>
+                            <data>29</data>
+                            <data>65</data>
                             <data>0</data>
                             <data>0</data>
                             <data>0</data>
@@ -26970,8 +26970,8 @@
                     </row>
                     <row>
                         <data>genblk1.gen_pages[2].pe_inst.u_pe_page</data>
-                        <data>26</data>
-                        <data>531</data>
+                        <data>25</data>
+                        <data>529</data>
                         <data>0</data>
                         <data>9</data>
                         <data>0</data>
@@ -27293,8 +27293,8 @@
                         </row>
                         <row>
                             <data>u_w_manager</data>
-                            <data>26</data>
-                            <data>61</data>
+                            <data>25</data>
+                            <data>59</data>
                             <data>0</data>
                             <data>0</data>
                             <data>0</data>
@@ -27321,7 +27321,7 @@
                     </row>
                     <row>
                         <data>genblk1.out_inst.u_output_layer</data>
-                        <data>136</data>
+                        <data>137</data>
                         <data>294</data>
                         <data>0</data>
                         <data>0</data>
@@ -27348,7 +27348,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>242</data>
+                        <data>243</data>
                         <data>729</data>
                         <data>0</data>
                         <data>0</data>
@@ -27700,7 +27700,7 @@
                 </row>
                 <row>
                     <data>u_layer1</data>
-                    <data>526</data>
+                    <data>524</data>
                     <data>1689</data>
                     <data>36</data>
                     <data>36</data>
@@ -28914,7 +28914,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>187</data>
+                        <data>185</data>
                         <data>241</data>
                         <data>36</data>
                         <data>0</data>
@@ -29266,7 +29266,7 @@
                 </row>
                 <row>
                     <data>u_layer2</data>
-                    <data>574</data>
+                    <data>575</data>
                     <data>3453</data>
                     <data>144</data>
                     <data>36</data>
@@ -29292,7 +29292,7 @@
                     <data>0</data>
                     <row>
                         <data>genblk1.gen_pages[0].pe_inst.u_pe_page</data>
-                        <data>5</data>
+                        <data>4</data>
                         <data>439</data>
                         <data>0</data>
                         <data>9</data>
@@ -29615,7 +29615,7 @@
                         </row>
                         <row>
                             <data>u_w_manager</data>
-                            <data>5</data>
+                            <data>4</data>
                             <data>7</data>
                             <data>0</data>
                             <data>0</data>
@@ -30723,7 +30723,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>389</data>
+                        <data>391</data>
                         <data>665</data>
                         <data>144</data>
                         <data>0</data>
@@ -31075,7 +31075,7 @@
                 </row>
                 <row>
                     <data>u_layer3</data>
-                    <data>551</data>
+                    <data>550</data>
                     <data>3440</data>
                     <data>36</data>
                     <data>36</data>
@@ -32289,7 +32289,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>194</data>
+                        <data>193</data>
                         <data>249</data>
                         <data>36</data>
                         <data>0</data>
@@ -32641,7 +32641,7 @@
                 </row>
                 <row>
                     <data>u_layer4</data>
-                    <data>737</data>
+                    <data>739</data>
                     <data>5662</data>
                     <data>144</data>
                     <data>72</data>
@@ -33909,7 +33909,7 @@
                     </row>
                     <row>
                         <data>genblk1.gen_pages[2].pe_inst.u_pe_page</data>
-                        <data>7</data>
+                        <data>6</data>
                         <data>513</data>
                         <data>0</data>
                         <data>18</data>
@@ -34502,7 +34502,7 @@
                         </row>
                         <row>
                             <data>u_w_manager</data>
-                            <data>7</data>
+                            <data>6</data>
                             <data>9</data>
                             <data>0</data>
                             <data>0</data>
@@ -35151,7 +35151,7 @@
                     </row>
                     <row>
                         <data>genblk1.out_inst.u_output_layer</data>
-                        <data>341</data>
+                        <data>342</data>
                         <data>2465</data>
                         <data>0</data>
                         <data>0</data>
@@ -35178,7 +35178,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>389</data>
+                        <data>391</data>
                         <data>1172</data>
                         <data>144</data>
                         <data>0</data>
@@ -35530,7 +35530,7 @@
                 </row>
                 <row>
                     <data>u_layer5</data>
-                    <data>1175</data>
+                    <data>1177</data>
                     <data>4072</data>
                     <data>72</data>
                     <data>36</data>
@@ -36798,7 +36798,7 @@
                     </row>
                     <row>
                         <data>genblk1.out_inst.u_output_layer</data>
-                        <data>243</data>
+                        <data>242</data>
                         <data>1560</data>
                         <data>0</data>
                         <data>0</data>
@@ -36825,7 +36825,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>248</data>
+                        <data>251</data>
                         <data>890</data>
                         <data>72</data>
                         <data>0</data>
@@ -37177,7 +37177,7 @@
                 </row>
                 <row>
                     <data>u_layer6</data>
-                    <data>728</data>
+                    <data>727</data>
                     <data>3431</data>
                     <data>72</data>
                     <data>18</data>
@@ -37905,7 +37905,7 @@
                     </row>
                     <row>
                         <data>genblk1.out_inst.u_output_layer</data>
-                        <data>139</data>
+                        <data>138</data>
                         <data>1448</data>
                         <data>0</data>
                         <data>0</data>
@@ -38284,8 +38284,8 @@
                 </row>
                 <row>
                     <data>u_layer7</data>
-                    <data>184</data>
-                    <data>1040</data>
+                    <data>185</data>
+                    <data>1041</data>
                     <data>4</data>
                     <data>1</data>
                     <data>1.5</data>
@@ -38445,8 +38445,8 @@
                     </row>
                     <row>
                         <data>genblk1.out_inst.u_output_layer</data>
-                        <data>101</data>
-                        <data>954</data>
+                        <data>102</data>
+                        <data>955</data>
                         <data>0</data>
                         <data>0</data>
                         <data>0</data>
@@ -38554,7 +38554,7 @@
                 </row>
                 <row>
                     <data>u_layer8</data>
-                    <data>1171</data>
+                    <data>1173</data>
                     <data>4063</data>
                     <data>72</data>
                     <data>36</data>
@@ -39849,7 +39849,7 @@
                     </row>
                     <row>
                         <data>u_input_layer</data>
-                        <data>250</data>
+                        <data>252</data>
                         <data>890</data>
                         <data>72</data>
                         <data>0</data>
@@ -40202,7 +40202,7 @@
                 <row>
                     <data>u_layer9</data>
                     <data>727</data>
-                    <data>3432</data>
+                    <data>3431</data>
                     <data>72</data>
                     <data>18</data>
                     <data>6</data>
@@ -40930,7 +40930,7 @@
                     <row>
                         <data>genblk1.out_inst.u_output_layer</data>
                         <data>138</data>
-                        <data>1449</data>
+                        <data>1448</data>
                         <data>0</data>
                         <data>0</data>
                         <data>0</data>
@@ -41308,7 +41308,7 @@
                 </row>
                 <row>
                     <data>u_layer10</data>
-                    <data>184</data>
+                    <data>185</data>
                     <data>1041</data>
                     <data>4</data>
                     <data>1</data>
@@ -41469,7 +41469,7 @@
                     </row>
                     <row>
                         <data>genblk1.out_inst.u_output_layer</data>
-                        <data>101</data>
+                        <data>102</data>
                         <data>955</data>
                         <data>0</data>
                         <data>0</data>
@@ -41660,7 +41660,7 @@
             </row>
             <row>
                 <data>u_CORES</data>
-                <data>682</data>
+                <data>680</data>
                 <data>1357</data>
                 <data>0</data>
                 <data>0</data>
@@ -41698,10 +41698,10 @@
             <data>RAM(GB)</data>
         </column_headers>
         <row>
-            <data>0h:5m:26s</data>
-            <data>0h:8m:27s</data>
-            <data>0h:12m:53s</data>
-            <data>5,852</data>
+            <data>0h:4m:43s</data>
+            <data>0h:6m:58s</data>
+            <data>0h:12m:51s</data>
+            <data>5,832</data>
             <data>WINDOWS 10 x86_64</data>
             <data>12th Gen Intel(R) Core(TM) i5-12400F</data>
             <data>16</data>
@@ -41848,34 +41848,22 @@
             <data message="4">The IO driver of u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/rst_clk_gpll/u_gpll/gpll_inst(CLKIN1) is not constraint at pllpad, its clock path will pass through SRB.</data>
         </row>
         <row>
-            <data message="4">GP end with result: density(0.049366)</data>
+            <data message="4">GP end with result: density(0.051362)</data>
         </row>
         <row>
             <data message="4">Process macros using &quot;Global&quot;.</data>
         </row>
         <row>
-            <data message="4">GP end with result: density(0.000375)</data>
+            <data message="4">GP end with result: density(0.000708)</data>
         </row>
         <row>
-            <data message="4">LUT6D pack result: There are 7199 LUT6 in collection, pack success:340</data>
+            <data message="4">LUT6D pack result: There are 7170 LUT6 in collection, pack success:337</data>
         </row>
         <row>
-            <data message="4">Place-6001: Add the new FF instances CLMS_363_697(/FF1/FF) CLMA_453_702(/FF0/FF) CLMA_453_774(/FFAPP0/FF) replicated by the FF instance CLMS_363_769(/FF0/FF) .</data>
+            <data message="4">Place-6001: Add the new FF instances CLMA_447_894(/FF0/FF) CLMA_447_942(/FFAPP0/FF) replicated by the FF instance CLMS_363_943(/FF1/FF) .</data>
         </row>
         <row>
-            <data message="4">Place-6001: Add the new FF instances CLMA_345_768(/FF3/FF) replicated by the FF instance CLMA_339_781(/FFAPP0/FF) .</data>
-        </row>
-        <row>
-            <data message="4">Place-6001: Add the new FF instances CLMA_417_774(/FF1/FF) replicated by the FF instance CLMA_375_774(/FF2/FF) .</data>
-        </row>
-        <row>
-            <data message="4">Place-6001: Add the new FF instances CLMA_345_744(/FF0/FF) replicated by the FF instance CLMS_321_739(/FFAPP1/FF) .</data>
-        </row>
-        <row>
-            <data message="4">Place-6001: Add the new LUT instances CLMS_573_727(/devAL6L5Q_S) replicated by the LUT instance CLMA_531_792(/devCL6L5Q).</data>
-        </row>
-        <row>
-            <data message="4">Place-6001: Add the new LUT instances CLMA_375_678(/devBL6) replicated by the LUT instance CLMS_363_679(/devDL6_S).</data>
+            <data message="4">Place-6001: Add the new FF instances CLMA_339_853(/FFAPP1/FF) CLMA_387_871(/FFAPP1/FF) CLMA_405_912(/FFAPP2/FF) replicated by the FF instance CLMA_339_913(/FFAPP3/FF) .</data>
         </row>
         <row>
             <data message="4">Replicate Registers:ms72xx_ctl/iic_dri/scl_out/opit_0_inv_1 </data>
@@ -41887,7 +41875,7 @@
             <data message="4">Design net ntclkbufg_2 is routed by general path.</data>
         </row>
         <row>
-            <data message="6">Route-2036: The clock path from clkbufg_5/gopclkbufg:CLKOUT to u_CORES/u_debug_core_0/u0_trig_unit/conf_reg[100]/opit_0_inv_L6QL5Q:CLK is routed by SRB.</data>
+            <data message="6">Route-2036: The clock path from clkbufg_5/gopclkbufg:CLKOUT to u_CORES/u_debug_core_0/u_rd_addr_gen/confck_same_ram.ram_radr[3]/opit_0_inv_L6Q:CLK is routed by SRB.</data>
         </row>
         <row>
             <data message="4">Design net u_CORES/capt_o is routed by general path.</data>
@@ -42173,7 +42161,7 @@
                     <data>clkbufg_3/gopclkbufg</data>
                     <data>USCM_383_930</data>
                     <data>ntclkbufg_0</data>
-                    <data>50096</data>
+                    <data>50092</data>
                     <data>0</data>
                     <data>u_pll/u_gpll/gpll_inst</data>
                     <data>CLKOUT2</data>
@@ -42183,7 +42171,7 @@
                     <data>clkbufg_4/gopclkbufg</data>
                     <data>USCM_383_933</data>
                     <data>ntclkbufg_1</data>
-                    <data>6056</data>
+                    <data>6055</data>
                     <data>0</data>
                     <data>pixclk_in_ibuf/opit_1</data>
                     <data>DI_TO_CLK</data>
@@ -42203,7 +42191,7 @@
                     <data>clkbufg_6/gopclkbufg</data>
                     <data>USCM_383_936</data>
                     <data>ntclkbufg_3</data>
-                    <data>170</data>
+                    <data>169</data>
                     <data>0</data>
                     <data>u_ms72/u_gpll/gpll_inst</data>
                     <data>CLKOUT0</data>
@@ -42223,7 +42211,7 @@
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/u_rst_clk_bufg/gopclkbufg</data>
                     <data>USCM_383_885</data>
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/rst_clk</data>
-                    <data>119</data>
+                    <data>118</data>
                     <data>0</data>
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/rst_clk_gpll/u_gpll/gpll_inst</data>
                     <data>CLKOUT0</data>
@@ -42233,7 +42221,7 @@
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/u_sysclk_bufg/gopclkbufg</data>
                     <data>USCM_383_882</data>
                     <data>u_ddr_video_delay_sync/ddr_clk</data>
-                    <data>3765</data>
+                    <data>3757</data>
                     <data>1</data>
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_gpll/u_gpll/gpll_inst</data>
                     <data>CLKOUT0</data>
@@ -42305,12 +42293,12 @@
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_gpll/u_gpll/gpll_inst</data>
                     <data>GPLL_727_769</data>
                     <data>CLKIN2</data>
-                    <data>_GND8547</data>
+                    <data>_GND8679</data>
                     <data> - </data>
                     <data> - </data>
-                    <data>GND_8547</data>
+                    <data>GND_8679</data>
                     <data>Z</data>
-                    <data>CLMA_717_792</data>
+                    <data>CLMA_711_792</data>
                 </row>
                 <row>
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_slice_top/i_dqs_bank[0].ddrphy_ppll/u_ppll/ppll_inst</data>
@@ -42327,10 +42315,10 @@
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_slice_top/i_dqs_bank[0].ddrphy_ppll/u_ppll/ppll_inst</data>
                     <data>PPLL_727_613</data>
                     <data>CLKIN2</data>
-                    <data>_GND8631</data>
+                    <data>_GND8745</data>
                     <data> - </data>
                     <data> - </data>
-                    <data>GND_8631</data>
+                    <data>GND_8745</data>
                     <data>Z</data>
                     <data>CLMA_717_648</data>
                 </row>
@@ -42349,12 +42337,12 @@
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/ddrphy_slice_top/i_dqs_bank[1].ddrphy_ppll/u_ppll/ppll_inst</data>
                     <data>PPLL_727_919</data>
                     <data>CLKIN2</data>
-                    <data>_GND8586</data>
+                    <data>_GND8713</data>
                     <data> - </data>
                     <data> - </data>
-                    <data>GND_8586</data>
+                    <data>GND_8713</data>
                     <data>Z</data>
-                    <data>CLMA_717_955</data>
+                    <data>CLMA_717_954</data>
                 </row>
                 <row>
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/rst_clk_gpll/u_gpll/gpll_inst</data>
@@ -42371,10 +42359,10 @@
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/rst_clk_gpll/u_gpll/gpll_inst</data>
                     <data>GPLL_7_769</data>
                     <data>CLKIN2</data>
-                    <data>_GND8518</data>
+                    <data>_GND8650</data>
                     <data> - </data>
                     <data> - </data>
-                    <data>GND_8518</data>
+                    <data>GND_8650</data>
                     <data>Z</data>
                     <data>CLMA_21_792</data>
                 </row>
@@ -42393,10 +42381,10 @@
                     <data>u_ms72/u_gpll/gpll_inst</data>
                     <data>GPLL_7_1381</data>
                     <data>CLKIN2</data>
-                    <data>_GND8537</data>
+                    <data>_GND8669</data>
                     <data> - </data>
                     <data> - </data>
-                    <data>GND_8537</data>
+                    <data>GND_8669</data>
                     <data>Z</data>
                     <data>CLMA_21_1404</data>
                 </row>
@@ -42415,10 +42403,10 @@
                     <data>u_pll/u_gpll/gpll_inst</data>
                     <data>GPLL_7_1075</data>
                     <data>CLKIN2</data>
-                    <data>_GND8527</data>
+                    <data>_GND8659</data>
                     <data> - </data>
                     <data> - </data>
-                    <data>GND_8527</data>
+                    <data>GND_8659</data>
                     <data>Z</data>
                     <data>CLMA_21_1098</data>
                 </row>
@@ -42427,7 +42415,7 @@
                     <data>GPLL_727_769</data>
                     <data>CLKOUT0</data>
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/gpll_clkout0</data>
-                    <data>3765</data>
+                    <data>3757</data>
                     <data>1</data>
                     <data> ... </data>
                     <data> ... </data>
@@ -42460,7 +42448,7 @@
                     <data>GPLL_7_769</data>
                     <data>CLKOUT0</data>
                     <data>u_ddr_video_delay_sync/u_ddr3_test/u_ddrphy_top/rst_gpll_clkout0</data>
-                    <data>119</data>
+                    <data>118</data>
                     <data>0</data>
                     <data> ... </data>
                     <data> ... </data>
@@ -42471,7 +42459,7 @@
                     <data>GPLL_7_1381</data>
                     <data>CLKOUT0</data>
                     <data>cfg_clk</data>
-                    <data>170</data>
+                    <data>169</data>
                     <data>0</data>
                     <data> ... </data>
                     <data> ... </data>
@@ -42493,7 +42481,7 @@
                     <data>GPLL_7_1075</data>
                     <data>CLKOUT2</data>
                     <data>clk_pe</data>
-                    <data>50096</data>
+                    <data>50092</data>
                     <data>0</data>
                     <data> ... </data>
                     <data> ... </data>

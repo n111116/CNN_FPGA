@@ -1,11 +1,26 @@
-# CNN USB / HDMI FPGA 工程说明
+# CNN HDMI FPGA 工程说明
 
-本工程是一个面向 FPGA 的实时视频检测与识别系统。当前主线功能是从 HDMI 视频流中检测车牌候选框，用 overlay 在原图上画框，同时裁剪子图送入 LPRNet 做字符识别，最终把结果叠加到 HDMI 输出视频中。
+> 本项目获得第十届全国大学生集成电路创新创业大赛“紫光同创” FPGA 赛道全国一等奖。
+
+本工程是一个面向 FPGA 的实时视频检测与识别系统。当前主线功能是从 HDMI 视频流中用YOLO检测车牌候选框，用 overlay 在原图上画框，同时裁剪子图送入 LPRNet 做字符识别，最终把结果叠加到 HDMI 输出视频中。
+
+当前公开的主线工程面向紫光同创 PG2L200H-6FBB676，输入与输出为 1280x720@60Hz HDMI 视频。CNN 部分采用固定权重、流式三维脉动卷积阵列；YOLO 负责候选框检测，LPRNet 负责车牌字符识别。
+
+## 开源范围与第三方内容
+
+本仓库中的 CNN、视频延迟、裁剪与叠加逻辑用于学习、复现和二次开发。请在发布或分发前先明确本仓库根目录的许可证；当前仓库尚未提供 `LICENSE` 文件，因此不能仅凭 GitHub 公开状态推定可自由再发布或商用。
+
+以下目录包含基于小眼睛半导体官方 demo 整合、适配或迁移的内容，不应视为本项目独立原创 IP：
+
+- `rtl_pds/ddr` 中的 DDR3 控制相关 RTL 及 `ipcore/ddr3_test` IP。
+- `rtl_pds/drive_hdmi` 中的 HDMI 收发、TMDS 编码/串化、MS7200/MS7210 配置及 I2C 驱动。
+
+使用者应保留原始版权与许可声明，并自行确认小眼睛半导体 demo、PDS 生成 IP、开发板原理图/约束文件及模型权重是否允许随项目再分发。若准备公开发布，建议把这些第三方部分单独列入 `NOTICE`，并在仓库根目录补充适合本项目自研代码的许可证。
 
 工程中同时保留了两套 FPGA 目标：
 
-- `rtl`、`prj`、`sim`：较早版本，主要面向 Xilinx K7-325T。
-- `rtl_pds`、`prj_pds`、`sim_pds`：Pango/PDS 版本，主要面向 PG2L200H，开始时是因为PDS不支持许多可以在Vivado综合的SystemVerilog语法。这个版本更晚，已经包含一些功能改动，例如 DDR 同帧视频延迟、LPRNet v10 迁移、crop/overlay 相关改动等。
+- `rtl`、`prj`、`sim`：较早版本，主要面向 XC7A325T（正点原子7K325T开发板）。
+- `rtl_pds`、`prj_pds`、`sim_pds`：Pango/PDS 版本，主要面向 PG2L200H（小眼睛PG200K mini开发板），开始时是因为PDS不支持许多可以在Vivado综合的SystemVerilog语法。这个版本更晚，已经包含一些功能改动，例如 DDR 同帧视频延迟、LPRNet v10 迁移、crop/overlay 相关改动等。
 
 因此阅读或修改工程时，不要简单认为 `rtl` 和 `rtl_pds` 只是同一份代码的厂商重命名。当前开发重点通常在 `*_pds` 这一套。
 
@@ -27,7 +42,62 @@
 - `conv_data_hex_pds`：由 Python 脚本生成的仿真输入 hex。
 - `rtl_pds/data_process/header`：由 Python 脚本生成的 layer 参数头文件。
 - `rtl_pds/data_process/mem_data`：由 Python 脚本生成的权重、偏置、LUT、字符点阵等 mem 文件。
-- `doc`：开发记录、结构理解和调试笔记。
+
+## `rtl_pds` 模块索引
+
+`rtl_pds` 是当前 PG2L200H/PDS 主线 RTL。顶层文件和目录的职责如下；`ddr/ipcore` 下的自动生成 PHY/控制器文件不建议手工修改。
+
+| 位置 | 主要模块 | 简要说明 |
+| --- | --- | --- |
+| `hdmi_loop.sv` | `hdmi_loop` | PDS 工程顶层；连接 HDMI、DDR 视频延迟、YOLO、box/crop、LPRNet 与字符叠加，并管理跨模块时钟/复位及视频同步。 |
+| `top_yolo.sv` | `top_yolo` | YOLO 网络顶层，串接 layer0-layer10，并把最后层特征图交给检测后处理生成 box 数据。 |
+| `top_lprnet.sv` | `lprnet_top` | LPRNet v10 顶层，显式串接 layer20-layer31，并连接空间求和和 CTC 字符后处理。 |
+| `layer_data_adapter.sv` | `layer_data_adapter` | 在外部 32bit 数据流与 CNN RGB/多通道流式接口之间做解析、适配及结果打包。 |
+| `my_fifo.sv` | `my_fifo` | 双时钟 FIFO，用于模块间缓存与跨时钟域传输；实例深度应保持为 2 的幂。 |
+| `data_process/` | 通用 CNN 计算模块 | 卷积窗口生成、脉动 PE 阵列、权重/偏置读取、卷积/池化输出和 LPRNet 后处理。 |
+| `overlay/` | 视频叠加与裁剪模块 | 将 YOLO box 同步到视频坐标，画框、裁剪缩放子图并把识别字符叠加回 HDMI 视频。 |
+| `ddr/` | DDR3 视频延迟模块 | 将输入 RGB888 压缩为 RGB565 写入 DDR，再读出扩展为 RGB888，用于让 box 与视频底图保持同帧。 |
+| `drive_hdmi/` | HDMI PHY/控制模块 | 小眼睛半导体官方 demo 派生的 HDMI 接收/发送、TMDS 与芯片配置逻辑。 |
+
+### `data_process` 模块
+
+| 文件 | 说明 |
+| --- | --- |
+| `activation_lut.sv` | 激活函数查找表，根据卷积输出符号选择对应 LUT 数据。 |
+| `d_manager.sv` | 数据延迟与分发。`D[n]` 相对 `data[n]` 延迟 `n+1` 个周期，使数据与 PE 列、权重节拍对齐。 |
+| `extrema_finder.sv` | 在连续输出通道中寻找极值，用于检测网络后处理。 |
+| `input_layer.sv` | 行缓存和滑窗生成，把串行像素流组织成卷积核所需的并行窗口。 |
+| `layer.sv` | 可参数化通用 CNN 层，组合输入窗口、PE page、输出层和可选池化；其中 `lprnet_layer_direct` 为 PDS 下 LPRNet 的显式层级实例化封装。 |
+| `lprnet_spatial_sum.sv` | 对 LPRNet 最后层同一列的空间输出做累加，形成 CTC 的时序分类输入。 |
+| `lprnet_post_process.sv` | LPRNet 后处理，完成类别极值选择、CTC 去重/blank 处理并输出字符序列。 |
+| `max_pool2d.sv` | 计算卷积窗口内的最大值，实现最大池化。 |
+| `output_layer.sv` | 累加各输入 page 的 partial sum，加入偏置、移位量化、激活并产生层输出有效时序。 |
+| `pe.sv` | 单个处理单元，执行乘加并传递级联结果；可按 `USE_DSP_PE` 选择 DSP 乘法或移位加法逻辑。 |
+| `pe_col.sv` | 串接一个卷积核展开方向上的多个 PE，形成单个输出通道槽位的 MAC 链。 |
+| `pe_page.sv` | 并行组织多个 `pe_col`，处理一个输入通道 page 的多个输出通道槽位。 |
+| `post_cv3_conv2d.sv` | YOLO 检测输出后处理，将网络特征流转换为候选框相关数据。 |
+| `sdp_ram.sv` | 简单双端口 RAM 封装，供行缓存和中间数据缓冲使用。 |
+| `w_manager.sv` | 按生成器预排布的固定节拍读取权重/偏置 mem，并与数据脉动延迟对齐。 |
+
+### `overlay` 模块
+
+| 文件 | 说明 |
+| --- | --- |
+| `box_overlay_sync.sv` | 接收 YOLO 候选框，在视频坐标系内判断 box 边界、绘制框线，并为各 box 产生裁剪像素和开始/结束标志。 |
+| `crop_buffer_manager.sv` | 缓存各 box 的裁剪像素，以双线性插值缩放为 LPRNet 输入尺寸，按网络节拍顺序输出 RGB 数据；必要时插入黑色子图以排空 LPRNet 流水线。 |
+| `char_overlay.sv` | 接收 LPRNet 的字符和 box 坐标，查询字符点阵 ROM，并将文字叠加到 HDMI 视频。 |
+
+### `ddr` 与 `drive_hdmi` 模块
+
+| 位置 | 主要文件 | 说明 |
+| --- | --- | --- |
+| `ddr/ddr_video_delay_sync.sv` | `ddr_video_delay_sync` | 视频延迟封装，完成 RGB888/RGB565 转换、帧内地址控制、读写请求及输出同步。 |
+| `ddr/ddr_wr_line_ram.sv`、`ddr/ddr_rd_line_ram.sv` | 行缓存 | 将视频像素与 DDR AXI 数据拍宽匹配，并在读写端完成打包/拆包。 |
+| `ddr/wr_rd_ctrl_top.v`、`wr_ctrl.v`、`wr_cmd_trans.v`、`rd_ctrl.v` | AXI 读写控制 | 对接 DDR3 IP 的 AXI 接口，组织突发写入、读回和命令时序。 |
+| `ddr/sync_vg.v` | 同步时序发生器 | 生成/整理视频行场同步和有效显示区域时序。 |
+| `drive_hdmi/iic_dri.v` | I2C 驱动 | 对 HDMI 收发芯片进行寄存器读写。 |
+| `drive_hdmi/ms7200_ctl.v`、`ms7210_ctl.v`、`ms72xx_ctl.v` | 芯片配置 | 初始化和配置 MS7200/MS7210 HDMI 收发链路。 |
+| `drive_hdmi/tmds_encoder.v`、`rgb2tmds.v`、`outputserdes.v` | HDMI 发送 | TMDS 编码、三通道组织与高速串行输出。 |
 
 ## 视频与识别链路
 
@@ -119,16 +189,16 @@ DDR 不是 CNN 推理本身的必需条件。未加入 DDR 的原始设计是一
 | --- | --- |
 | 目标器件 | PG2L200H / PG200H 系列，当前 PDS 工程面向 PG2L200H-6FBB676 |
 | 视频规格 | HDMI 720P@60Hz，像素时钟 74.25MHz |
-| CNN 处理时钟 | 约为像素时钟 2 倍，技术文档中按约 148.5MHz 估算延迟 |
+| CNN 处理时钟 | 约为像素时钟 2 倍，按 148.5MHz 估算延迟 |
 | YOLO 延迟 | 100MHz 仿真约 1.7ms；折算 148.5MHz 约 1.14ms |
 | LPRNet 延迟 | 100MHz 仿真约 3.5ms；折算 148.5MHz 约 2.35ms |
 | 端到端能力 | 720P@60Hz 下可在单帧内完成多个车牌定位与识别，文档测试中单帧支持 8 个车牌号 |
 | 量化误差 | YOLO 累计信噪比误差小于 0.05%，LPRNet 小于 0.06% |
 | 实测识别效果 | 清晰场景下车牌类型检测接近 100%，车牌号识别可达 95% 以上 |
-| 适应范围 | 约 `20x80` 到 `200x800` 的车牌框，约 30 度以内俯仰、偏航、横滚角 |
-| 资源利用率 | LUT 10.65%，Registers 27.26%，DRM 47.11%，APM 53.51% |
-| 时序结果 | 技术文档中 pixclk Fmax 82.33MHz，clk_pe Fmax 163.23MHz，Setup/Hold Slack 为正 |
-| 功耗 | 总功耗约 3.377W，其中静态功耗约 0.825W |
+| 适应范围 | 约 `20x80` 到 `200x800` 的车牌框，30 度以内俯仰、偏航、横滚角 |
+| 资源利用率（PDS Device Map）| LUT 53%，Registers 33%，DRM 63%，APM 38% |
+| 时序结果 （PDS Report Timing）|  pixclk Fmax 80MHz，clk_pe Fmax 162MHz，Setup/Hold Slack 为正 |
+| 功耗 （PDS Report Power）| 总功耗约 7.5W，其中静态功耗约 1.2W |
 
 量化策略上，技术文档采用 PPQ 做对称量化和 Power-of-Two 量化，使硬件侧主要通过移位完成尺度调整，减少乘法和反量化资源。YOLO 文档配置中输入和中间张量主要按 9bit 量化；LPRNet 文档配置中输入按 9bit，中间张量按 10bit 量化。当前工程实际位宽以各 `layerN.vh` 和 `CnnHardwareGenerator_pds.py` 生成参数为准。
 
