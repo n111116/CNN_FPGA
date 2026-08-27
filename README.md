@@ -2,6 +2,8 @@
 
 > 本项目获得第十届全国大学生集成电路创新创业大赛“紫光同创” FPGA 赛道全国一等奖。
 
+> B站演示视频链接（后续计划更新详细讲解）：【［电子榨菜✓］YOLO+LPRNet 车牌号实时检测 - FPGA】 https://www.bilibili.com/video/BV1NvKd6EEpQ/?share_source=copy_web&vd_source=dc7e9d63ec94ab717e51d3918af2e9b5
+
 本工程是一个面向 FPGA 的实时视频检测与识别系统。当前主线功能是从 HDMI 视频流中用YOLO检测车牌候选框，用 overlay 在原图上画框，同时裁剪子图送入 LPRNet 做字符识别，最终把结果叠加到 HDMI 输出视频中。
 
 主要亮点是全片上推理（DDR仅缓存一张图片用于同步，识别图片时非必须）、自定义脉动卷积阵列架构、毫秒级推理延迟、720P@100Hz左右速率上限（XC7A325T）、国产FPGA实现（PG2L200H，720P@60Hz）。
