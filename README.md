@@ -17,13 +17,7 @@
 
 使用者应保留原始版权与许可声明，并自行确认小眼睛半导体 demo、PDS 生成 IP、开发板原理图/约束文件及模型权重是否允许随项目再分发。若某个文件的来源或许可不明确，应将它移出公开发布版本，或先取得版权所有者授权。
 
-## 可复现版本说明
-
-这里的“可复现版本”是指其他开发者能够根据仓库中的源码、模型参数、生成脚本、测试脚本、约束和工具版本，重新生成参数文件、运行仿真，并在对应 FPGA/PDS 环境中重新建立工程。它不承诺不同电脑、不同 PDS 版本或不同布局布线随机种子会生成字节完全相同的 bitstream。
-
-`prj_pds` 属于可复现材料的一部分，其中的 `hdmi_loop.pds`、约束文件、IP 配置和实现脚本用于描述 PDS 工程；但单独发布 `prj_pds` 不足以复现整个项目。至少还需要配套的 `rtl_pds`、`python_script`、模型/权重数据、`sim_pds` 和必要的 `rtl_pds/data_process/header`、`mem_data` 生成结果。`compile`、`synthesize`、`device_map`、`place_route` 等缓存、日志和 `.fic` 属于过程产物，不是可复现所必需的源码。
-
-由于 DDR3 PHY、HDMI 驱动和部分 PDS IP 来自第三方，完整板级复现还需要获得相应 IP、PDS 软件和官方 demo 的合法使用权限。公开仓库应同时注明已验证的 PDS 版本、器件型号、开发板、DDR3/HDMI 芯片和约束版本。
+## 主要内容
 
 工程中同时保留了两套 FPGA 目标：
 
@@ -41,6 +35,7 @@
   - `data_process`：CNN 通用层、PE、输入窗口缓存、输出累加、后处理等模块。
   - `overlay`：box 画框、子图裁剪、crop buffer 管理。
   - `ddr`：PDS 版本中用于视频延迟对齐的 DDR 读写封装。
+- `bit_files`：bit流文件，针对正点原子XC7K325T核心板和开发板、小眼睛PG200K-mini核心板和开发板，可直接下载使用。
 - `prj_pds`：PDS 工程文件、约束和 IP 工程引用。
 - `sim_pds`：PDS 版本 ModelSim testbench。
 - `sim_pds/sim_modelsim`：ModelSim `.bat` 和 `.tcl` 脚本入口。
